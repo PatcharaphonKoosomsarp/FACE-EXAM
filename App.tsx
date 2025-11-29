@@ -83,6 +83,17 @@ const App: React.FC = () => {
     return () => subscription.unsubscribe();
   }, []);
 
+  const roomsRef = React.useRef<Room[]>(rooms);
+  const examsRef = React.useRef<Exam[]>(exams);
+
+  useEffect(() => {
+    roomsRef.current = rooms;
+  }, [rooms]);
+
+  useEffect(() => {
+    examsRef.current = exams;
+  }, [exams]);
+
   useEffect(() => {
     if (user) {
       loadData();
@@ -107,24 +118,48 @@ const App: React.FC = () => {
 
   const fetchActiveStudents = async () => {
       const { data, error } = await supabase
-          .from('exam_attendance')
-          .select('*');
+          .from('exam_student_sessions')
+          .select('*')
+          .eq('is_active', true);
       
       if (error) {
           // console.error('Error fetching attendance:', error); // Suppress error if table doesn't exist yet
       } else {
-          const mapped: ExamAttendance[] = data.map((a: any) => ({
-              id: a.id,
-              examId: a.exam_id,
-              studentId: a.student_id,
-              studentName: a.student_name,
-              studentCode: a.student_code,
-              row: a.row_number,
-              col: a.col_number,
-              ipAddress: a.ip_address,
-              status: a.status,
-              joinedAt: a.joined_at
-          }));
+          const mapped: ExamAttendance[] = data.map((s: any) => {
+              // Try to find room to calculate row/col
+              const room = roomsRef.current.find(r => r.id === s.layout_id);
+              let row = 0;
+              let col = 0;
+              
+              if (room && s.seat_number) {
+                  row = Math.ceil(s.seat_number / room.cols);
+                  col = s.seat_number % room.cols;
+                  if (col === 0) col = room.cols;
+              }
+
+              // Try to find active exam for this room
+              // This is a best-effort guess. We assume the exam in this room is the one we want.
+              // Ideally we should check time, but for now let's just find *an* exam in this room.
+              // Or better, don't assign examId if we aren't sure, and let TeacherDashboard handle it via fallback.
+              // But TeacherDashboard filters by examId.
+              
+              // If we want TeacherDashboard to use this data, we need to match the examId.
+              // But TeacherDashboard has its own realtimeSessions fetcher which is more accurate for the specific view.
+              // So we can just return empty examId or the layout_id (which won't match but is safe).
+              
+              return {
+                  id: s.id,
+                  examId: '', // We don't have exam_id in sessions. TeacherDashboard will use its own fallback.
+                  studentId: s.student_email, // Use email as ID
+                  studentName: s.student_name,
+                  studentCode: s.student_email,
+                  row: row,
+                  col: col,
+                  ipAddress: s.ip_address,
+                  status: 'ONLINE',
+                  joinedAt: s.created_at || new Date().toISOString()
+              };
+          });
           setActiveStudents(mapped);
       }
   };
