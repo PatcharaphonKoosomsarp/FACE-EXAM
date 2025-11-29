@@ -23,7 +23,8 @@ const ExamRoomView: React.FC<ExamRoomViewProps> = ({ user, exam, onExit }) => {
                     .eq('student_email', user.email)
                     .eq('is_active', true)
                     .order('created_at', { ascending: false })
-                    .single();
+                    .limit(1)
+                    .maybeSingle();
 
                 if (error) throw error;
                 setSession(data);
