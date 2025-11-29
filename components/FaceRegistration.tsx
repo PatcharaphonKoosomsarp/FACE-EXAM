@@ -69,7 +69,7 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
       up: 0.45,
       down: 0.65,
       blinkEAR: 0.15, // Relaxed from 0.1 for mobile
-      openEAR: 0.30,  // New threshold: Relaxed from 0.4 to allow looking down at screen
+      openEAR: 0.25,  // New threshold: Relaxed from 0.4 to allow looking down at screen
       closeRatio: 1.25
   };
 
