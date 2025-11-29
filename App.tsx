@@ -159,6 +159,9 @@ const App: React.FC = () => {
   const handleKickStudent = async (attendanceId: string) => {
       // Find the student to get UUID if available
       const student = activeStudents.find(s => s.id === attendanceId);
+      if (!student) return;
+
+      console.log("Kicking student:", student);
 
       // 1. Delete from exam_student_sessions
       const { error } = await supabase
@@ -169,15 +172,33 @@ const App: React.FC = () => {
       if (error) {
           alert('Error kicking student: ' + error.message);
       } else {
-          // 2. Delete from qr_authentication if UUID is available
-          let userIdToDelete = student?.studentUuid;
+          // 2. Delete from qr_authentication
+          let userIdToDelete = student.studentUuid;
 
-          // Fallback: Try to extract User ID from Profile URL hash (e.g. url#USER_ID)
-          if (!userIdToDelete && student?.studentProfileUrl) {
+          // Strategy A: Extract from Profile URL Hash (Primary method)
+          if (!userIdToDelete && student.studentProfileUrl) {
               const parts = student.studentProfileUrl.split('#');
               if (parts.length > 1) {
                   userIdToDelete = parts[1];
+                  console.log("Found UserID from URL Hash:", userIdToDelete);
               }
+          }
+
+          // Strategy B: Find by IP (Fallback if Hash missing)
+          if (!userIdToDelete && student.ipAddress) {
+               // Try to find a recent authentication from this IP
+               const { data: ipMatch } = await supabase
+                  .from('qr_authentication')
+                  .select('user_id')
+                  .eq('ip', student.ipAddress)
+                  .order('authenticated_at', { ascending: false })
+                  .limit(1)
+                  .maybeSingle();
+                
+               if (ipMatch) {
+                   userIdToDelete = ipMatch.user_id;
+                   console.log("Found UserID from IP match:", userIdToDelete);
+               }
           }
 
           if (userIdToDelete) {
@@ -186,7 +207,13 @@ const App: React.FC = () => {
                   .delete()
                   .eq('user_id', userIdToDelete);
               
-              if (qrError) console.error("Error deleting QR auth:", qrError);
+              if (qrError) {
+                  console.error("Error deleting QR auth:", qrError);
+              } else {
+                  console.log("Successfully deleted QR auth for user:", userIdToDelete);
+              }
+          } else {
+              console.warn("Could not find UserID to delete QR record. Student removed from session only.");
           }
 
           setActiveStudents(prev => prev.filter(s => s.id !== attendanceId));
