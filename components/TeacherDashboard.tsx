@@ -179,6 +179,8 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         const col = (viewingSeat % room.cols) + 1;
         const seatNumber = (row - 1) * room.cols + col;
 
+        console.log("Fetching seat mapping for:", { layout_id: room.id, row, col });
+
         // Fetch seat number from room_seat_ip_mappings
         const { data: seatMapping } = await supabase
             .from('room_seat_ip_mappings')
@@ -833,11 +835,11 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                           <div className="grid grid-cols-2 gap-2 mt-2">
                                               <div className="bg-purple-50 p-2 rounded text-center">
                                                   <div className="text-xs text-purple-400 uppercase font-bold">Download</div>
-                                                  <div className="text-xl font-bold text-purple-700">{studentResourceData.network_download_mb?.toFixed(2) || 0} <span className="text-xs">MB</span></div>
+                                                  <div className="text-xl font-bold text-purple-700 whitespace-nowrap">{studentResourceData.network_download_mb?.toFixed(2) || 0} <span className="text-xs">MB</span></div>
                                               </div>
                                               <div className="bg-blue-50 p-2 rounded text-center">
                                                   <div className="text-xs text-blue-400 uppercase font-bold">Upload</div>
-                                                  <div className="text-xl font-bold text-blue-700">{studentResourceData.network_upload_mb?.toFixed(2) || 0} <span className="text-xs">MB</span></div>
+                                                  <div className="text-xl font-bold text-blue-700 whitespace-nowrap">{studentResourceData.network_upload_mb?.toFixed(2) || 0} <span className="text-xs">MB</span></div>
                                               </div>
                                           </div>
                                       </div>
