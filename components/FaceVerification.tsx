@@ -592,7 +592,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
         );
     }
 
-    if (method === 'QR') {
+    if (method === 'QR' && status !== 'VERIFYING_IP' && status !== 'SUCCESS') {
         return (
             <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
                 <div className="bg-white rounded-2xl p-8 max-w-md w-full text-center animate-in zoom-in-95 duration-200">
