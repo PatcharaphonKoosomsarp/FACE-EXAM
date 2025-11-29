@@ -360,33 +360,49 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
               const col = actionMapping[photo.action];
               if (col) {
                   const fileName = `${userId}/${photo.action}.png`;
-                  
-                  // Try uploading to liveness-photos first
-                  const { error: uploadError } = await supabase.storage
-                      .from('liveness-photos')
-                      .upload(fileName, photo.blob, { upsert: true, contentType: 'image/png' });
-                  
                   let publicUrl = '';
 
-                  if (uploadError) {
-                      console.warn("Upload to liveness-photos failed, trying user-photos (legacy)...", uploadError);
-                      // Fallback to user-photos if liveness-photos fails (likely due to RLS or bucket config)
-                      // The legacy HTML uses 'user-photos'
-                      const { error: legacyError } = await supabase.storage
+                  // For QR Mode, prioritize 'user-photos' as it's known to work with the RPC flow
+                  if (isQrMode) {
+                      console.log("QR Mode: Uploading to user-photos...");
+                      const { error: uploadError } = await supabase.storage
                           .from('user-photos')
                           .upload(fileName, photo.blob, { upsert: true, contentType: 'image/png' });
                       
-                      if (legacyError) throw legacyError; // If both fail, throw error
+                      if (uploadError) {
+                          console.error("QR Mode upload failed:", uploadError);
+                          throw uploadError;
+                      }
 
                       const { data: urlData } = supabase.storage
                           .from('user-photos')
                           .getPublicUrl(fileName);
                       publicUrl = urlData.publicUrl;
                   } else {
-                      const { data: urlData } = supabase.storage
+                      // Normal mode: Try liveness-photos first
+                      const { error: uploadError } = await supabase.storage
                           .from('liveness-photos')
-                          .getPublicUrl(fileName);
-                      publicUrl = urlData.publicUrl;
+                          .upload(fileName, photo.blob, { upsert: true, contentType: 'image/png' });
+                      
+                      if (uploadError) {
+                          console.warn("Upload to liveness-photos failed, trying user-photos (legacy)...", uploadError);
+                          // Fallback to user-photos if liveness-photos fails (likely due to RLS or bucket config)
+                          const { error: legacyError } = await supabase.storage
+                              .from('user-photos')
+                              .upload(fileName, photo.blob, { upsert: true, contentType: 'image/png' });
+                          
+                          if (legacyError) throw legacyError; // If both fail, throw error
+
+                          const { data: urlData } = supabase.storage
+                              .from('user-photos')
+                              .getPublicUrl(fileName);
+                          publicUrl = urlData.publicUrl;
+                      } else {
+                          const { data: urlData } = supabase.storage
+                              .from('liveness-photos')
+                              .getPublicUrl(fileName);
+                          publicUrl = urlData.publicUrl;
+                      }
                   }
                   
                   // Add timestamp to URL to prevent caching issues on client side
@@ -395,6 +411,7 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
           }
 
           // Save to DB
+          console.log("Saving to DB. Mode:", isQrMode ? "QR (RPC)" : "Normal (Direct)", "UserID:", userId);
           if (isQrMode) {
               // Use RPC functions for QR mode to bypass RLS (as seen in qr_register_face.html)
               // These functions must exist in the database as SECURITY DEFINER
