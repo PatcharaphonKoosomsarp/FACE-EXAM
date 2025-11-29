@@ -39,7 +39,7 @@ const ExamRoomView: React.FC<ExamRoomViewProps> = ({ user, exam, onExit }) => {
     }, [exam.roomId, user.email]);
 
     const handleExit = async () => {
-        if (!confirm('คุณแน่ใจหรือไม่ที่ต้องการออกจากห้องสอบ?\n\nการออกจากห้องจะบันทึกเวลาออกและปิดสถานะการเข้าสอบของคุณ')) {
+        if (!confirm('คุณแน่ใจหรือไม่ที่ต้องการออกจากห้องสอบ?\n\nการออกจากห้องจะลบข้อมูลการเข้าสอบของคุณออกจากระบบ')) {
             return;
         }
 
@@ -47,11 +47,7 @@ const ExamRoomView: React.FC<ExamRoomViewProps> = ({ user, exam, onExit }) => {
             if (session) {
                 const { error } = await supabase
                     .from('exam_student_sessions')
-                    .update({
-                        is_active: false,
-                        session_end_time: new Date().toISOString(),
-                        updated_at: new Date().toISOString()
-                    })
+                    .delete()
                     .eq('id', session.id);
 
                 if (error) throw error;
