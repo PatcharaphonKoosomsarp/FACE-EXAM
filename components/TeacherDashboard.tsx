@@ -179,7 +179,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         const col = (viewingSeat % room.cols) + 1;
         const seatNumber = (row - 1) * room.cols + col;
 
-        console.log("Fetching seat mapping for:", { layout_id: room.id, row, col });
+        console.log("[v1.1] Fetching seat mapping for:", { layout_id: room.id, row, col });
 
         let fetchedSeatNumber = null;
         try {
@@ -204,7 +204,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         }
         
         if (fetchedSeatNumber) {
-            setCurrentSeatNumber(fetchedSeatNumber);
+            setCurrentSeatNumber(fetchedSeatNumber.toString());
         } else {
             // Fallback to calculated seat number if not found in DB
             setCurrentSeatNumber(seatNumber.toString());
@@ -650,7 +650,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                 Seat {row}-{col}
                                 {currentSeatNumber && <span className="text-orange-400 bg-white/10 px-2 py-0.5 rounded text-sm">No. {currentSeatNumber}</span>}
                               </h3>
-                              <p className="text-xs text-gray-400">Resource & Connection Status</p>
+                              <p className="text-xs text-gray-400">Resource & Connection Status (v1.1)</p>
                           </div>
                       </div>
                       <button onClick={() => setViewingSeat(null)} className="hover:bg-white/10 p-2 rounded-full transition">
