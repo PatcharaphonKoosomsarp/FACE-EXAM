@@ -331,6 +331,7 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
       // Upload to Supabase
       try {
           let userId = targetUserId;
+          let isQrMode = !!targetUserId;
           
           // Check authentication if not in mobile target mode
           if (!userId) {
@@ -338,10 +339,7 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
             if (!user) throw new Error("No user found");
             userId = user.id;
           } else {
-             // In mobile mode, we might be unauthenticated.
-             // Ensure RLS policies allow this, or we need a way to auth.
-             // For now, we proceed, assuming RLS is configured or public.
-             console.log("Proceeding with targetUserId:", userId);
+             console.log("Proceeding with targetUserId (QR Mode):", userId);
           }
 
           const photoData: any = { user_id: userId };
@@ -360,35 +358,88 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
           for (const photo of capturedPhotos) {
               const col = actionMapping[photo.action];
               if (col) {
-                  // Use simple filename to overwrite existing (cleaner storage)
                   const fileName = `${userId}/${photo.action}.png`;
+                  
+                  // Try uploading to liveness-photos first
                   const { error: uploadError } = await supabase.storage
                       .from('liveness-photos')
                       .upload(fileName, photo.blob, { upsert: true, contentType: 'image/png' });
                   
-                  if (uploadError) throw uploadError;
+                  let publicUrl = '';
 
-                  const { data: urlData } = supabase.storage
-                      .from('liveness-photos')
-                      .getPublicUrl(fileName);
+                  if (uploadError) {
+                      console.warn("Upload to liveness-photos failed, trying user-photos (legacy)...", uploadError);
+                      // Fallback to user-photos if liveness-photos fails (likely due to RLS or bucket config)
+                      // The legacy HTML uses 'user-photos'
+                      const { error: legacyError } = await supabase.storage
+                          .from('user-photos')
+                          .upload(fileName, photo.blob, { upsert: true, contentType: 'image/png' });
+                      
+                      if (legacyError) throw legacyError; // If both fail, throw error
+
+                      const { data: urlData } = supabase.storage
+                          .from('user-photos')
+                          .getPublicUrl(fileName);
+                      publicUrl = urlData.publicUrl;
+                  } else {
+                      const { data: urlData } = supabase.storage
+                          .from('liveness-photos')
+                          .getPublicUrl(fileName);
+                      publicUrl = urlData.publicUrl;
+                  }
                   
                   // Add timestamp to URL to prevent caching issues on client side
-                  photoData[col] = `${urlData.publicUrl}?t=${Date.now()}`;
+                  photoData[col] = `${publicUrl}?t=${Date.now()}`;
               }
           }
 
           // Save to DB
-          // Check existing
-          const { data: existing } = await supabase
-              .from('user_photos')
-              .select('id')
-              .eq('user_id', userId)
-              .maybeSingle();
+          if (isQrMode) {
+              // Use RPC functions for QR mode to bypass RLS (as seen in qr_register_face.html)
+              // These functions must exist in the database as SECURITY DEFINER
+              
+              // 1. Check existing via RPC
+              const { data: existingData, error: checkError } = await supabase
+                  .rpc('get_user_photos_qr', { p_user_id: userId });
+              
+              let existingId = null;
+              if (!checkError && existingData && existingData.length > 0) {
+                  existingId = existingData[0].id;
+              }
 
-          if (existing) {
-              await supabase.from('user_photos').update(photoData).eq('id', existing.id);
+              if (existingId) {
+                  console.log('Updating existing record via QR access function...');
+                  const { error: updateError } = await supabase
+                      .rpc('update_user_photos_qr', {
+                          p_record_id: existingId,
+                          p_photo_data: photoData
+                      });
+                  
+                  if (updateError) throw updateError;
+              } else {
+                  console.log('Inserting new record via QR access function...');
+                  const { error: insertError } = await supabase
+                      .rpc('insert_user_photos_qr', {
+                          p_user_id: userId,
+                          p_photo_data: photoData
+                      });
+                  
+                  if (insertError) throw insertError;
+              }
+
           } else {
-              await supabase.from('user_photos').insert(photoData);
+              // Normal authenticated mode
+              const { data: existing } = await supabase
+                  .from('user_photos')
+                  .select('id')
+                  .eq('user_id', userId)
+                  .maybeSingle();
+
+              if (existing) {
+                  await supabase.from('user_photos').update(photoData).eq('id', existing.id);
+              } else {
+                  await supabase.from('user_photos').insert(photoData);
+              }
           }
 
           onComplete();
