@@ -375,19 +375,28 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
              const supabaseKey = (supabase as any).supabaseKey;
              
              if (supabaseUrl && supabaseKey) {
-                 // Create a client that points to the specific storage key
-                 // We use persistSession: true so it reads from the localStorage we just set
+                 // Create a dedicated client that forces the fake token in headers
+                 // This bypasses the client-side auth state management and sends the token directly
                  uploadClient = createClient(supabaseUrl, supabaseKey, {
                      auth: {
-                         storageKey: 'supabase.auth.token',
-                         storage: localStorage,
-                         persistSession: true,
-                         detectSessionInUrl: false,
-                         autoRefreshToken: false
+                         persistSession: false, // We handle auth via headers
+                         autoRefreshToken: false,
+                         detectSessionInUrl: false
+                     },
+                     global: {
+                         fetch: (url, options) => {
+                             const newOptions = { ...options };
+                             newOptions.headers = {
+                                 ...newOptions.headers,
+                                 'Authorization': 'Bearer temp_qr_access_token',
+                                 'apikey': supabaseKey
+                             };
+                             return fetch(url, newOptions);
+                         }
                      }
                  });
                  
-                 console.log("Created dedicated upload client for QR mode");
+                 console.log("Created dedicated upload client with forced headers for QR mode");
              }
           }
 
