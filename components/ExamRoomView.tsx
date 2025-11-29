@@ -12,6 +12,20 @@ interface ExamRoomViewProps {
 const ExamRoomView: React.FC<ExamRoomViewProps> = ({ user, exam, onExit }) => {
     const [session, setSession] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [roomName, setRoomName] = useState<string>('');
+
+    useEffect(() => {
+        const fetchRoomName = async () => {
+            const { data } = await supabase
+                .from('room_seat_layouts')
+                .select('room_name')
+                .eq('id', exam.roomId)
+                .single();
+            
+            if (data) setRoomName(data.room_name);
+        };
+        fetchRoomName();
+    }, [exam.roomId]);
 
     useEffect(() => {
         const fetchSession = async () => {
@@ -154,7 +168,7 @@ const ExamRoomView: React.FC<ExamRoomViewProps> = ({ user, exam, onExit }) => {
                                     </div>
                                     <div>
                                         <p className="text-xs text-gray-500 font-bold uppercase">ห้องสอบ</p>
-                                        <p className="font-medium text-gray-800">Room ID: {exam.roomId.substring(0, 8)}...</p>
+                                        <p className="font-medium text-gray-800">{roomName || 'กำลังโหลด...'}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-3">
