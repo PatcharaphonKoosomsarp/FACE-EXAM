@@ -33,6 +33,15 @@ interface ResourceLog {
     timestamp: string;
 }
 
+interface ViolationLog {
+    id: string;
+    timestamp: string;
+    violation_type: string;
+    resource_name: string;
+    action_taken: string;
+    details: string;
+}
+
 interface TeacherDashboardProps {
   user: User;
   rooms: Room[];
@@ -127,6 +136,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
   // Monitoring Data State
   const [studentResourceData, setStudentResourceData] = useState<ResourceLog | null>(null);
+  const [studentViolationLogs, setStudentViolationLogs] = useState<ViolationLog[]>([]);
   const [sessionStudent, setSessionStudent] = useState<any | null>(null);
   const [realtimeSessions, setRealtimeSessions] = useState<any[]>([]);
 
@@ -194,8 +204,20 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             if (data) {
                 setStudentResourceData(data);
             }
+
+            // Fetch violations
+            const { data: violations } = await supabase
+                .from('violation_logs')
+                .select('*')
+                .eq('session_id', session.id)
+                .order('timestamp', { ascending: false });
+            
+            if (violations) {
+                setStudentViolationLogs(violations);
+            }
         } else {
             setStudentResourceData(null);
+            setStudentViolationLogs([]);
             setSessionStudent(null);
         }
     };
@@ -205,6 +227,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         interval = setInterval(fetchResourceData, 5000); // Refresh every 5s
     } else {
         setStudentResourceData(null);
+        setStudentViolationLogs([]);
         setSessionStudent(null);
     }
 
@@ -679,6 +702,29 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                                 {studentResourceData.all_open_windows.map((win: any, idx: number) => (
                                                     <div key={idx} className="text-xs text-gray-600 bg-white/50 px-2 py-1 rounded border border-indigo-50 truncate">
                                                         {typeof win === 'string' ? win : win.title || JSON.stringify(win)}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                      )}
+
+                                      {/* Violation Logs */}
+                                      {studentViolationLogs && studentViolationLogs.length > 0 && (
+                                        <div className="mt-4 pt-3 border-t border-indigo-100">
+                                            <h5 className="text-xs font-bold text-red-600 mb-2 flex items-center">
+                                                <ShieldAlert className="w-3 h-3 mr-1"/> Violation Logs ({studentViolationLogs.length})
+                                            </h5>
+                                            <div className="max-h-40 overflow-y-auto space-y-2">
+                                                {studentViolationLogs.map((log) => (
+                                                    <div key={log.id} className="text-xs bg-red-50 p-2 rounded border border-red-100">
+                                                        <div className="flex justify-between font-bold text-red-800 mb-1">
+                                                            <span>{log.violation_type}</span>
+                                                            <span>{new Date(log.timestamp).toLocaleTimeString()}</span>
+                                                        </div>
+                                                        <div className="text-red-700 mb-1 break-all font-medium">{log.resource_name}</div>
+                                                        <div className="flex justify-between items-center">
+                                                            <span className="bg-red-200 text-red-800 px-1.5 py-0.5 rounded text-[10px] font-bold">{log.action_taken}</span>
+                                                        </div>
                                                     </div>
                                                 ))}
                                             </div>
