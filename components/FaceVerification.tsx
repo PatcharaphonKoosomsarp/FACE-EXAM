@@ -26,6 +26,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
     const [modelsLoaded, setModelsLoaded] = useState(false);
     const [labeledDescriptors, setLabeledDescriptors] = useState<any[]>([]);
     const [faceMatcher, setFaceMatcher] = useState<any | null>(null);
+    const [debugMsg, setDebugMsg] = useState<string>("");
 
     const handleMobileSuccess = useCallback(async (mobileIp: string) => {
         setStatus('VERIFYING_IP');
@@ -137,28 +138,32 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                     pollInterval = setInterval(async () => {
                         if (!isMounted) return;
                         try {
-                            console.log("Polling for mobile auth...");
                             // Check qr_authentication table for the LATEST authenticated record
-                            const { data } = await supabase
+                            const { data, error } = await supabase
                                 .from('qr_authentication')
                                 .select('*')
                                 .eq('user_id', user.id)
                                 .eq('status', 'authenticated')
-                                // .gt('authenticated_at', new Date(Date.now() - 120000).toISOString()) // Removed time check for robustness
                                 .order('authenticated_at', { ascending: false })
                                 .limit(1)
                                 .maybeSingle();
 
-                            if (data) {
+                            if (error) {
+                                setDebugMsg(`Polling Error: ${error.message}`);
+                            } else if (data) {
+                                setDebugMsg(`Success! Found record from ${data.ip}`);
                                 console.log('Mobile authentication successful:', data);
                                 if (pollInterval) clearInterval(pollInterval);
                                 // Proceed to session creation using the IP from the handshake
                                 if (handleMobileSuccessRef.current) {
                                     await handleMobileSuccessRef.current(data.ip);
                                 }
+                            } else {
+                                setDebugMsg(`Polling... User: ${user.id.substring(0, 8)}... No auth record yet.`);
                             }
-                        } catch (e) {
+                        } catch (e: any) {
                             console.error("Polling error:", e);
+                            setDebugMsg(`Exception: ${e.message}`);
                         }
                     }, 2000);
 
@@ -658,22 +663,34 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                     </p>
                     
                     <div className="flex flex-col gap-2">
+                        <div className="text-xs text-gray-400 font-mono bg-gray-100 p-2 rounded break-all">
+                            {debugMsg || "Initializing..."}
+                        </div>
                         <button 
                             onClick={async () => {
                                 // Manual check
-                                const { data } = await supabase
+                                setDebugMsg("Checking manually...");
+                                const { data, error } = await supabase
                                     .from('qr_authentication')
                                     .select('*')
                                     .eq('user_id', user.id)
-                                    .eq('status', 'authenticated')
                                     .order('authenticated_at', { ascending: false })
                                     .limit(1)
                                     .maybeSingle();
                                 
-                                if (data) {
-                                    handleMobileSuccess(data.ip);
+                                if (error) {
+                                    alert(`Error: ${error.message}`);
+                                    setDebugMsg(`Manual Error: ${error.message}`);
+                                } else if (data) {
+                                    if (data.status === 'authenticated') {
+                                        handleMobileSuccess(data.ip);
+                                    } else {
+                                        alert(`Found record but status is '${data.status}' (Expected: 'authenticated')`);
+                                        setDebugMsg(`Found record but status is ${data.status}`);
+                                    }
                                 } else {
                                     alert("ยังไม่พบข้อมูลการยืนยันตัวตน กรุณาทำรายการบนมือถือให้เสร็จสิ้น");
+                                    setDebugMsg("Manual check: No record found.");
                                 }
                             }}
                             className="text-sm bg-[#E35205] text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition"
