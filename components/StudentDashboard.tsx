@@ -5,6 +5,7 @@ import FaceRegistration from './FaceRegistration';
 import FaceVerification from './FaceVerification';
 import VerificationMethodSelector from './VerificationMethodSelector';
 import QRCodeModal from './QRCodeModal';
+import ExamRoomView from './ExamRoomView';
 
 interface StudentDashboardProps {
   user: User;
@@ -59,34 +60,11 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user, exams, rooms,
 
   if (activeExam) {
       return (
-          <div className="min-h-screen bg-gray-900 text-white flex flex-col">
-              <header className="bg-gray-800 p-4 flex justify-between items-center border-b border-gray-700">
-                  <div className="flex items-center gap-3">
-                      <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-                      <h1 className="font-bold text-lg">กำลังสอบ: {activeExam.subjectName} ({activeExam.subjectCode})</h1>
-                  </div>
-                  <button onClick={() => setActiveExam(null)} className="text-sm bg-red-600 hover:bg-red-700 px-3 py-1 rounded">ออกจากการสอบ</button>
-              </header>
-              <div className="flex-1 p-8 flex items-center justify-center">
-                  <div className="text-center max-w-2xl">
-                      <Monitor className="w-24 h-24 text-gray-700 mx-auto mb-6" />
-                      <h2 className="text-3xl font-bold mb-4">เข้าสู่โหมดห้องสอบปลอดภัย</h2>
-                      <div className="bg-gray-800 p-6 rounded-xl border border-gray-700 text-left mb-6">
-                          <h3 className="text-orange-500 font-bold mb-3 flex items-center"><AlertTriangle className="w-5 h-5 mr-2"/> กฎการใช้ทรัพยากร</h3>
-                          <ul className="space-y-2 text-sm text-gray-300">
-                              {activeExam.blockedResources.length > 0 ? activeExam.blockedResources.map(r => (
-                                  <li key={r.id} className="flex items-center">
-                                      <span className="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
-                                      ห้ามใช้: <span className="text-white font-medium ml-1">{r.name}</span> <span className="text-xs text-gray-500 ml-2">({r.type})</span>
-                                  </li>
-                              )) : <li>ไม่มีการจำกัดทรัพยากรพิเศษ</li>}
-                          </ul>
-                          <p className="mt-4 text-xs text-gray-500">*ระบบกำลังติดตามการใช้งาน หากพบการละเมิดจะแจ้งเตือนผู้คุมสอบทันที</p>
-                      </div>
-                      <div className="text-green-400 text-sm">สถานะ: ใบหน้าอยู่ในกล้อง | ทรัพยากรปกติ</div>
-                  </div>
-              </div>
-          </div>
+          <ExamRoomView 
+            user={user}
+            exam={activeExam}
+            onExit={() => setActiveExam(null)}
+          />
       );
   }
 
