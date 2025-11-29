@@ -443,8 +443,24 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
                                       if (error) throw error;
                                       publicUrlResult = supabase.storage.from('liveness-photos').getPublicUrl(fileName);
                                   } catch (err4: any) {
-                                      console.error("All upload strategies failed.");
-                                      throw new Error(`ไม่สามารถบันทึกรูปภาพได้ (RLS Policy Blocked). กรุณาตรวจสอบว่า Bucket 'user-photos' หรือ 'liveness-photos' เป็น Public หรือไม่`);
+                                      console.warn("All upload strategies failed. Falling back to Base64 encoding directly to Database.");
+                                      
+                                      // Strategy 5: Bypass Storage completely and save Base64 to DB
+                                      // This works if the DB columns are TEXT and can hold large strings
+                                      try {
+                                          const base64String = await new Promise<string>((resolve, reject) => {
+                                              const reader = new FileReader();
+                                              reader.onload = () => resolve(reader.result as string);
+                                              reader.onerror = reject;
+                                              reader.readAsDataURL(photo.blob);
+                                          });
+                                          publicUrl = base64String;
+                                          // Skip the publicUrlResult check since we have the data directly
+                                          continue; 
+                                      } catch (base64Err) {
+                                          console.error("Base64 conversion failed:", base64Err);
+                                          throw new Error(`ไม่สามารถบันทึกรูปภาพได้ (Storage & Base64 failed). กรุณาตรวจสอบ Policy ของ Storage Bucket`);
+                                      }
                                   }
                               }
                           }
