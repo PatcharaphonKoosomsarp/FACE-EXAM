@@ -27,64 +27,6 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
     const [labeledDescriptors, setLabeledDescriptors] = useState<any[]>([]);
     const [faceMatcher, setFaceMatcher] = useState<any | null>(null);
 
-    // QR Code Logic
-    useEffect(() => {
-        if (method === 'QR') {
-            const generateQR = async () => {
-                try {
-                    // 1. Get Local IP from Agent (preferred) or WebRTC
-                    let ip = await agentService.getLocalIP();
-                    if (!ip || ip === '127.0.0.1') {
-                        ip = await getPrimaryWiFiIP();
-                    }
-                    
-                    console.log('Generating QR with IP:', ip);
-
-                    const baseUrl = window.location.origin;
-                    // Construct URL for mobile auth page (using query params as per App.tsx)
-                    const url = `${baseUrl}/?mode=mobile-verify&exam_id=${exam.id}&user_id=${user.id}&ip=${ip || ''}`;
-                    setQrUrl(url);
-
-                    // 2. Start Polling for Handshake
-                    const pollInterval = setInterval(async () => {
-                        try {
-                            // Check qr_authentication table for the LATEST authenticated record
-                            const { data } = await supabase
-                                .from('qr_authentication')
-                                .select('*')
-                                .eq('user_id', user.id)
-                                .eq('status', 'authenticated')
-                                .gt('authenticated_at', new Date(Date.now() - 120000).toISOString()) // Increased to 2 minutes
-                                .order('authenticated_at', { ascending: false })
-                                .limit(1)
-                                .maybeSingle();
-
-                            if (data) {
-                                clearInterval(pollInterval);
-                                console.log('Mobile authentication successful:', data);
-                                
-                                // Proceed to session creation using the IP from the handshake
-                                await handleMobileSuccess(data.ip);
-                            }
-                        } catch (e) {
-                            console.error("Polling error:", e);
-                        }
-                    }, 2000);
-
-                    return () => clearInterval(pollInterval);
-                } catch (err) {
-                    console.error("Error generating QR:", err);
-                    setErrorMessage("ไม่สามารถสร้าง QR Code ได้");
-                }
-            };
-
-            const cleanupPromise = generateQR();
-            return () => {
-                // Cleanup logic if needed
-            };
-        }
-    }, [method, exam.id, user.id, user.email, exam.roomId]);
-
     const handleMobileSuccess = async (mobileIp: string) => {
         setStatus('VERIFYING_IP');
         try {
@@ -132,6 +74,64 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
             setStatus('FAILED');
         }
     };
+
+    // QR Code Logic
+    useEffect(() => {
+        if (method === 'QR') {
+            const generateQR = async () => {
+                try {
+                    // 1. Get Local IP from Agent (preferred) or WebRTC
+                    let ip = await agentService.getLocalIP();
+                    if (!ip || ip === '127.0.0.1') {
+                        ip = await getPrimaryWiFiIP();
+                    }
+                    
+                    console.log('Generating QR with IP:', ip);
+
+                    const baseUrl = window.location.origin;
+                    // Construct URL for mobile auth page (using query params as per App.tsx)
+                    const url = `${baseUrl}/?mode=mobile-verify&exam_id=${exam.id}&user_id=${user.id}&ip=${ip || ''}`;
+                    setQrUrl(url);
+
+                    // 2. Start Polling for Handshake
+                    const pollInterval = setInterval(async () => {
+                        try {
+                            // Check qr_authentication table for the LATEST authenticated record
+                            const { data } = await supabase
+                                .from('qr_authentication')
+                                .select('*')
+                                .eq('user_id', user.id)
+                                .eq('status', 'authenticated')
+                                // .gt('authenticated_at', new Date(Date.now() - 120000).toISOString()) // Removed time check for robustness
+                                .order('authenticated_at', { ascending: false })
+                                .limit(1)
+                                .maybeSingle();
+
+                            if (data) {
+                                clearInterval(pollInterval);
+                                console.log('Mobile authentication successful:', data);
+                                
+                                // Proceed to session creation using the IP from the handshake
+                                await handleMobileSuccess(data.ip);
+                            }
+                        } catch (e) {
+                            console.error("Polling error:", e);
+                        }
+                    }, 2000);
+
+                    return () => clearInterval(pollInterval);
+                } catch (err) {
+                    console.error("Error generating QR:", err);
+                    setErrorMessage("ไม่สามารถสร้าง QR Code ได้");
+                }
+            };
+
+            const cleanupPromise = generateQR();
+            return () => {
+                // Cleanup logic if needed
+            };
+        }
+    }, [method, exam.id, user.id, user.email, exam.roomId]);
 
     const createSession = async (ip: string, seatNumber: number, descriptorStr: string) => {
          // Check for existing active session
