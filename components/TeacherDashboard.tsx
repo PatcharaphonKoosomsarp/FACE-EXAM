@@ -849,14 +849,14 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                           <div className="grid grid-cols-2 gap-2 mt-2">
                                               <div className="bg-purple-50 p-2 rounded text-center">
                                                   <div className="text-xs text-purple-400 uppercase font-bold">Download</div>
-                                                  <div className="flex items-baseline justify-center gap-1 text-xl font-bold text-purple-700">
+                                                  <div className="flex items-baseline justify-center gap-1 text-xl font-bold text-purple-700 whitespace-nowrap">
                                                       <span>{studentResourceData.network_download_mb?.toFixed(2) || 0}</span>
                                                       <span className="text-xs">MB</span>
                                                   </div>
                                               </div>
                                               <div className="bg-blue-50 p-2 rounded text-center">
                                                   <div className="text-xs text-blue-400 uppercase font-bold">Upload</div>
-                                                  <div className="flex items-baseline justify-center gap-1 text-xl font-bold text-blue-700">
+                                                  <div className="flex items-baseline justify-center gap-1 text-xl font-bold text-blue-700 whitespace-nowrap">
                                                       <span>{studentResourceData.network_upload_mb?.toFixed(2) || 0}</span>
                                                       <span className="text-xs">MB</span>
                                                   </div>
