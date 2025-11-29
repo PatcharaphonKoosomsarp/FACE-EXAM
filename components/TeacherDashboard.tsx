@@ -139,6 +139,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   const [studentViolationLogs, setStudentViolationLogs] = useState<ViolationLog[]>([]);
   const [sessionStudent, setSessionStudent] = useState<any | null>(null);
   const [realtimeSessions, setRealtimeSessions] = useState<any[]>([]);
+  const [currentSeatNumber, setCurrentSeatNumber] = useState<string | null>(null);
 
   // Effect to fetch all active sessions for the room when exam is selected
   useEffect(() => {
@@ -177,6 +178,21 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         const row = Math.floor(viewingSeat / room.cols) + 1;
         const col = (viewingSeat % room.cols) + 1;
         const seatNumber = (row - 1) * room.cols + col;
+
+        // Fetch seat number from room_seat_ip_mappings
+        const { data: seatMapping } = await supabase
+            .from('room_seat_ip_mappings')
+            .select('seat_number')
+            .eq('room_id', room.id)
+            .eq('row_number', row)
+            .eq('col_number', col)
+            .single();
+        
+        if (seatMapping) {
+            setCurrentSeatNumber(seatMapping.seat_number);
+        } else {
+            setCurrentSeatNumber(null);
+        }
 
         // Try to find active student session first
         // We query exam_student_sessions directly to ensure we get the correct session ID for logs
@@ -229,6 +245,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         setStudentResourceData(null);
         setStudentViolationLogs([]);
         setSessionStudent(null);
+        setCurrentSeatNumber(null);
     }
 
     return () => {
@@ -613,7 +630,10 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                               <MonitorX className="w-6 h-6"/>
                           </div>
                           <div>
-                              <h3 className="font-bold text-lg">Seat {row}-{col}</h3>
+                              <h3 className="font-bold text-lg">
+                                {currentSeatNumber && <div className="text-sm text-gray-300 mb-0.5">No. {currentSeatNumber}</div>}
+                                Seat {row}-{col}
+                              </h3>
                               <p className="text-xs text-gray-400">Resource & Connection Status</p>
                           </div>
                       </div>
