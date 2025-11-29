@@ -68,7 +68,8 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
       rightTurn: 0.35,
       up: 0.45,
       down: 0.65,
-      blinkEAR: 0.1,
+      blinkEAR: 0.15, // Relaxed from 0.1 for mobile
+      openEAR: 0.30,  // New threshold: Relaxed from 0.4 to allow looking down at screen
       closeRatio: 1.25
   };
 
@@ -216,7 +217,7 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
       }
       // 2. Eye Open
       else if (currentSeq === 'eyeOpen') {
-          if (ear > 0.4) {
+          if (ear > T.openEAR) {
               isPoseValid = true;
               feedbackMsg = "ลืมตา: ค้างไว้...";
           } else {
