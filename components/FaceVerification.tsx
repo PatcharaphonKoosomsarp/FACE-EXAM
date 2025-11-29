@@ -1,7 +1,9 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { User, Exam } from '../types';
-import { ShieldCheck, Loader2, AlertTriangle, RefreshCw, CameraOff, Lock } from 'lucide-react';
+import { ShieldCheck, Loader2, AlertTriangle, RefreshCw, CameraOff, Lock, QrCode } from 'lucide-react';
 import { supabase } from '../supabaseClient';
+import { getPrimaryWiFiIP, verifyIPAccess } from '../utils';
+import QRCodeModal from './QRCodeModal';
 
 // Use global faceapi from script tag
 declare const faceapi: any;
@@ -15,12 +17,13 @@ interface FaceVerificationProps {
 
 const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerified, onCancel }) => {
     const videoRef = useRef<HTMLVideoElement>(null);
-    const [status, setStatus] = useState<'LOADING_MODELS' | 'LOADING_DATA' | 'SCANNING' | 'SUCCESS' | 'FAILED'>('LOADING_MODELS');
+    const [status, setStatus] = useState<'LOADING_MODELS' | 'LOADING_DATA' | 'SCANNING' | 'VERIFYING_IP' | 'SUCCESS' | 'FAILED'>('LOADING_MODELS');
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [errorType, setErrorType] = useState<'PERMISSION' | 'NOT_FOUND' | 'IN_USE' | 'GENERIC' | null>(null);
     const [modelsLoaded, setModelsLoaded] = useState(false);
     const [labeledDescriptors, setLabeledDescriptors] = useState<any[]>([]);
     const [faceMatcher, setFaceMatcher] = useState<any | null>(null);
+    const [showQR, setShowQR] = useState(false);
 
     // 1. Load Models
     useEffect(() => {
@@ -267,40 +270,82 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
     }, [status, faceMatcher, user.id]);
 
     const handleSuccess = async (descriptor: Float32Array) => {
-        setStatus('SUCCESS');
+        setStatus('VERIFYING_IP');
         
         try {
-            // 1. Get Layout ID
-            const { data: layout } = await supabase
-                .from('room_seat_layouts')
-                .select('id')
-                .eq('room_id', exam.roomId)
-                .maybeSingle();
-            
-            if (!layout) {
-                console.warn("No layout found for this room, skipping session record or using default.");
+            // 1. Get IP
+            const ip = await getPrimaryWiFiIP();
+            console.log("Detected IP:", ip);
+
+            if (!ip) {
+                // For development/testing, you might want to allow null IP or mock it
+                // But per requirements, we should fail or warn
+                console.warn("Could not detect IP, proceeding with caution or failing based on policy");
+                // throw new Error("ไม่สามารถระบุ IP Address ได้ (กรุณาเชื่อมต่อ WiFi มจพ.)");
             }
 
-            // 2. Insert Session Record
-            if (layout) {
-                await supabase.from('exam_student_sessions').insert({
-                    layout_id: layout.id,
-                    student_email: user.email,
-                    student_name: user.name,
-                    seat_number: 0, // Default or fetch from attendance
-                    ip_address: null, // Let backend or trigger handle, or leave null
-                    face_descriptor: JSON.stringify(Array.from(descriptor)),
-                    is_active: true
-                });
+            // 2. Verify IP Access (Only if IP is detected)
+            if (ip) {
+                const hasAccess = await verifyIPAccess(exam.roomId, ip);
+                if (!hasAccess) {
+                    throw new Error(`IP Address ของคุณ (${ip}) ไม่ได้รับอนุญาตให้เข้าห้องสอบนี้`);
+                }
+            }
+
+            setStatus('SUCCESS');
+            
+            let seatNumber = 0;
+
+            // Attempt to calculate seat number
+            try {
+                // Get layout columns to calculate seat index
+                const { data: layout } = await supabase
+                    .from('room_seat_layouts')
+                    .select('columns')
+                    .eq('id', exam.roomId)
+                    .single();
+                
+                if (layout) {
+                    // Get student attendance position
+                    const { data: attendance } = await supabase
+                        .from('exam_attendance')
+                        .select('row_number, col_number')
+                        .eq('exam_id', exam.id)
+                        .eq('student_id', user.id)
+                        .maybeSingle();
+                    
+                    if (attendance) {
+                        seatNumber = ((attendance.row_number - 1) * layout.columns) + attendance.col_number;
+                    }
+                }
+            } catch (calcError) {
+                console.warn("Could not calculate seat number:", calcError);
+            }
+
+            // Insert Session Record
+            const { error } = await supabase.from('exam_student_sessions').insert({
+                layout_id: exam.roomId,
+                student_email: user.email,
+                student_name: user.name,
+                seat_number: seatNumber,
+                ip_address: ip,
+                face_descriptor: JSON.stringify(Array.from(descriptor)),
+                is_active: true
+            });
+
+            if (error) {
+                console.error("Supabase insert error:", error);
+                throw error;
             }
 
             setTimeout(() => {
                 onVerified();
             }, 1500);
 
-        } catch (err) {
+        } catch (err: any) {
             console.error("Error saving session:", err);
-            onVerified();
+            setErrorMessage(err.message || "เกิดข้อผิดพลาดในการตรวจสอบสิทธิ์");
+            setStatus('FAILED');
         }
     };
 
@@ -325,9 +370,19 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                         </h3>
                         <p className="text-xs text-gray-500 mt-1">วิชา: {exam.subjectName}</p>
                     </div>
-                    {status !== 'SUCCESS' && (
-                        <button onClick={onCancel} className="text-gray-400 hover:text-gray-600 transition">✕</button>
-                    )}
+                    <div className="flex items-center">
+                        {status !== 'SUCCESS' && (
+                            <button 
+                                onClick={() => setShowQR(true)} 
+                                className="text-blue-600 hover:text-blue-800 mr-4 flex items-center text-sm font-medium bg-blue-50 px-3 py-1.5 rounded-lg transition"
+                            >
+                                <QrCode className="w-4 h-4 mr-1.5" /> QR Code
+                            </button>
+                        )}
+                        {status !== 'SUCCESS' && (
+                            <button onClick={onCancel} className="text-gray-400 hover:text-gray-600 transition">✕</button>
+                        )}
+                    </div>
                 </div>
                 
                 <div className="relative aspect-[4/3] bg-black group">
@@ -353,6 +408,17 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                             <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-transparent via-[#E35205] to-transparent animate-[scan_2s_linear_infinite]" style={{ animationName: 'scan' }}></div>
                             <div className="bg-black/40 backdrop-blur-sm px-4 py-2 rounded-full text-white text-sm border border-white/20">
                                 มองตรงไปที่กล้อง
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Verifying IP Overlay */}
+                    {status === 'VERIFYING_IP' && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-20">
+                            <div className="text-center">
+                                <Loader2 className="w-10 h-10 text-blue-500 animate-spin mx-auto mb-4" />
+                                <p className="text-white font-medium">กำลังตรวจสอบ IP Address...</p>
+                                <p className="text-gray-400 text-xs mt-2">กรุณารอสักครู่</p>
                             </div>
                         </div>
                     )}
@@ -404,6 +470,12 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                     <span>Student: {user.name}</span>
                     <span>Status: {status}</span>
                 </div>
+
+                <QRCodeModal 
+                    isOpen={showQR} 
+                    onClose={() => setShowQR(false)} 
+                    url={`${window.location.origin}?action=exam&roomId=${exam.roomId}`} 
+                />
             </div>
             <style>{`@keyframes scan { 0% { top: 0; opacity: 0; } 50% { opacity: 1; } 100% { top: 100%; opacity: 0; } }`}</style>
         </div>
