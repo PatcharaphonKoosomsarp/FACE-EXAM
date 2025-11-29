@@ -28,7 +28,6 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
     const [faceMatcher, setFaceMatcher] = useState<any | null>(null);
 
     const handleMobileSuccess = async (mobileIp: string) => {
-        console.log("handleMobileSuccess called with IP:", mobileIp);
         setStatus('VERIFYING_IP');
         try {
             // 1. Get PC IP (The machine running the exam)
@@ -75,6 +74,35 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
             setStatus('FAILED');
         }
     };
+
+    // Check for existing valid authentication on mount
+    useEffect(() => {
+        const checkExistingAuth = async () => {
+            try {
+                // Check for auth record in the last 10 minutes
+                const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+                
+                const { data } = await supabase
+                    .from('qr_authentication')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .eq('status', 'authenticated')
+                    .gt('authenticated_at', tenMinutesAgo)
+                    .order('authenticated_at', { ascending: false })
+                    .limit(1)
+                    .maybeSingle();
+
+                if (data) {
+                    console.log('Found recent authentication:', data);
+                    await handleMobileSuccess(data.ip);
+                }
+            } catch (err) {
+                console.error("Error checking existing auth:", err);
+            }
+        };
+
+        checkExistingAuth();
+    }, []);
 
     // QR Code Logic
     useEffect(() => {
@@ -564,7 +592,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
         };
     }, []);
 
-    if (!method) {
+    if (!method && status !== 'VERIFYING_IP' && status !== 'SUCCESS') {
         return (
             <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
                 <div className="bg-white rounded-2xl p-8 max-w-lg w-full text-center animate-in zoom-in-95 duration-200">
@@ -593,7 +621,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
         );
     }
 
-    if (method === 'QR' && status !== 'VERIFYING_IP' && status !== 'SUCCESS' && status !== 'FAILED') {
+    if (method === 'QR' && status !== 'VERIFYING_IP' && status !== 'SUCCESS') {
         return (
             <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
                 <div className="bg-white rounded-2xl p-8 max-w-md w-full text-center animate-in zoom-in-95 duration-200">
