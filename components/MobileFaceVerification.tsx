@@ -23,6 +23,7 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
     const [modelsLoaded, setModelsLoaded] = useState(false);
     const [labeledDescriptors, setLabeledDescriptors] = useState<any[]>([]);
     const [faceMatcher, setFaceMatcher] = useState<any | null>(null);
+    const successHandled = useRef(false);
 
     // 1. Fetch User Photos (Critical) & Exam Info (Optional)
     useEffect(() => {
@@ -234,6 +235,9 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
     }, [status, faceMatcher, user]);
 
     const handleSuccess = async (descriptor: Float32Array) => {
+        if (successHandled.current) return;
+        successHandled.current = true;
+
         setStatus('VERIFYING_IP');
         
         try {
