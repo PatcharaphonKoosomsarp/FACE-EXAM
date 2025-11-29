@@ -4,12 +4,8 @@ import { Camera as CameraIcon, RefreshCw, CheckCircle, Smartphone, Monitor, Aler
 import { FaceRegistrationStep } from '../types';
 import { FaceMesh, Results } from '@mediapipe/face_mesh';
 import { Camera } from '@mediapipe/camera_utils';
+import { createClient } from '@supabase/supabase-js';
 import { supabase } from '../supabaseClient';
-
-interface FaceRegistrationProps {
-  onComplete: () => void;
-  onCancel: () => void;
-}
 
 const stepsData: FaceRegistrationStep[] = [
   { id: '1', instruction: 'หน้าตรง', description: 'มองตรงไปที่กล้อง', isCompleted: false },
@@ -323,12 +319,6 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
       });
       setCurrentStepIndex(index + 1);
   };
-
-import { createClient } from '@supabase/supabase-js';
-
-// ... existing imports ...
-
-// ... existing code ...
 
   // Mimic the HTML's fake authentication for QR access
   const authenticateForQRAccess = async (userId: string) => {
