@@ -145,7 +145,52 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                     .limit(1);
 
                 if (data && data.length > 0) {
-                    setMonitoringData(data[0]);
+                    const raw = data[0];
+                    
+                    // Parse processes
+                    let processes = [];
+                    try {
+                        processes = typeof raw.exe_processes === 'string' 
+                            ? JSON.parse(raw.exe_processes) 
+                            : raw.exe_processes || [];
+                    } catch (e) { processes = []; }
+
+                    // Calculate disk usage
+                    let diskTotal = 0;
+                    let diskFree = 0;
+                    
+                    if (raw.disk_partitions_info) {
+                         try {
+                            const partitions = typeof raw.disk_partitions_info === 'string'
+                                ? JSON.parse(raw.disk_partitions_info)
+                                : raw.disk_partitions_info;
+                            
+                            if (Array.isArray(partitions)) {
+                                diskTotal = partitions.reduce((acc: number, p: any) => acc + (p.total_gb || 0), 0);
+                                diskFree = partitions.reduce((acc: number, p: any) => acc + (p.free_gb || 0), 0);
+                            }
+                         } catch (e) {}
+                    }
+                    
+                    // Fallback
+                    if (diskTotal === 0 && raw.disk_total_gb) diskTotal = raw.disk_total_gb;
+                    if (diskFree === 0 && raw.disk_free_gb) diskFree = raw.disk_free_gb;
+
+                    const diskUsage = diskTotal > 0 ? Math.round(((diskTotal - diskFree) / diskTotal) * 100) : 0;
+
+                    setMonitoringData({
+                        timestamp: raw.timestamp,
+                        cpu_usage: Math.round(raw.cpu_usage || 0),
+                        cpu_model: raw.cpu_model,
+                        ram_usage: Math.round(raw.ram_usage || 0),
+                        ram_total: raw.ram_total_gb ? parseFloat(raw.ram_total_gb).toFixed(1) : 0,
+                        ram_available: raw.ram_available_gb ? parseFloat(raw.ram_available_gb).toFixed(1) : 0,
+                        disk_usage: diskUsage,
+                        disk_total: diskTotal ? parseFloat(diskTotal.toString()).toFixed(0) : 0,
+                        disk_free: diskFree ? parseFloat(diskFree.toString()).toFixed(0) : 0,
+                        active_window: raw.active_window_title,
+                        processes: processes
+                    });
                 } else {
                     setMonitoringData(null);
                 }
