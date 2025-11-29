@@ -108,6 +108,30 @@ def show_alert_message(title, message):
     except Exception as e:
         print(f"Error showing alert: {e}")
 
+def save_violation_log(violation_type, resource_name, action_taken, details):
+    """
+    บันทึกข้อมูลการละเมิดกฎลงใน Supabase violation_logs
+    """
+    global current_session_id
+    
+    if not current_session_id:
+        return
+
+    try:
+        data = {
+            "session_id": current_session_id,
+            "timestamp": datetime.now().isoformat(),
+            "violation_type": violation_type,
+            "resource_name": resource_name,
+            "action_taken": action_taken,
+            "details": details
+        }
+        
+        supabase.table('violation_logs').insert(data).execute()
+        print(f"Agent: บันทึก Violation ({resource_name}) ลง Supabase สำเร็จ")
+    except Exception as e:
+        print(f"Agent: ไม่สามารถบันทึก Violation ได้: {e}")
+
 def check_violations(resources):
     """
     ตรวจสอบว่ามีการเปิดโปรแกรมหรือหน้าต่างที่ถูกบล็อกหรือไม่
@@ -221,6 +245,23 @@ def check_violations(resources):
         
         if is_violation:
             violations.append(f"{rule.get('pattern')} ({detected_source}) {action_taken}")
+            
+            # Determine violation type
+            v_type = "UNKNOWN"
+            if "Active Window" in detected_source: v_type = "ACTIVE_WINDOW"
+            elif "Background Window" in detected_source: v_type = "BACKGROUND_WINDOW"
+            elif "Process" in detected_source: v_type = "PROCESS"
+            
+            # Clean action string
+            action_clean = action_taken.replace("[", "").replace("]", "") if action_taken else "DETECTED"
+
+            # Log to Supabase (Run in thread to avoid blocking)
+            threading.Thread(target=save_violation_log, args=(
+                v_type, 
+                detected_source, 
+                action_clean, 
+                f"Matched Rule: {rule.get('pattern')} ({rule.get('match_type')})"
+            )).start()
 
     if violations:
         print(f"\n[VIOLATION DETECTED] Room: {current_session_info.get('room_name', 'Unknown')} | Seat: {current_session_info.get('seat_number', '?')} | Student: {current_session_info.get('student_name', 'Unknown')}")
