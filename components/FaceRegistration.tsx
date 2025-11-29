@@ -37,6 +37,7 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
   const [errorType, setErrorType] = useState<'PERMISSION' | 'NOT_FOUND' | 'IN_USE' | 'GENERIC' | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const [isReviewing, setIsReviewing] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Liveness State
   const [capturedPhotos, setCapturedPhotos] = useState<any[]>([]);
@@ -323,15 +324,24 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
   };
 
   const finishRegistration = async () => {
+      if (isSubmitting) return;
+      setIsSubmitting(true);
       setFeedback("กำลังบันทึกข้อมูล...");
+      
       // Upload to Supabase
       try {
           let userId = targetUserId;
           
+          // Check authentication if not in mobile target mode
           if (!userId) {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error("No user found");
             userId = user.id;
+          } else {
+             // In mobile mode, we might be unauthenticated.
+             // Ensure RLS policies allow this, or we need a way to auth.
+             // For now, we proceed, assuming RLS is configured or public.
+             console.log("Proceeding with targetUserId:", userId);
           }
 
           const photoData: any = { user_id: userId };
@@ -385,8 +395,14 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
 
       } catch (err: any) {
           console.error("Registration error:", err);
-          setError("เกิดข้อผิดพลาดในการบันทึก: " + err.message);
+          const errorMsg = err.message || "Unknown error";
+          setError("เกิดข้อผิดพลาดในการบันทึก: " + errorMsg);
           setErrorType('GENERIC');
+          
+          // Show alert for mobile users who might miss the error UI
+          alert("บันทึกไม่สำเร็จ: " + errorMsg + "\nกรุณาลองใหม่อีกครั้ง");
+      } finally {
+          setIsSubmitting(false);
       }
   };
 
@@ -549,10 +565,20 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
                     </button>
                     <button 
                         onClick={() => finishRegistration()}
-                        className="px-8 py-2 rounded-full bg-[#E35205] text-white font-bold hover:bg-orange-600 transition shadow-lg flex items-center"
+                        disabled={isSubmitting}
+                        className={`px-8 py-2 rounded-full text-white font-bold transition shadow-lg flex items-center ${isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#E35205] hover:bg-orange-600'}`}
                     >
-                        <CheckCircle className="w-5 h-5 mr-2" />
-                        ยืนยันและบันทึก
+                        {isSubmitting ? (
+                            <>
+                                <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
+                                กำลังบันทึก...
+                            </>
+                        ) : (
+                            <>
+                                <CheckCircle className="w-5 h-5 mr-2" />
+                                ยืนยันและบันทึก
+                            </>
+                        )}
                     </button>
                 </div>
             </div>
