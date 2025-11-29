@@ -3,6 +3,7 @@ import AuthScreen from './components/AuthScreen';
 import TeacherDashboard from './components/TeacherDashboard';
 import StudentDashboard from './components/StudentDashboard';
 import MobileFaceRegistration from './components/MobileFaceRegistration';
+import MobileFaceVerification from './components/MobileFaceVerification';
 import { User, UserRole, Room, Exam, ExamAttendance } from './types';
 import { supabase } from './supabaseClient';
 import { determineUserRole } from './utils';
@@ -20,16 +21,24 @@ const App: React.FC = () => {
   
   // Mobile Registration Mode State
   const [mobileRegisterUserId, setMobileRegisterUserId] = useState<string | null>(null);
+  // Mobile Verification Mode State
+  const [mobileVerifyParams, setMobileVerifyParams] = useState<{examId: string, userId: string} | null>(null);
 
   useEffect(() => {
-    // Check for Mobile Registration Mode URL parameters
+    // Check for Mobile Registration/Verification Mode URL parameters
     const params = new URLSearchParams(window.location.search);
     const mode = params.get('mode');
     const userId = params.get('user_id');
+    const examId = params.get('exam_id');
 
     if (mode === 'mobile-register' && userId) {
         setMobileRegisterUserId(userId);
         return; // Skip normal auth check if in mobile register mode
+    }
+
+    if (mode === 'mobile-verify' && userId && examId) {
+        setMobileVerifyParams({ examId, userId });
+        return; // Skip normal auth check
     }
 
     // Check active session
@@ -465,6 +474,11 @@ const App: React.FC = () => {
   // Render Mobile Registration View if active
   if (mobileRegisterUserId) {
       return <MobileFaceRegistration targetUserId={mobileRegisterUserId} />;
+  }
+
+  // Render Mobile Verification View if active
+  if (mobileVerifyParams) {
+      return <MobileFaceVerification examId={mobileVerifyParams.examId} userId={mobileVerifyParams.userId} />;
   }
 
   if (!user) {

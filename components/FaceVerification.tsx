@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { User, Exam } from '../types';
-import { ShieldCheck, Loader2, AlertTriangle, RefreshCw, CameraOff, Lock } from 'lucide-react';
+import { ShieldCheck, Loader2, AlertTriangle, RefreshCw, CameraOff, Lock, Monitor, Smartphone } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import { getPrimaryWiFiIP, verifyIPAccess } from '../utils';
+import { QRCodeCanvas } from 'qrcode.react';
 
 // Use global faceapi from script tag
 declare const faceapi: any;
@@ -16,6 +17,8 @@ interface FaceVerificationProps {
 
 const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerified, onCancel }) => {
     const videoRef = useRef<HTMLVideoElement>(null);
+    const [method, setMethod] = useState<'WEBCAM' | 'QR' | null>(null);
+    const [qrUrl, setQrUrl] = useState<string | null>(null);
     const [status, setStatus] = useState<'LOADING_MODELS' | 'LOADING_DATA' | 'SCANNING' | 'VERIFYING_IP' | 'SUCCESS' | 'FAILED'>('LOADING_MODELS');
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [errorType, setErrorType] = useState<'PERMISSION' | 'NOT_FOUND' | 'IN_USE' | 'GENERIC' | null>(null);
@@ -23,8 +26,43 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
     const [labeledDescriptors, setLabeledDescriptors] = useState<any[]>([]);
     const [faceMatcher, setFaceMatcher] = useState<any | null>(null);
 
-    // 1. Load Models
+    // QR Code Logic
     useEffect(() => {
+        if (method === 'QR') {
+            const baseUrl = window.location.origin;
+            const url = `${baseUrl}/?mode=mobile-verify&exam_id=${exam.id}&user_id=${user.id}`;
+            setQrUrl(url);
+
+            // Poll for verification success from mobile
+            const pollInterval = setInterval(async () => {
+                try {
+                    // Check for active session created by mobile
+                    const { data } = await supabase
+                        .from('exam_student_sessions')
+                        .select('id, updated_at')
+                        .eq('layout_id', exam.roomId)
+                        .eq('student_email', user.email)
+                        .eq('is_active', true)
+                        .gt('updated_at', new Date(Date.now() - 30000).toISOString()) // Check for recent updates (30s)
+                        .maybeSingle();
+
+                    if (data) {
+                        clearInterval(pollInterval);
+                        onVerified();
+                    }
+                } catch (e) {
+                    console.error("Polling error:", e);
+                }
+            }, 2000);
+
+            return () => clearInterval(pollInterval);
+        }
+    }, [method, exam.id, user.id, user.email, exam.roomId, onVerified]);
+
+    // 1. Load Models (Only if WEBCAM is selected)
+    useEffect(() => {
+        if (method !== 'WEBCAM') return;
+
         const loadModels = async () => {
             try {
                 // Load models from local public/models directory
@@ -44,13 +82,13 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
             }
         };
         loadModels();
-    }, []);
+    }, [method]);
 
     // 2. Load User Photos & Compute Descriptors
     useEffect(() => {
-        const loadUserDescriptors = async () => {
-            if (!modelsLoaded) return;
+        if (method !== 'WEBCAM' || !modelsLoaded) return;
 
+        const loadUserDescriptors = async () => {
             try {
                 // Fetch photos from Supabase
                 const { data: photos, error } = await supabase
@@ -180,7 +218,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
         };
 
         loadUserDescriptors();
-    }, [modelsLoaded, user.id]);
+    }, [method, modelsLoaded, user.id]);
 
     const startCamera = useCallback(async () => {
         setErrorMessage(null);
@@ -213,6 +251,8 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
 
     // 3. Real-time Detection Loop
     useEffect(() => {
+        if (method !== 'WEBCAM') return;
+
         let interval: NodeJS.Timeout;
 
         const detect = async () => {
@@ -265,7 +305,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
         }
 
         return () => clearInterval(interval);
-    }, [status, faceMatcher, user.id]);
+    }, [method, status, faceMatcher, user.id]);
 
     const handleSuccess = async (descriptor: Float32Array) => {
         setStatus('VERIFYING_IP');
@@ -409,6 +449,64 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
         };
     }, []);
 
+    if (!method) {
+        return (
+            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+                <div className="bg-white rounded-2xl p-8 max-w-lg w-full text-center animate-in zoom-in-95 duration-200">
+                    <h2 className="text-2xl font-bold mb-6 text-gray-800">เลือกวิธีการยืนยันตัวตน</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <button 
+                            onClick={() => setMethod('WEBCAM')}
+                            className="flex flex-col items-center justify-center p-6 border-2 border-gray-200 rounded-xl hover:border-[#E35205] hover:bg-orange-50 transition group"
+                        >
+                            <Monitor className="w-12 h-12 mb-3 text-gray-400 group-hover:text-[#E35205] transition-colors" />
+                            <span className="font-semibold text-gray-700">ใช้กล้องเว็บแคม</span>
+                            <span className="text-xs text-gray-500 mt-1">บนอุปกรณ์นี้</span>
+                        </button>
+                        <button 
+                            onClick={() => setMethod('QR')}
+                            className="flex flex-col items-center justify-center p-6 border-2 border-gray-200 rounded-xl hover:border-[#E35205] hover:bg-orange-50 transition group"
+                        >
+                            <Smartphone className="w-12 h-12 mb-3 text-gray-400 group-hover:text-[#E35205] transition-colors" />
+                            <span className="font-semibold text-gray-700">สแกน QR Code</span>
+                            <span className="text-xs text-gray-500 mt-1">เปิดกล้องผ่านมือถือ</span>
+                        </button>
+                    </div>
+                    <button onClick={onCancel} className="mt-8 text-gray-500 hover:text-gray-800 underline text-sm transition">ยกเลิก</button>
+                </div>
+            </div>
+        );
+    }
+
+    if (method === 'QR') {
+        return (
+            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+                <div className="bg-white rounded-2xl p-8 max-w-md w-full text-center animate-in zoom-in-95 duration-200">
+                    <h2 className="text-xl font-bold mb-4">สแกนเพื่อเปิดกล้องมือถือ</h2>
+                    
+                    <div className="bg-white p-4 rounded-xl shadow-lg border border-gray-100 mb-6 inline-block">
+                        {qrUrl ? (
+                            <QRCodeCanvas value={qrUrl} size={200} level="H" />
+                        ) : (
+                            <div className="w-[200px] h-[200px] flex items-center justify-center bg-gray-100 rounded-lg">
+                                <span className="text-gray-400">กำลังสร้าง QR Code...</span>
+                            </div>
+                        )}
+                    </div>
+
+                    <p className="text-sm text-gray-600 mb-4 leading-relaxed">
+                        ใช้โทรศัพท์มือถือสแกน QR Code นี้<br/>
+                        เพื่อดำเนินการยืนยันตัวตนบนมือถือ
+                    </p>
+                    
+                    <button onClick={() => setMethod(null)} className="mt-4 text-sm text-gray-500 hover:text-gray-900 underline">
+                        ย้อนกลับ
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="fixed inset-0 bg-gray-900/90 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
             <div className="bg-white rounded-2xl overflow-hidden shadow-2xl max-w-md w-full animate-in zoom-in-95 duration-200">
@@ -421,7 +519,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                         <p className="text-xs text-gray-500 mt-1">วิชา: {exam.subjectName}</p>
                     </div>
                     <div className="flex items-center">
-
+                        <button onClick={() => setMethod(null)} className="text-gray-400 hover:text-gray-600 transition mr-2 text-sm">เปลี่ยนวิธี</button>
                         {status !== 'SUCCESS' && (
                             <button onClick={onCancel} className="text-gray-400 hover:text-gray-600 transition">✕</button>
                         )}
