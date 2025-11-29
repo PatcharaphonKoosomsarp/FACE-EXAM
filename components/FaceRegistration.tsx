@@ -330,13 +330,11 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
               user_metadata: { qr_access: true }
           };
           
-          // Set temporary auth state using the structure from HTML (Flat structure)
+          // Set temporary auth state using the structure from HTML (Exact match)
           const sessionData = {
               access_token: 'temp_qr_access_token',
               refresh_token: 'temp_qr_refresh_token',
-              user: fakeUser,
-              token_type: 'bearer',
-              expires_in: 3600
+              user: fakeUser
           };
           
           // Clear any existing session first to ensure clean state
@@ -378,6 +376,7 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
              
              if (supabaseUrl && supabaseKey) {
                  // Create a client that points to the specific storage key
+                 // We use persistSession: true so it reads from the localStorage we just set
                  uploadClient = createClient(supabaseUrl, supabaseKey, {
                      auth: {
                          storageKey: 'supabase.auth.token',
@@ -385,18 +384,7 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
                          persistSession: true,
                          detectSessionInUrl: false,
                          autoRefreshToken: false
-                     },
-                     global: {
-                         headers: {
-                             'Authorization': `Bearer temp_qr_access_token` // Force header just in case
-                         }
                      }
-                 });
-                 
-                 // Manually set the session on the client to ensure it's picked up
-                 await uploadClient.auth.setSession({
-                     access_token: 'temp_qr_access_token',
-                     refresh_token: 'temp_qr_refresh_token'
                  });
                  
                  console.log("Created dedicated upload client for QR mode");
