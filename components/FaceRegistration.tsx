@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { QRCodeCanvas } from 'qrcode.react';
 import { Camera as CameraIcon, RefreshCw, CheckCircle, Smartphone, Monitor, AlertTriangle, Lock, VideoOff } from 'lucide-react';
 import { FaceRegistrationStep } from '../types';
 import { FaceMesh, Results } from '@mediapipe/face_mesh';
@@ -25,7 +26,7 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
   const [steps, setSteps] = useState(stepsData);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isCapturing, setIsCapturing] = useState(false);
-  const [qrSimulateProgress, setQrSimulateProgress] = useState(0);
+  const [qrUrl, setQrUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [errorType, setErrorType] = useState<'PERMISSION' | 'NOT_FOUND' | 'IN_USE' | 'GENERIC' | null>(null);
   const [retryCount, setRetryCount] = useState(0);
@@ -450,22 +451,22 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
     };
   }, [method, retryCount, onResults]);
 
-  // QR Simulation Logic
+  // QR Code Generation Logic
   useEffect(() => {
     if (method === 'QR') {
-        const interval = setInterval(() => {
-            setQrSimulateProgress(prev => {
-                if (prev >= 100) {
-                    clearInterval(interval);
-                    setTimeout(onComplete, 500);
-                    return 100;
-                }
-                return prev + 2; 
-            });
-        }, 50);
-        return () => clearInterval(interval);
+        const generateQR = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                // สร้าง URL สำหรับ QR Code โดยแนบ user_id ไปด้วย
+                // หมายเหตุ: ต้องตรวจสอบว่า path นี้มีอยู่จริงในโปรเจค หรือปรับเปลี่ยนให้ตรงกับ Route ที่ใช้
+                const baseUrl = window.location.origin;
+                const url = `${baseUrl}/student/scan_qr_code/qr_register_face.html?user_id=${encodeURIComponent(user.id)}`;
+                setQrUrl(url);
+            }
+        };
+        generateQR();
     }
-  }, [method, onComplete]);
+  }, [method]);
 
   const handleRetry = () => {
       setError(null);
@@ -580,25 +581,27 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
   if (method === 'QR') {
       return (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl p-8 max-w-md w-full text-center">
+            <div className="bg-white rounded-2xl p-8 max-w-md w-full text-center animate-in zoom-in-95 duration-200">
                 <h2 className="text-xl font-bold mb-4">สแกนเพื่อเปิดกล้องมือถือ</h2>
-                <div className="bg-gray-100 w-48 h-48 mx-auto mb-4 rounded-lg flex items-center justify-center relative overflow-hidden border border-gray-200">
-                     {/* Pseudo QR Code */}
-                     <div className="grid grid-cols-6 grid-rows-6 gap-1 w-32 h-32 opacity-80">
-                         {Array.from({length: 36}).map((_, i) => (
-                             <div key={i} className={`bg-black ${Math.random() > 0.5 ? 'opacity-100' : 'opacity-0'}`}></div>
-                         ))}
-                     </div>
-                     {/* Scan Line */}
-                     <div className="absolute top-0 left-0 w-full h-1 bg-red-500 shadow-[0_0_10px_rgba(255,0,0,0.8)] animate-[scan_2s_ease-in-out_infinite]" style={{ animationName: 'scan' }}></div>
-                     <style>{`@keyframes scan { 0% { top: 0; } 100% { top: 100%; } }`}</style>
+                
+                <div className="bg-white p-4 rounded-xl shadow-lg border border-gray-100 mb-6 inline-block">
+                    {qrUrl ? (
+                        <QRCodeCanvas value={qrUrl} size={200} level="H" />
+                    ) : (
+                        <div className="w-[200px] h-[200px] flex items-center justify-center bg-gray-100 rounded-lg">
+                            <span className="text-gray-400">กำลังสร้าง QR Code...</span>
+                        </div>
+                    )}
                 </div>
-                <p className="text-sm text-gray-600 mb-4">กำลังเชื่อมต่อกับอุปกรณ์มือถือ...</p>
-                <div className="w-full bg-gray-200 rounded-full h-2.5 mb-1">
-                    <div className="bg-[#E35205] h-2.5 rounded-full transition-all duration-300" style={{ width: `${qrSimulateProgress}%` }}></div>
-                </div>
-                <p className="text-xs text-gray-400">{qrSimulateProgress}%</p>
-                <button onClick={() => setMethod(null)} className="mt-6 text-sm text-gray-500 hover:text-gray-900">ย้อนกลับ</button>
+
+                <p className="text-sm text-gray-600 mb-4 leading-relaxed">
+                    ใช้โทรศัพท์มือถือสแกน QR Code นี้<br/>
+                    เพื่อดำเนินการลงทะเบียนใบหน้าต่อบนมือถือ
+                </p>
+                
+                <button onClick={() => setMethod(null)} className="mt-4 text-sm text-gray-500 hover:text-gray-900 underline">
+                    ย้อนกลับ
+                </button>
             </div>
         </div>
       );
