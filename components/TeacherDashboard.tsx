@@ -9,6 +9,65 @@ import {
 import { GoogleGenAI } from "@google/genai";
 import { supabase } from '../supabaseClient';
 
+// --- CONFIGURATION: รายการที่ไม่อนุญาตเริ่มต้น (แก้ไขรายการตรงนี้) ---
+const PRESET_BLOCKED_APPS: { name: string; type: 'WEB_APP' | 'WINDOWS_APP' | 'BROWSER' }[] = [
+    // --- 1. Generative AI & Assistants ---
+    { name: "ChatGPT", type: "WEB_APP" },
+    { name: "Gemini", type: "WEB_APP" },
+    { name: "Claude", type: "WEB_APP" },
+    { name: "Perplexity", type: "WEB_APP" },
+    { name: "Copilot", type: "WEB_APP" },
+    { name: "Quillbot", type: "WEB_APP" },
+    { name: "Blackbox AI", type: "WEB_APP" },
+
+    // --- 2. Remote Desktop & Screen Sharing ---
+    { name: "TeamViewer", type: "WINDOWS_APP" },
+    { name: "AnyDesk", type: "WINDOWS_APP" },
+    { name: "Chrome Remote Desktop", type: "WEB_APP" },
+    { name: "Zoom", type: "WINDOWS_APP" },
+    { name: "Microsoft Teams", type: "WINDOWS_APP" },
+    { name: "Skype", type: "WINDOWS_APP" },
+
+    // --- 3. Communication & Social Media ---
+    { name: "Discord", type: "WINDOWS_APP" },
+    { name: "Line", type: "WINDOWS_APP" },
+    { name: "Facebook", type: "WEB_APP" },
+    { name: "Messenger", type: "WEB_APP" },
+    { name: "WhatsApp", type: "WEB_APP" },
+    { name: "Telegram", type: "WINDOWS_APP" },
+    { name: "Twitter", type: "WEB_APP" },
+    { name: "Instagram", type: "WEB_APP" },
+    
+    // --- 4. Search Engines & Entertainment ---
+    { name: "YouTube", type: "WEB_APP" },
+    { name: "Google Search", type: "WEB_APP" },
+    { name: "Pantip", type: "WEB_APP" },
+    { name: "Reddit", type: "WEB_APP" },
+
+    // --- 5. Developer Tools ---
+    { name: "StackOverflow", type: "WEB_APP" },
+    { name: "GitHub", type: "WEB_APP" },
+    { name: "GitLab", type: "WEB_APP" },
+    { name: "Replit", type: "WEB_APP" },
+    { name: "VS Code", type: "WINDOWS_APP" },
+
+    // --- 6. Cloud Storage ---
+    { name: "Google Drive", type: "WEB_APP" },
+    { name: "OneDrive", type: "WEB_APP" },
+    { name: "Dropbox", type: "WEB_APP" },
+    { name: "Canva", type: "WEB_APP" },
+
+    // --- 7. Utilities & Office Tools (เพิ่มใหม่: เครื่องมือคำนวณและเอกสาร) ---
+    { name: "Calculator", type: "WINDOWS_APP" }, // เครื่องคิดเลข Windows
+    { name: "Microsoft Excel", type: "WINDOWS_APP" }, // โปรแกรม Excel
+    { name: "Microsoft Word", type: "WINDOWS_APP" }, // โปรแกรม Word (ใช้จดโพย)
+    { name: "Microsoft PowerPoint", type: "WINDOWS_APP" }, // เผื่อกรณีจดใส่สไลด์
+    { name: "Google Sheets", type: "WEB_APP" }, // Excel แบบออนไลน์
+    { name: "Google Docs", type: "WEB_APP" }, // Word แบบออนไลน์
+    { name: "Notepad", type: "WINDOWS_APP" }, // โปรแกรมจดบันทึกพื้นฐาน
+    { name: "Sticky Notes", type: "WINDOWS_APP" } // กระดาษโน้ตแปะหน้าจอ
+];
+
 // Trigger Vercel Deployment
 interface ResourceLog {
     cpu_usage: number;
@@ -412,12 +471,16 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   };
 
   const handleSuggestResources = async () => {
+    // Helper to generate preset items with unique IDs
+    const getPresets = () => PRESET_BLOCKED_APPS.map((app, idx) => ({
+        id: Date.now().toString() + '-preset-' + idx,
+        name: app.name,
+        type: app.type
+    })) as ResourceConstraint[];
+
     if (!process.env.API_KEY) {
-        const fallback = [
-            { id: Date.now().toString() + "-1", name: "ChatGPT", type: "WEB_APP" },
-            { id: Date.now().toString() + "-2", name: "Discord", type: "WINDOWS_APP" }
-        ] as ResourceConstraint[];
-        setBlockedResources([...blockedResources, ...fallback]);
+        // ถ้าไม่มี API Key ให้ใช้รายการที่ตั้งค่าไว้ในโค้ด (PRESET_BLOCKED_APPS)
+        setBlockedResources(prev => [...prev, ...getPresets()]);
         return;
     }
     
@@ -448,17 +511,16 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                  throw new Error("No JSON found");
             }
         } catch (e) {
-             suggested = [
-                 { id: Date.now().toString() + '1', name: 'StackOverflow', type: 'WEB_APP' },
-                 { id: Date.now().toString() + '2', name: 'Facebook Messenger', type: 'WEB_APP' },
-                 { id: Date.now().toString() + '3', name: 'Line', type: 'WINDOWS_APP' },
-            ];
+             // ถ้า AI ตอบกลับผิดพลาด ให้ใช้รายการที่ตั้งค่าไว้ในโค้ด
+             suggested = getPresets();
         }
        
-        setBlockedResources([...blockedResources, ...suggested]);
+        setBlockedResources(prev => [...prev, ...suggested]);
 
     } catch (error) {
         console.error("AI Error", error);
+        // ถ้าเกิดข้อผิดพลาดในการเชื่อมต่อ AI ให้ใช้รายการที่ตั้งค่าไว้ในโค้ด
+        setBlockedResources(prev => [...prev, ...getPresets()]);
     } finally {
         setIsSuggesting(false);
     }
