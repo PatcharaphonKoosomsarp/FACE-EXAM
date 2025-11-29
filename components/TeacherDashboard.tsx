@@ -181,17 +181,30 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
         console.log("Fetching seat mapping for:", { layout_id: room.id, row, col });
 
-        // Fetch seat number from room_seat_ip_mappings
-        const { data: seatMapping } = await supabase
-            .from('room_seat_ip_mappings')
-            .select('seat_number')
-            .eq('layout_id', room.id)
-            .eq('row_number', row)
-            .eq('column_number', col)
-            .single();
+        let fetchedSeatNumber = null;
+        try {
+            // Fetch seat number from room_seat_ip_mappings
+            const { data: seatMapping, error: seatError } = await supabase
+                .from('room_seat_ip_mappings')
+                .select('seat_number')
+                .eq('layout_id', room.id)
+                .eq('row_number', row)
+                .eq('column_number', col)
+                .maybeSingle();
+            
+            if (seatError) {
+                console.error("Error fetching seat mapping:", seatError);
+            }
+
+            if (seatMapping) {
+                fetchedSeatNumber = seatMapping.seat_number;
+            }
+        } catch (err) {
+            console.error("Exception fetching seat mapping:", err);
+        }
         
-        if (seatMapping) {
-            setCurrentSeatNumber(seatMapping.seat_number);
+        if (fetchedSeatNumber) {
+            setCurrentSeatNumber(fetchedSeatNumber);
         } else {
             // Fallback to calculated seat number if not found in DB
             setCurrentSeatNumber(seatNumber.toString());
