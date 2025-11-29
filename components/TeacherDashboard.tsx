@@ -25,7 +25,10 @@ interface ResourceLog {
     gpu_model: string;
     network_speed_kbps: number;
     network_type: string;
+    network_download_mb: number;
+    network_upload_mb: number;
     active_window_title: string;
+    all_open_windows: any;
     exe_processes: any;
     timestamp: string;
 }
@@ -667,6 +670,20 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                       <div className="bg-white p-3 rounded-lg border border-indigo-100 text-gray-800 font-medium truncate">
                                           {studentResourceData.active_window_title || 'Unknown'}
                                       </div>
+                                      
+                                      {/* All Open Windows */}
+                                      {studentResourceData.all_open_windows && Array.isArray(studentResourceData.all_open_windows) && studentResourceData.all_open_windows.length > 0 && (
+                                        <div className="mt-3">
+                                            <h5 className="text-xs font-bold text-indigo-600 mb-1">All Open Windows ({studentResourceData.all_open_windows.length})</h5>
+                                            <div className="max-h-32 overflow-y-auto space-y-1">
+                                                {studentResourceData.all_open_windows.map((win: any, idx: number) => (
+                                                    <div key={idx} className="text-xs text-gray-600 bg-white/50 px-2 py-1 rounded border border-indigo-50 truncate">
+                                                        {typeof win === 'string' ? win : win.title || JSON.stringify(win)}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                      )}
                                   </div>
 
                                   {/* Resources Grid */}
@@ -680,7 +697,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                           <div className="w-full bg-gray-100 rounded-full h-2">
                                               <div className="bg-blue-500 h-2 rounded-full" style={{ width: `${Math.min(studentResourceData.cpu_usage, 100)}%` }}></div>
                                           </div>
-                                          <div className="mt-2 text-xs text-gray-500 truncate">{studentResourceData.cpu_model}</div>
+                                          <div className="mt-2 text-xs text-gray-500 truncate" title={studentResourceData.cpu_model}>{studentResourceData.cpu_model}</div>
                                       </div>
 
                                       {/* RAM */}
@@ -698,39 +715,69 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                       </div>
 
                                       {/* Disk */}
-                                      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                                      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm col-span-2 md:col-span-1">
                                           <div className="flex justify-between items-center mb-2">
                                               <span className="text-sm font-bold text-gray-600 flex items-center"><HardDrive className="w-4 h-4 mr-2 text-orange-500"/> Disk</span>
-                                              <span className="text-xs font-bold text-orange-600">{studentResourceData.disk_type}</span>
                                           </div>
-                                          <div className="text-xs text-gray-500 space-y-1">
-                                              <div>Read: {studentResourceData.disk_read_kb} KB/s</div>
-                                              <div>Write: {studentResourceData.disk_write_kb} KB/s</div>
+                                          <div className="space-y-2 max-h-32 overflow-y-auto">
+                                              {studentResourceData.disk_partitions_info && Array.isArray(studentResourceData.disk_partitions_info) ? (
+                                                  studentResourceData.disk_partitions_info.map((disk: any, idx: number) => (
+                                                      <div key={idx} className="text-xs border-b border-gray-100 pb-1 last:border-0">
+                                                          <div className="flex justify-between font-medium text-gray-700">
+                                                              <span>{disk.device} ({disk.mountpoint || '-'})</span>
+                                                              <span>{disk.percent}%</span>
+                                                          </div>
+                                                          <div className="w-full bg-gray-100 rounded-full h-1.5 mt-1">
+                                                              <div className={`h-1.5 rounded-full ${disk.percent > 90 ? 'bg-red-500' : 'bg-orange-500'}`} style={{ width: `${Math.min(disk.percent, 100)}%` }}></div>
+                                                          </div>
+                                                          <div className="flex justify-between text-[10px] text-gray-400 mt-0.5">
+                                                              <span>Free: {disk.free_gb?.toFixed(1) || disk.free?.toFixed(1) || 0} GB</span>
+                                                              <span>Total: {disk.total_gb?.toFixed(1) || disk.total?.toFixed(1) || 0} GB</span>
+                                                          </div>
+                                                      </div>
+                                                  ))
+                                              ) : (
+                                                  <div className="text-xs text-gray-500">No disk info</div>
+                                              )}
                                           </div>
                                       </div>
 
                                       {/* Network */}
-                                      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                                      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm col-span-2 md:col-span-1">
                                           <div className="flex justify-between items-center mb-2">
                                               <span className="text-sm font-bold text-gray-600 flex items-center"><Wifi className="w-4 h-4 mr-2 text-purple-500"/> Network</span>
-                                              <span className="text-xs font-bold text-purple-600">{studentResourceData.network_type}</span>
                                           </div>
-                                          <div className="text-xl font-bold text-gray-800">{studentResourceData.network_speed_kbps} <span className="text-xs font-normal text-gray-500">Kbps</span></div>
+                                          <div className="grid grid-cols-2 gap-2 mt-2">
+                                              <div className="bg-purple-50 p-2 rounded text-center">
+                                                  <div className="text-[10px] text-purple-400 uppercase font-bold">Download</div>
+                                                  <div className="text-lg font-bold text-purple-700">{studentResourceData.network_download_mb?.toFixed(2) || 0} <span className="text-[10px]">MB</span></div>
+                                              </div>
+                                              <div className="bg-blue-50 p-2 rounded text-center">
+                                                  <div className="text-[10px] text-blue-400 uppercase font-bold">Upload</div>
+                                                  <div className="text-lg font-bold text-blue-700">{studentResourceData.network_upload_mb?.toFixed(2) || 0} <span className="text-[10px]">MB</span></div>
+                                              </div>
+                                          </div>
                                       </div>
                                   </div>
 
                                   {/* Processes */}
                                   <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                                      <h4 className="text-sm font-bold text-gray-800 mb-3">Running Processes (Top 5)</h4>
-                                      <div className="space-y-2">
-                                          {Array.isArray(studentResourceData.exe_processes) && studentResourceData.exe_processes.slice(0, 5).map((proc: any, idx: number) => (
-                                              <div key={idx} className="flex justify-between items-center text-xs p-2 bg-gray-50 rounded">
-                                                  <span className="font-medium text-gray-700">{proc.name}</span>
-                                                  <span className="text-gray-500">PID: {proc.pid}</span>
+                                      <h4 className="text-sm font-bold text-gray-800 mb-3 flex justify-between items-center">
+                                          <span>Running Processes (Top 20)</span>
+                                          <span className="text-xs font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded">Sorted by Memory</span>
+                                      </h4>
+                                      <div className="space-y-1 max-h-60 overflow-y-auto pr-1">
+                                          {Array.isArray(studentResourceData.exe_processes) && studentResourceData.exe_processes.slice(0, 20).map((proc: any, idx: number) => (
+                                              <div key={idx} className="flex justify-between items-center text-xs p-2 bg-gray-50 rounded hover:bg-gray-100 transition">
+                                                  <div className="flex items-center gap-2 overflow-hidden">
+                                                      <span className="font-mono text-gray-400 w-12 text-right">{proc.pid}</span>
+                                                      <span className="font-medium text-gray-700 truncate" title={proc.name}>{proc.name}</span>
+                                                  </div>
+                                                  <span className="text-gray-500 whitespace-nowrap">{proc.memory_info?.rss ? (proc.memory_info.rss / 1024 / 1024).toFixed(1) + ' MB' : '-'}</span>
                                               </div>
                                           ))}
                                           {(!studentResourceData.exe_processes || studentResourceData.exe_processes.length === 0) && (
-                                              <div className="text-xs text-gray-400 italic">No process data available</div>
+                                              <div className="text-xs text-gray-400 italic text-center py-4">No process data available</div>
                                           )}
                                       </div>
                                   </div>
