@@ -606,7 +606,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
       return (
           <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-              <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+              <div className="bg-white w-full max-w-6xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh]">
                   <div className="bg-gray-800 text-white p-4 flex justify-between items-center">
                       <div className="flex items-center gap-3">
                           <div className="bg-white/10 p-2 rounded-lg">
@@ -703,7 +703,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                             <span className="flex items-center"><List className="w-4 h-4 mr-2 text-gray-500"/> All Open Windows</span>
                                             <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs">{studentResourceData.all_open_windows.length}</span>
                                         </h5>
-                                        <div className="max-h-32 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
+                                        <div className="max-h-48 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
                                             {studentResourceData.all_open_windows.map((win: any, idx: number) => (
                                                 <div key={idx} className="text-sm text-gray-600 bg-gray-50 px-2 py-1.5 rounded border border-gray-100 truncate hover:bg-gray-100 transition">
                                                     {typeof win === 'string' ? win : win.title || JSON.stringify(win)}
@@ -719,7 +719,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                         <h5 className="text-base font-bold text-red-600 mb-3 flex items-center">
                                             <ShieldAlert className="w-5 h-5 mr-2"/> Violation Logs ({studentViolationLogs.length})
                                         </h5>
-                                        <div className="max-h-60 overflow-y-auto space-y-3 pr-1 custom-scrollbar">
+                                        <div className="max-h-80 overflow-y-auto space-y-3 pr-1 custom-scrollbar">
                                             {studentViolationLogs.map((log) => (
                                                 <div key={log.id} className="bg-red-50 p-3 rounded-xl border border-red-100 shadow-sm relative overflow-hidden group">
                                                     <div className="absolute left-0 top-0 bottom-0 w-1 bg-red-500"></div>
@@ -782,7 +782,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                           <div className="flex justify-between items-center mb-2">
                                               <span className="text-base font-bold text-gray-600 flex items-center"><HardDrive className="w-4 h-4 mr-2 text-orange-500"/> Disk</span>
                                           </div>
-                                          <div className="space-y-2 max-h-32 overflow-y-auto">
+                                          <div className="space-y-2 max-h-48 overflow-y-auto">
                                               {studentResourceData.disk_partitions_info && Array.isArray(studentResourceData.disk_partitions_info) ? (
                                                   studentResourceData.disk_partitions_info.map((disk: any, idx: number) => (
                                                       <div key={idx} className="text-sm border-b border-gray-100 pb-1 last:border-0">
@@ -829,7 +829,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                           <span>Running Processes (Top 20)</span>
                                           <span className="text-sm font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded">Sorted by Memory</span>
                                       </h4>
-                                      <div className="space-y-1 max-h-60 overflow-y-auto pr-1">
+                                      <div className="space-y-1 max-h-96 overflow-y-auto pr-1">
                                           {Array.isArray(studentResourceData.exe_processes) && studentResourceData.exe_processes.slice(0, 20).map((proc: any, idx: number) => (
                                               <div key={idx} className="flex justify-between items-center text-sm p-2 bg-gray-50 rounded hover:bg-gray-100 transition">
                                                   <div className="flex items-center gap-2 overflow-hidden">
