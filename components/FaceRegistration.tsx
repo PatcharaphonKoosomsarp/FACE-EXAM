@@ -20,8 +20,14 @@ const stepsData: FaceRegistrationStep[] = [
   { id: '6', instruction: 'ใบหน้าเข้าใกล้', description: 'ขยับใบหน้าเข้าใกล้กล้อง', isCompleted: false },
 ];
 
-const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCancel }) => {
-  const [method, setMethod] = useState<'WEBCAM' | 'QR' | null>(null);
+interface FaceRegistrationProps {
+  onComplete: () => void;
+  onCancel: () => void;
+  targetUserId?: string; // Optional: For mobile registration mode
+}
+
+const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCancel, targetUserId }) => {
+  const [method, setMethod] = useState<'WEBCAM' | 'QR' | null>(targetUserId ? 'WEBCAM' : null);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [steps, setSteps] = useState(stepsData);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -320,10 +326,15 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
       setFeedback("กำลังบันทึกข้อมูล...");
       // Upload to Supabase
       try {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (!user) throw new Error("No user found");
+          let userId = targetUserId;
+          
+          if (!userId) {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error("No user found");
+            userId = user.id;
+          }
 
-          const photoData: any = { user_id: user.id };
+          const photoData: any = { user_id: userId };
           const actionMapping: any = {
               'faceForward': 'face_forward',
               'eyeClosed': 'closed_eye',
@@ -340,7 +351,7 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
               const col = actionMapping[photo.action];
               if (col) {
                   // Use simple filename to overwrite existing (cleaner storage)
-                  const fileName = `${user.id}/${photo.action}.png`;
+                  const fileName = `${userId}/${photo.action}.png`;
                   const { error: uploadError } = await supabase.storage
                       .from('liveness-photos')
                       .upload(fileName, photo.blob, { upsert: true, contentType: 'image/png' });
@@ -361,7 +372,7 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
           const { data: existing } = await supabase
               .from('user_photos')
               .select('id')
-              .eq('user_id', user.id)
+              .eq('user_id', userId)
               .maybeSingle();
 
           if (existing) {
@@ -458,9 +469,9 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
             const { data: { user } } = await supabase.auth.getUser();
             if (user) {
                 // สร้าง URL สำหรับ QR Code โดยแนบ user_id ไปด้วย
-                // หมายเหตุ: ต้องตรวจสอบว่า path นี้มีอยู่จริงในโปรเจค หรือปรับเปลี่ยนให้ตรงกับ Route ที่ใช้
+                // ใช้ URL ของ React App เอง แต่เพิ่ม parameter mode=mobile-register
                 const baseUrl = window.location.origin;
-                const url = `${baseUrl}/student/scan_qr_code/qr_register_face.html?user_id=${encodeURIComponent(user.id)}`;
+                const url = `${baseUrl}/?mode=mobile-register&user_id=${encodeURIComponent(user.id)}`;
                 setQrUrl(url);
             }
         };

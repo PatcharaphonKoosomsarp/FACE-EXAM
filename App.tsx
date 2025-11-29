@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import AuthScreen from './components/AuthScreen';
 import TeacherDashboard from './components/TeacherDashboard';
 import StudentDashboard from './components/StudentDashboard';
+import MobileFaceRegistration from './components/MobileFaceRegistration';
 import { User, UserRole, Room, Exam, ExamAttendance } from './types';
 import { supabase } from './supabaseClient';
 import { determineUserRole } from './utils';
@@ -16,8 +17,21 @@ const App: React.FC = () => {
   const [rooms, setRooms] = useState<Room[]>(INITIAL_ROOMS);
   const [exams, setExams] = useState<Exam[]>(INITIAL_EXAMS);
   const [activeStudents, setActiveStudents] = useState<ExamAttendance[]>([]);
+  
+  // Mobile Registration Mode State
+  const [mobileRegisterUserId, setMobileRegisterUserId] = useState<string | null>(null);
 
   useEffect(() => {
+    // Check for Mobile Registration Mode URL parameters
+    const params = new URLSearchParams(window.location.search);
+    const mode = params.get('mode');
+    const userId = params.get('user_id');
+
+    if (mode === 'mobile-register' && userId) {
+        setMobileRegisterUserId(userId);
+        return; // Skip normal auth check if in mobile register mode
+    }
+
     // Check active session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
@@ -446,6 +460,11 @@ const App: React.FC = () => {
 
   const handleUpdateUser = (updatedUser: User) => {
       setUser(updatedUser);
+  }
+
+  // Render Mobile Registration View if active
+  if (mobileRegisterUserId) {
+      return <MobileFaceRegistration targetUserId={mobileRegisterUserId} />;
   }
 
   if (!user) {
