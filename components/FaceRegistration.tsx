@@ -697,7 +697,7 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
 
   return (
     <div className="fixed inset-0 bg-gray-900 flex flex-col items-center justify-center z-50">
-      <div className="w-full max-w-5xl bg-white rounded-2xl overflow-hidden shadow-2xl flex flex-col md:flex-row h-[85vh]">
+      <div className={`w-full max-w-5xl bg-white md:rounded-2xl overflow-hidden shadow-2xl flex flex-col md:flex-row ${targetUserId ? 'h-full md:h-[85vh] rounded-none' : 'h-[85vh] rounded-2xl'}`}>
         
         {/* Camera View */}
         <div className="relative bg-black flex-1 flex items-center justify-center overflow-hidden">
@@ -805,14 +805,23 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
         </div>
 
         {/* Sidebar Instructions */}
-        <div className="w-full md:w-80 bg-gray-50 p-6 overflow-y-auto border-l border-gray-200">
-            <h3 className="font-bold text-lg mb-6 text-gray-800 flex items-center">
+        <div className={`w-full md:w-80 bg-gray-50 p-6 overflow-y-auto border-l border-gray-200 transition-all duration-300 ${targetUserId ? 'max-h-[30vh] md:max-h-full' : ''}`}>
+            <h3 className="font-bold text-lg mb-6 text-gray-800 flex items-center sticky top-0 bg-gray-50 z-20 py-2">
                 <CameraIcon className="w-5 h-5 mr-2 text-[#E35205]"/>
                 ขั้นตอนการลงทะเบียน
             </h3>
             <div className="space-y-4 relative before:absolute before:left-5 before:top-4 before:bottom-4 before:w-0.5 before:bg-gray-200">
                 {steps.map((step, index) => (
-                    <div key={step.id} className={`relative pl-4 flex items-start p-3 rounded-xl transition-all duration-300 ${index === currentStepIndex ? 'bg-white shadow-md scale-105 z-10 ring-1 ring-orange-100' : 'opacity-60'}`}>
+                    <div 
+                        key={step.id} 
+                        id={`step-${index}`}
+                        className={`relative pl-4 flex items-start p-3 rounded-xl transition-all duration-300 ${index === currentStepIndex ? 'bg-white shadow-md scale-105 z-10 ring-1 ring-orange-100' : 'opacity-60'}`}
+                        ref={(el) => {
+                            if (index === currentStepIndex && el) {
+                                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }
+                        }}
+                    >
                         {/* Status Indicator */}
                         <div className="absolute -left-[5px] top-1/2 transform -translate-y-1/2 bg-gray-50 p-1">
                              {step.isCompleted ? (
