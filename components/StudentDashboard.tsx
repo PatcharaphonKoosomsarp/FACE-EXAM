@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { User, Exam, Room } from '../types';
-import { Camera, Calendar, Clock, MapPin, List, Check, ArrowLeft } from 'lucide-react';
+import { Camera, Calendar, Clock, MapPin, AlertTriangle, Monitor, List, Check, ArrowLeft } from 'lucide-react';
 import FaceRegistration from './FaceRegistration';
 import FaceVerification from './FaceVerification';
+import VerificationMethodSelector from './VerificationMethodSelector';
+import QRCodeModal from './QRCodeModal';
 import ExamRoomView from './ExamRoomView';
 
 interface StudentDashboardProps {
@@ -19,6 +21,11 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user, exams, rooms,
   const [verifyingExam, setVerifyingExam] = useState<Exam | null>(null);
   const [activeExam, setActiveExam] = useState<Exam | null>(null);
   const [isReregistering, setIsReregistering] = useState(false);
+  
+  // New states for verification method selection
+  const [showMethodSelector, setShowMethodSelector] = useState(false);
+  const [selectedExamForVerification, setSelectedExamForVerification] = useState<Exam | null>(null);
+  const [showQRModal, setShowQRModal] = useState(false);
 
   const handleFaceRegComplete = () => {
     onUpdateUser({ ...user, isFaceRegistered: true });
@@ -28,7 +35,20 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user, exams, rooms,
   };
 
   const handleEnterExam = (exam: Exam) => {
-      setVerifyingExam(exam);
+      setSelectedExamForVerification(exam);
+      setShowMethodSelector(true);
+  };
+
+  const handleSelectWebcam = () => {
+      if (selectedExamForVerification) {
+          setVerifyingExam(selectedExamForVerification);
+          setShowMethodSelector(false);
+      }
+  };
+
+  const handleSelectQRCode = () => {
+      setShowMethodSelector(false);
+      setShowQRModal(true);
   };
 
   const handleVerified = () => {
@@ -188,6 +208,25 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user, exams, rooms,
             exam={verifyingExam}
             onVerified={handleVerified}
             onCancel={() => setVerifyingExam(null)}
+          />
+      )}
+
+      {showMethodSelector && (
+          <VerificationMethodSelector 
+            onSelectWebcam={handleSelectWebcam}
+            onSelectQRCode={handleSelectQRCode}
+            onCancel={() => {
+                setShowMethodSelector(false);
+                setSelectedExamForVerification(null);
+            }}
+          />
+      )}
+
+      {showQRModal && selectedExamForVerification && (
+          <QRCodeModal 
+            isOpen={showQRModal}
+            onClose={() => setShowQRModal(false)}
+            url={`${window.location.origin}?action=exam&roomId=${selectedExamForVerification.roomId}`}
           />
       )}
     </div>
