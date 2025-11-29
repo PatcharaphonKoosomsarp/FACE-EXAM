@@ -398,32 +398,61 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
                   if (isQrMode) {
                       console.log(`QR Mode: Uploading ${photo.action} to user-photos...`);
                       
-                      // Try with dedicated uploadClient (Fake Session)
+                      // Strategy 1: Try with the "Fake Session" (uploadClient)
                       let uploadError;
-                      let usedClient = uploadClient;
+                      let publicUrlResult;
                       
-                      const { error: err1 } = await uploadClient.storage
-                          .from('user-photos')
-                          .upload(fileName, photo.blob, { upsert: true });
-                      
-                      uploadError = err1;
+                      try {
+                          const { data, error } = await uploadClient.storage
+                              .from('user-photos')
+                              .upload(fileName, photo.blob, { upsert: true });
+                          if (error) throw error;
+                          publicUrlResult = uploadClient.storage.from('user-photos').getPublicUrl(fileName);
+                      } catch (err1: any) {
+                          console.warn("Strategy 1 (Fake Session -> user-photos) failed:", err1.message);
+                          
+                          // Strategy 2: Try Anonymous upload (Global Client, no fake session)
+                          // We need to ensure we are using the global supabase client which might not have the fake session if we didn't mess with its internal storage key
+                          try {
+                              console.log("Strategy 2: Attempting Anonymous upload to user-photos...");
+                              const { data, error } = await supabase.storage
+                                  .from('user-photos')
+                                  .upload(fileName, photo.blob, { upsert: true });
+                              if (error) throw error;
+                              publicUrlResult = supabase.storage.from('user-photos').getPublicUrl(fileName);
+                          } catch (err2: any) {
+                              console.warn("Strategy 2 (Anonymous -> user-photos) failed:", err2.message);
 
-                      // If fake session fails, try fallback to global client (Anon)
-                      if (uploadError) {
-                          console.warn("QR Mode upload failed:", uploadError);
-                          
-                          // Check for RLS error specifically
-                          if (uploadError.message.includes('row-level security')) {
-                              throw new Error(`ไม่สามารถบันทึกรูปภาพได้เนื่องจากติดสิทธิ์การเข้าถึง (RLS) กรุณาแจ้งผู้ดูแลระบบให้ตรวจสอบ Policy ของ Storage Bucket 'user-photos' ให้รองรับการอัปโหลดแบบ Anonymous หรือตรวจสอบ Service Key`);
+                              // Strategy 3: Try 'liveness-photos' bucket (Fake Session)
+                              try {
+                                  console.log("Strategy 3: Attempting upload to liveness-photos (Fake Session)...");
+                                  const { data, error } = await uploadClient.storage
+                                      .from('liveness-photos')
+                                      .upload(fileName, photo.blob, { upsert: true });
+                                  if (error) throw error;
+                                  publicUrlResult = uploadClient.storage.from('liveness-photos').getPublicUrl(fileName);
+                              } catch (err3: any) {
+                                  console.warn("Strategy 3 (Fake Session -> liveness-photos) failed:", err3.message);
+
+                                  // Strategy 4: Try 'liveness-photos' bucket (Anonymous)
+                                  try {
+                                      console.log("Strategy 4: Attempting Anonymous upload to liveness-photos...");
+                                      const { data, error } = await supabase.storage
+                                          .from('liveness-photos')
+                                          .upload(fileName, photo.blob, { upsert: true });
+                                      if (error) throw error;
+                                      publicUrlResult = supabase.storage.from('liveness-photos').getPublicUrl(fileName);
+                                  } catch (err4: any) {
+                                      console.error("All upload strategies failed.");
+                                      throw new Error(`ไม่สามารถบันทึกรูปภาพได้ (RLS Policy Blocked). กรุณาตรวจสอบว่า Bucket 'user-photos' หรือ 'liveness-photos' เป็น Public หรือไม่`);
+                                  }
+                              }
                           }
-                          
-                          throw new Error(`Upload failed for ${photo.action}: ${uploadError.message}`);
                       }
 
-                      const { data: urlData } = usedClient.storage
-                          .from('user-photos')
-                          .getPublicUrl(fileName);
-                      publicUrl = urlData.publicUrl;
+                      if (publicUrlResult) {
+                          publicUrl = publicUrlResult.data.publicUrl;
+                      }
                   } else {
                       // Normal mode: Try liveness-photos first
                       const { error: uploadError } = await supabase.storage
