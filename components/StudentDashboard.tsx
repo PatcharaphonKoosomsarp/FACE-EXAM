@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, Exam, Room } from '../types';
 import { Camera, Calendar, Clock, MapPin, List, Check, ArrowLeft } from 'lucide-react';
 import FaceRegistration from './FaceRegistration';
 import FaceVerification from './FaceVerification';
 import ExamRoomView from './ExamRoomView';
+import { supabase } from '../supabaseClient';
 
 interface StudentDashboardProps {
   user: User;
@@ -15,10 +16,48 @@ interface StudentDashboardProps {
 type ViewMode = 'MENU' | 'FACE_REG' | 'EXAM_LIST';
 
 const StudentDashboard: React.FC<StudentDashboardProps> = ({ user, exams, rooms, onUpdateUser }) => {
-  const [viewMode, setViewMode] = useState<ViewMode>(user.isFaceRegistered ? 'EXAM_LIST' : 'MENU');
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+      const saved = localStorage.getItem('student_view_mode');
+      if (saved === 'FACE_REG' || saved === 'EXAM_LIST' || saved === 'MENU') {
+          return saved;
+      }
+      return user.isFaceRegistered ? 'EXAM_LIST' : 'MENU';
+  });
   const [verifyingExam, setVerifyingExam] = useState<Exam | null>(null);
   const [activeExam, setActiveExam] = useState<Exam | null>(null);
   const [isReregistering, setIsReregistering] = useState(false);
+
+  // Persist ViewMode changes
+  useEffect(() => {
+      localStorage.setItem('student_view_mode', viewMode);
+  }, [viewMode]);
+
+  // Check for active exam session on mount or when exams load
+  useEffect(() => {
+      const restoreSession = async () => {
+          // Check if user has an active session in DB
+          const { data: session } = await supabase
+              .from('exam_student_sessions')
+              .select('layout_id')
+              .eq('student_email', user.email)
+              .eq('is_active', true)
+              .maybeSingle();
+          
+          if (session) {
+              // Find the exam corresponding to this session
+              // We match by roomId (layout_id)
+              const exam = exams.find(e => e.roomId === session.layout_id);
+              if (exam) {
+                  console.log("Restoring active exam session:", exam.subjectCode);
+                  setActiveExam(exam);
+              }
+          }
+      };
+
+      if (exams.length > 0 && !activeExam) {
+          restoreSession();
+      }
+  }, [exams, user.email]);
 
   const handleFaceRegComplete = () => {
     onUpdateUser({ ...user, isFaceRegistered: true });
