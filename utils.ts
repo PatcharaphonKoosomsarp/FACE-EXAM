@@ -1,5 +1,6 @@
 import { UserRole } from './types';
 import { supabase } from './supabaseClient';
+import { agentService } from './services/agentService';
 
 export const determineUserRole = (email: string): UserRole => {
   if (email.endsWith('@itm.kmutnb.ac.th') || email === 'okkubyes@gmail.com') {
@@ -31,7 +32,12 @@ const isValidWiFiIP = (ip: string): boolean => {
     return false;
 };
 
-export const getPrimaryWiFiIP = (): Promise<string | null> => {
+export const getPrimaryWiFiIP = async (): Promise<string | null> => {
+    // 1. Try Python Agent first
+    const agentIP = await agentService.getLocalIP();
+    if (agentIP) return agentIP;
+
+    // 2. Fallback to WebRTC
     return new Promise((resolve) => {
         try {
             const RTCPeerConnection = window.RTCPeerConnection || 

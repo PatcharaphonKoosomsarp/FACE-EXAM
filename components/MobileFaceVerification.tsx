@@ -274,34 +274,26 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
         setStatus('VERIFYING_IP');
         
         try {
-            // Mobile might be on 4G/5G, so IP check might fail if it requires University WiFi.
-            // However, the requirement is "Mobile Verification".
-            // If the user is on mobile data, their IP won't match the room IP.
-            // But maybe we just want to verify the FACE on mobile, and the DESKTOP session is what matters?
-            // The desktop is polling for `exam_student_sessions`.
-            // If we create the session here, we are setting the IP of the MOBILE device.
-            // The desktop will pick it up.
-            // If the desktop then checks IP, it will see the mobile IP.
-            // Wait, `FaceVerification.tsx` (Desktop) polls for `exam_student_sessions`.
-            // When it finds one, it calls `onVerified()`.
-            // Does `FaceVerification.tsx` re-verify IP after polling?
-            // No, it just calls `onVerified()`.
-            // But `FaceVerification.tsx` (Desktop) *itself* verifies IP when doing webcam.
-            // If we do Mobile, we are bypassing the Desktop IP check?
-            // Or should we capture the IP here?
-            // If the student is in the room, they should be on WiFi.
-            // If they are on mobile data, the IP will be different.
-            // Let's assume we record the IP here.
+            const ip = await getPrimaryWiFiIP();
             
-            const ip = await getPrimaryWiFiIP(); // This might return null or public IP
-            
-            // We skip strict IP access check on mobile because it might be different network?
-            // Or we enforce it?
-            // Let's enforce it if possible, but maybe warn if not.
-            // Actually, the desktop will eventually be the one "taking the exam".
-            // The session record is used to track "who is sitting there".
-            // If we use mobile, we are saying "I am here".
-            // Let's just save the session.
+            // Update qr_authentication table for PC to pick up
+            // Schema: id, user_id, ip (inet), status, authenticated_at, expires_at
+            // Note: exam_id is not in the schema provided.
+            // Note: ip must be valid inet type. Use 0.0.0.0 if unknown.
+            const safeIp = (ip && ip.match(/^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/)) ? ip : '0.0.0.0';
+
+            const { error } = await supabase
+                .from('qr_authentication')
+                .upsert({
+                    user_id: userId,
+                    status: 'authenticated',
+                    ip: safeIp,
+                    authenticated_at: new Date().toISOString()
+                });
+
+            if (error) throw error;
+
+            setStatus('SUCCESS');
             
             let seatNumber = 0;
             // Calculate seat (same logic as desktop, but we might not have IP mapping for mobile IP)
@@ -333,7 +325,7 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
                 student_email: user.email,
                 student_name: user.name,
                 seat_number: seatNumber,
-                ip_address: ip || 'MOBILE', // Mark as mobile if IP not found
+                ip_address: safeIp === '0.0.0.0' ? null : safeIp, // exam_student_sessions allows null ip
                 face_descriptor: JSON.stringify(Array.from(descriptor)),
                 is_active: true,
                 updated_at: new Date().toISOString()

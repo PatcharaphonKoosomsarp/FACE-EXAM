@@ -4,6 +4,7 @@ import { ShieldCheck, Loader2, AlertTriangle, RefreshCw, CameraOff, Lock, Monito
 import { supabase } from '../supabaseClient';
 import { getPrimaryWiFiIP, verifyIPAccess } from '../utils';
 import { QRCodeCanvas } from 'qrcode.react';
+import { agentService } from '../services/agentService';
 
 // Use global faceapi from script tag
 declare const faceapi: any;
@@ -29,35 +30,136 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
     // QR Code Logic
     useEffect(() => {
         if (method === 'QR') {
-            const baseUrl = window.location.origin;
-            const url = `${baseUrl}/?mode=mobile-verify&exam_id=${exam.id}&user_id=${user.id}`;
-            setQrUrl(url);
-
-            // Poll for verification success from mobile
-            const pollInterval = setInterval(async () => {
+            const generateQR = async () => {
                 try {
-                    // Check for active session created by mobile
-                    const { data } = await supabase
-                        .from('exam_student_sessions')
-                        .select('id, updated_at')
-                        .eq('layout_id', exam.roomId)
-                        .eq('student_email', user.email)
-                        .eq('is_active', true)
-                        .gt('updated_at', new Date(Date.now() - 30000).toISOString()) // Check for recent updates (30s)
-                        .maybeSingle();
-
-                    if (data) {
-                        clearInterval(pollInterval);
-                        onVerified();
+                    // 1. Get Local IP from Agent (preferred) or WebRTC
+                    let ip = await agentService.getLocalIP();
+                    if (!ip || ip === '127.0.0.1') {
+                        ip = await getPrimaryWiFiIP();
                     }
-                } catch (e) {
-                    console.error("Polling error:", e);
-                }
-            }, 2000);
+                    
+                    console.log('Generating QR with IP:', ip);
 
-            return () => clearInterval(pollInterval);
+                    const baseUrl = window.location.origin;
+                    // Construct URL for mobile auth page (using query params as per App.tsx)
+                    const url = `${baseUrl}/?mode=mobile-verify&exam_id=${exam.id}&user_id=${user.id}&ip=${ip || ''}`;
+                    setQrUrl(url);
+
+                    // 2. Start Polling for Handshake
+                    const pollInterval = setInterval(async () => {
+                        try {
+                            // Check qr_authentication table
+                            const { data } = await supabase
+                                .from('qr_authentication')
+                                .select('*')
+                                .eq('user_id', user.id)
+                                .eq('status', 'authenticated')
+                                .gt('authenticated_at', new Date(Date.now() - 60000).toISOString()) // Last 1 minute
+                                .maybeSingle();
+
+                            if (data) {
+                                clearInterval(pollInterval);
+                                console.log('Mobile authentication successful:', data);
+                                
+                                // Proceed to session creation using the IP from the handshake
+                                await handleMobileSuccess(data.ip);
+                            }
+                        } catch (e) {
+                            console.error("Polling error:", e);
+                        }
+                    }, 2000);
+
+                    return () => clearInterval(pollInterval);
+                } catch (err) {
+                    console.error("Error generating QR:", err);
+                    setErrorMessage("ไม่สามารถสร้าง QR Code ได้");
+                }
+            };
+
+            const cleanupPromise = generateQR();
+            return () => {
+                // Cleanup logic if needed
+            };
         }
-    }, [method, exam.id, user.id, user.email, exam.roomId, onVerified]);
+    }, [method, exam.id, user.id, user.email, exam.roomId]);
+
+    const handleMobileSuccess = async (mobileIp: string) => {
+        setStatus('VERIFYING_IP');
+        try {
+            // Verify IP Access
+            const hasAccess = await verifyIPAccess(exam.id, mobileIp);
+            if (!hasAccess) {
+                throw new Error(`IP Address (${mobileIp}) ไม่ได้รับอนุญาตให้เข้าห้องสอบนี้`);
+            }
+
+            setStatus('SUCCESS');
+            
+            // Calculate Seat (Reuse logic from handleSuccess)
+            let seatNumber = 0;
+            try {
+                const { data: mapping } = await supabase
+                    .from('room_seat_ip_mappings')
+                    .select('seat_number')
+                    .eq('layout_id', exam.roomId)
+                    .eq('ip_address', mobileIp)
+                    .maybeSingle();
+
+                if (mapping) seatNumber = mapping.seat_number;
+            } catch (e) { console.warn(e); }
+
+            // Create/Update Session
+            await createSession(mobileIp, seatNumber, "Mobile Verified");
+            
+            setTimeout(() => {
+                onVerified();
+            }, 1500);
+
+        } catch (err: any) {
+            console.error("Mobile success handling error:", err);
+            setErrorMessage(err.message);
+            setStatus('FAILED');
+        }
+    };
+
+    const createSession = async (ip: string, seatNumber: number, descriptorStr: string) => {
+         // Check for existing active session
+         const { data: existingSession, error: findError } = await supabase
+         .from('exam_student_sessions')
+         .select('id')
+         .eq('layout_id', exam.roomId)
+         .eq('student_email', user.email)
+         .eq('is_active', true)
+         .order('created_at', { ascending: false })
+         .limit(1);
+
+        if (!findError && existingSession && existingSession.length > 0) {
+            // Update existing session
+            await supabase
+                .from('exam_student_sessions')
+                .update({
+                    student_name: user.name,
+                    seat_number: seatNumber,
+                    ip_address: ip,
+                    face_descriptor: descriptorStr, // Might be a placeholder for mobile
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', existingSession[0].id);
+        } else {
+            // Insert Session Record
+            await supabase.from('exam_student_sessions').insert({
+                layout_id: exam.roomId,
+                student_email: user.email,
+                student_name: user.name,
+                seat_number: seatNumber,
+                ip_address: ip,
+                face_descriptor: descriptorStr,
+                is_active: true,
+                session_start_time: new Date().toISOString(),
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            });
+        }
+    };
 
     // 1. Load Models (Only if WEBCAM is selected)
     useEffect(() => {
