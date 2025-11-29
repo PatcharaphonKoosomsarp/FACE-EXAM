@@ -52,6 +52,7 @@ export interface ExamAttendance {
   ipAddress: string;
   status: 'ONLINE' | 'OFFLINE' | 'KICKED';
   joinedAt: string;
+  studentProfileUrl?: string;
 }
 
 export interface FaceRegistrationStep {

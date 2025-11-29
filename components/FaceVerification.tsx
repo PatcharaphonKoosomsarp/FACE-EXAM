@@ -194,7 +194,8 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                     student_name: user.name,
                     seat_number: seatNumber,
                     ip_address: ip,
-                    face_descriptor: descriptorStr, // Might be a placeholder for mobile
+                    face_descriptor: descriptorStr, 
+                    student_profile_url: user.avatarUrl,
                     updated_at: new Date().toISOString()
                 })
                 .eq('id', existingSession[0].id);
@@ -207,6 +208,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                 seat_number: seatNumber,
                 ip_address: ip,
                 face_descriptor: descriptorStr,
+                student_profile_url: user.avatarUrl,
                 is_active: true,
                 session_start_time: new Date().toISOString(),
                 created_at: new Date().toISOString(),
@@ -534,6 +536,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                         seat_number: seatNumber,
                         ip_address: ip,
                         face_descriptor: JSON.stringify(Array.from(descriptor)),
+                        student_profile_url: user.avatarUrl,
                         updated_at: new Date().toISOString()
                     })
                     .eq('id', existingSession[0].id);
@@ -552,6 +555,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                     seat_number: seatNumber,
                     ip_address: ip,
                     face_descriptor: JSON.stringify(Array.from(descriptor)),
+                    student_profile_url: user.avatarUrl,
                     is_active: true,
                     session_start_time: new Date().toISOString(),
                     created_at: new Date().toISOString(),

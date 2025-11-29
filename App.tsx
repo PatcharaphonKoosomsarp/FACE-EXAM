@@ -137,22 +137,13 @@ const App: React.FC = () => {
                   if (col === 0) col = room.cols;
               }
 
-              // Try to find active exam for this room
-              // This is a best-effort guess. We assume the exam in this room is the one we want.
-              // Ideally we should check time, but for now let's just find *an* exam in this room.
-              // Or better, don't assign examId if we aren't sure, and let TeacherDashboard handle it via fallback.
-              // But TeacherDashboard filters by examId.
-              
-              // If we want TeacherDashboard to use this data, we need to match the examId.
-              // But TeacherDashboard has its own realtimeSessions fetcher which is more accurate for the specific view.
-              // So we can just return empty examId or the layout_id (which won't match but is safe).
-              
               return {
                   id: s.id,
                   examId: '', // We don't have exam_id in sessions. TeacherDashboard will use its own fallback.
                   studentId: s.student_email, // Use email as ID
                   studentName: s.student_name,
                   studentCode: s.student_email,
+                  studentProfileUrl: s.student_profile_url,
                   row: row,
                   col: col,
                   ipAddress: s.ip_address,
@@ -165,9 +156,11 @@ const App: React.FC = () => {
   };
 
   const handleKickStudent = async (attendanceId: string) => {
+      // Instead of deleting from exam_attendance (which doesn't exist),
+      // we update the session to be inactive.
       const { error } = await supabase
-          .from('exam_attendance')
-          .delete()
+          .from('exam_student_sessions')
+          .update({ is_active: false })
           .eq('id', attendanceId);
       
       if (error) {

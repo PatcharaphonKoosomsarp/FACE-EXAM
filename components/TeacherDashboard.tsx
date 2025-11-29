@@ -169,7 +169,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         // We query exam_student_sessions directly to ensure we get the correct session ID for logs
         const { data: sessions } = await supabase
             .from('exam_student_sessions')
-            .select('id, student_name, student_email, ip_address')
+            .select('id, student_name, student_email, ip_address, student_profile_url')
             .eq('layout_id', room.id)
             .eq('seat_number', seatNumber)
             .eq('is_active', true)
@@ -568,6 +568,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
               studentName: sessionStudent.student_name,
               studentCode: sessionStudent.student_email, // Use email as code fallback
               ipAddress: sessionStudent.ip_address,
+              studentProfileUrl: sessionStudent.student_profile_url,
               examId: selectedExamId,
               studentId: 'unknown',
               row: row,
@@ -598,8 +599,12 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                   <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
                       <div className="w-full md:w-1/3 bg-gray-50 p-6 border-r border-gray-200 overflow-y-auto">
                           <div className="flex flex-col items-center text-center mb-8">
-                                <div className="w-24 h-24 bg-gray-200 rounded-full mb-4 flex items-center justify-center relative">
-                                    <UserIcon className="w-12 h-12 text-gray-400"/>
+                                <div className="w-24 h-24 bg-gray-200 rounded-full mb-4 flex items-center justify-center relative overflow-hidden">
+                                    {student && student.studentProfileUrl ? (
+                                        <img src={student.studentProfileUrl} alt={student.studentName} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <UserIcon className="w-12 h-12 text-gray-400"/>
+                                    )}
                                     <div className={`absolute bottom-0 right-0 w-6 h-6 rounded-full border-4 border-white ${student ? 'bg-green-500' : assignedIp ? 'bg-orange-500' : 'bg-gray-400'}`}></div>
                                 </div>
                                 {student ? (
@@ -858,6 +863,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                                 examId: selectedExamId,
                                                 studentId: 'unknown',
                                                 ipAddress: session.ip_address,
+                                                studentProfileUrl: session.student_profile_url,
                                                 joinedAt: session.created_at
                                             } as ExamAttendance;
                                         }
@@ -881,7 +887,11 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                         
                                         {student ? (
                                             <div className="mt-1 flex flex-col items-center w-full px-1">
-                                                <UserIcon className="w-4 h-4 text-green-600 mb-1"/>
+                                                {student.studentProfileUrl ? (
+                                                    <img src={student.studentProfileUrl} alt="Profile" className="w-6 h-6 rounded-full object-cover mb-1 border border-green-500" />
+                                                ) : (
+                                                    <UserIcon className="w-4 h-4 text-green-600 mb-1"/>
+                                                )}
                                                 <span className="text-[10px] text-green-700 font-bold text-center truncate w-full">{student.studentName}</span>
                                             </div>
                                         ) : isConfigured && (
