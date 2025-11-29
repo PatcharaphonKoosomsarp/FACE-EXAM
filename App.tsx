@@ -87,9 +87,7 @@ const App: React.FC = () => {
     if (user) {
       loadData();
     }
-  }, [user]);
-
-  useEffect(() => {
+    
     let interval: NodeJS.Timeout;
     if (user?.role === UserRole.TEACHER) {
         fetchActiveStudents(); // Initial fetch
@@ -98,7 +96,7 @@ const App: React.FC = () => {
     return () => {
         if (interval) clearInterval(interval);
     };
-  }, [user, rooms, exams]);
+  }, [user]);
 
   const loadData = async () => {
       const loadedRooms = await fetchRooms();
@@ -109,46 +107,31 @@ const App: React.FC = () => {
 
   const fetchActiveStudents = async () => {
       const { data, error } = await supabase
-          .from('exam_student_sessions')
-          .select('*')
-          .eq('is_active', true);
+          .from('exam_attendance')
+          .select('*');
       
       if (error) {
-          // console.error('Error fetching attendance:', error); 
-      } else if (data) {
-          const mapped: ExamAttendance[] = [];
-          
-          data.forEach((session: any) => {
-              const relevantExams = exams.filter(e => e.roomId === session.layout_id);
-              
-              relevantExams.forEach(exam => {
-                 const room = rooms.find(r => r.id === session.layout_id);
-                 if (!room) return;
-                 
-                 const row = Math.ceil(session.seat_number / room.cols);
-                 const col = ((session.seat_number - 1) % room.cols) + 1;
-
-                 mapped.push({
-                     id: session.id,
-                     examId: exam.id,
-                     studentId: session.student_email, 
-                     studentName: session.student_name || session.student_email.split('@')[0],
-                     studentCode: session.student_email.split('@')[0],
-                     row: row,
-                     col: col,
-                     ipAddress: session.ip_address,
-                     status: 'ONLINE',
-                     joinedAt: session.created_at
-                 });
-              });
-          });
+          // console.error('Error fetching attendance:', error); // Suppress error if table doesn't exist yet
+      } else {
+          const mapped: ExamAttendance[] = data.map((a: any) => ({
+              id: a.id,
+              examId: a.exam_id,
+              studentId: a.student_id,
+              studentName: a.student_name,
+              studentCode: a.student_code,
+              row: a.row_number,
+              col: a.col_number,
+              ipAddress: a.ip_address,
+              status: a.status,
+              joinedAt: a.joined_at
+          }));
           setActiveStudents(mapped);
       }
   };
 
   const handleKickStudent = async (attendanceId: string) => {
       const { error } = await supabase
-          .from('exam_student_sessions')
+          .from('exam_attendance')
           .delete()
           .eq('id', attendanceId);
       

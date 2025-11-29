@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Room, Exam, ResourceConstraint, User, ExamAttendance } from '../types';
-import { supabase } from '../supabaseClient';
 import { 
   Plus, Calendar, Save, Trash2, Cpu, 
   ChevronRight, Check, LayoutGrid, List, 
-  MapPin, Clock, ArrowLeft, MonitorX, AlertCircle, Edit, X, User as UserIcon, Activity, ShieldAlert, Ban, Network, LogOut, HardDrive, MemoryStick, Wifi, Monitor, AlertTriangle 
+  MapPin, Clock, ArrowLeft, MonitorX, AlertCircle, Edit, X, User as UserIcon, Activity, ShieldAlert, Ban, Network, LogOut 
 } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 
@@ -99,7 +98,6 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   // List View State
   const [selectedExamId, setSelectedExamId] = useState<string | null>(null);
   const [viewingSeat, setViewingSeat] = useState<number | null>(null); 
-  const [monitoringData, setMonitoringData] = useState<any>(null);
 
   // Effect to clean up selection if item is deleted
   useEffect(() => {
@@ -114,103 +112,6 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
           setSelectedExamId(null);
       }
   }, [exams, selectedExamId]);
-
-  // Effect to fetch monitoring data when viewing a seat
-  useEffect(() => {
-    let intervalId: NodeJS.Timeout;
-
-    const fetchMonitoringData = async () => {
-        if (viewingSeat === null || !selectedExamId) return;
-
-        const exam = exams.find(e => e.id === selectedExamId);
-        const room = rooms.find(r => r.id === exam?.roomId);
-        if (!room) return;
-
-        const row = Math.floor(viewingSeat / room.cols) + 1;
-        const col = (viewingSeat % room.cols) + 1;
-
-        const student = activeStudents.find(s => 
-            s.examId === selectedExamId && 
-            s.row === row && 
-            s.col === col
-        );
-
-        if (student) {
-            try {
-                const { data, error } = await supabase
-                    .from('resource_logs')
-                    .select('*')
-                    .eq('session_id', student.id)
-                    .order('timestamp', { ascending: false })
-                    .limit(1);
-
-                if (data && data.length > 0) {
-                    const raw = data[0];
-                    
-                    // Parse processes
-                    let processes = [];
-                    try {
-                        processes = typeof raw.exe_processes === 'string' 
-                            ? JSON.parse(raw.exe_processes) 
-                            : raw.exe_processes || [];
-                    } catch (e) { processes = []; }
-
-                    // Calculate disk usage
-                    let diskTotal = 0;
-                    let diskFree = 0;
-                    
-                    if (raw.disk_partitions_info) {
-                         try {
-                            const partitions = typeof raw.disk_partitions_info === 'string'
-                                ? JSON.parse(raw.disk_partitions_info)
-                                : raw.disk_partitions_info;
-                            
-                            if (Array.isArray(partitions)) {
-                                diskTotal = partitions.reduce((acc: number, p: any) => acc + (p.total_gb || 0), 0);
-                                diskFree = partitions.reduce((acc: number, p: any) => acc + (p.free_gb || 0), 0);
-                            }
-                         } catch (e) {}
-                    }
-                    
-                    // Fallback
-                    if (diskTotal === 0 && raw.disk_total_gb) diskTotal = raw.disk_total_gb;
-                    if (diskFree === 0 && raw.disk_free_gb) diskFree = raw.disk_free_gb;
-
-                    const diskUsage = diskTotal > 0 ? Math.round(((diskTotal - diskFree) / diskTotal) * 100) : 0;
-
-                    setMonitoringData({
-                        timestamp: raw.timestamp,
-                        cpu_usage: Math.round(raw.cpu_usage || 0),
-                        cpu_model: raw.cpu_model,
-                        ram_usage: Math.round(raw.ram_usage || 0),
-                        ram_total: raw.ram_total_gb ? parseFloat(raw.ram_total_gb).toFixed(1) : 0,
-                        ram_available: raw.ram_available_gb ? parseFloat(raw.ram_available_gb).toFixed(1) : 0,
-                        disk_usage: diskUsage,
-                        disk_total: diskTotal ? parseFloat(diskTotal.toString()).toFixed(0) : 0,
-                        disk_free: diskFree ? parseFloat(diskFree.toString()).toFixed(0) : 0,
-                        active_window: raw.active_window_title,
-                        processes: processes
-                    });
-                } else {
-                    setMonitoringData(null);
-                }
-            } catch (err) {
-                console.error("Error fetching monitoring data:", err);
-            }
-        } else {
-            setMonitoringData(null);
-        }
-    };
-
-    if (viewingSeat !== null) {
-        fetchMonitoringData();
-        intervalId = setInterval(fetchMonitoringData, 5000); // Poll every 5 seconds
-    }
-
-    return () => {
-        if (intervalId) clearInterval(intervalId);
-    };
-  }, [viewingSeat, selectedExamId, exams, rooms, activeStudents]);
 
   // --- Actions ---
 
@@ -562,7 +463,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                               <p className="text-xs text-gray-400">Resource & Connection Status</p>
                           </div>
                       </div>
-                      <button onClick={() => { setViewingSeat(null); setMonitoringData(null); }} className="hover:bg-white/10 p-2 rounded-full transition">
+                      <button onClick={() => setViewingSeat(null)} className="hover:bg-white/10 p-2 rounded-full transition">
                           <X className="w-6 h-6"/>
                       </button>
                   </div>
@@ -621,135 +522,18 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                           </div>
                       </div>
 
-                      <div className="w-full md:w-2/3 bg-white p-6 overflow-y-auto">
-                          {!student ? (
-                              <div className="flex flex-col items-center justify-center h-full text-gray-400">
-                                  <Activity className="w-16 h-16 mb-4 opacity-20"/>
-                                  <p>Waiting for student to login...</p>
-                              </div>
-                          ) : !monitoringData ? (
-                              <div className="flex flex-col items-center justify-center h-full text-gray-400">
-                                  <Activity className="w-16 h-16 mb-4 animate-pulse opacity-20"/>
-                                  <p>Waiting for system data...</p>
+                      <div className="w-full md:w-2/3 bg-white p-6 overflow-y-auto flex items-center justify-center text-gray-400">
+                          {student ? (
+                              <div className="text-center w-full">
+                                  <Activity className="w-16 h-16 mx-auto mb-4 text-green-500"/>
+                                  <h3 className="text-xl font-bold text-gray-800 mb-2">Monitoring Active</h3>
+                                  <p>Student is currently taking the exam.</p>
+                                  {/* Future: Add real-time logs or screen capture here */}
                               </div>
                           ) : (
-                              <div className="space-y-6">
-                                {/* Critical Alerts */}
-                                {monitoringData.cpu_usage > 90 && (
-                                  <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r">
-                                    <div className="flex items-center">
-                                      <AlertTriangle className="w-5 h-5 text-red-500 mr-2" />
-                                      <p className="text-red-700 font-medium">High CPU Usage Detected ({monitoringData.cpu_usage}%)</p>
-                                    </div>
-                                  </div>
-                                )}
-
-                                {/* System Stats Grid */}
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                  {/* CPU */}
-                                  <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                                    <div className="flex items-center justify-between mb-2">
-                                      <div className="flex items-center text-blue-700">
-                                        <Cpu className="w-5 h-5 mr-2" />
-                                        <span className="font-semibold">CPU Usage</span>
-                                      </div>
-                                      <span className="text-2xl font-bold text-blue-800">{monitoringData.cpu_usage}%</span>
-                                    </div>
-                                    <div className="w-full bg-blue-200 rounded-full h-2">
-                                      <div 
-                                        className="bg-blue-600 h-2 rounded-full transition-all duration-500" 
-                                        style={{ width: `${monitoringData.cpu_usage}%` }}
-                                      />
-                                    </div>
-                                    <p className="text-xs text-blue-600 mt-2">{monitoringData.cpu_model || 'Unknown CPU'}</p>
-                                  </div>
-
-                                  {/* RAM */}
-                                  <div className="bg-purple-50 p-4 rounded-xl border border-purple-100">
-                                    <div className="flex items-center justify-between mb-2">
-                                      <div className="flex items-center text-purple-700">
-                                        <MemoryStick className="w-5 h-5 mr-2" />
-                                        <span className="font-semibold">Memory</span>
-                                      </div>
-                                      <span className="text-2xl font-bold text-purple-800">{monitoringData.ram_usage}%</span>
-                                    </div>
-                                    <div className="w-full bg-purple-200 rounded-full h-2">
-                                      <div 
-                                        className="bg-purple-600 h-2 rounded-full transition-all duration-500" 
-                                        style={{ width: `${monitoringData.ram_usage}%` }}
-                                      />
-                                    </div>
-                                    <p className="text-xs text-purple-600 mt-2">
-                                      {monitoringData.ram_available}GB free of {monitoringData.ram_total}GB
-                                    </p>
-                                  </div>
-
-                                  {/* Disk */}
-                                  <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-100">
-                                    <div className="flex items-center justify-between mb-2">
-                                      <div className="flex items-center text-emerald-700">
-                                        <HardDrive className="w-5 h-5 mr-2" />
-                                        <span className="font-semibold">Storage</span>
-                                      </div>
-                                      <span className="text-2xl font-bold text-emerald-800">{monitoringData.disk_usage}%</span>
-                                    </div>
-                                    <div className="w-full bg-emerald-200 rounded-full h-2">
-                                      <div 
-                                        className="bg-emerald-600 h-2 rounded-full transition-all duration-500" 
-                                        style={{ width: `${monitoringData.disk_usage}%` }}
-                                      />
-                                    </div>
-                                    <p className="text-xs text-emerald-600 mt-2">
-                                      {monitoringData.disk_free}GB free of {monitoringData.disk_total}GB
-                                    </p>
-                                  </div>
-                                </div>
-
-                                {/* Active Window */}
-                                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                                  <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Active Window</h4>
-                                  <div className="flex items-center bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
-                                    <Monitor className="w-5 h-5 text-gray-400 mr-3" />
-                                    <span className="font-mono text-sm text-gray-700 truncate">
-                                      {monitoringData.active_window || 'Unknown'}
-                                    </span>
-                                  </div>
-                                </div>
-
-                                {/* Process List */}
-                                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                                  <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Top Processes</h4>
-                                  <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-                                    <table className="w-full text-sm text-left">
-                                      <thead className="bg-gray-50 text-gray-500 font-medium border-b border-gray-200">
-                                        <tr>
-                                          <th className="px-4 py-2">Process Name</th>
-                                          <th className="px-4 py-2 text-right">Memory</th>
-                                          <th className="px-4 py-2 text-right">CPU</th>
-                                        </tr>
-                                      </thead>
-                                      <tbody className="divide-y divide-gray-100">
-                                        {monitoringData.processes && Array.isArray(monitoringData.processes) ? (
-                                            monitoringData.processes.slice(0, 5).map((proc: any, idx: number) => (
-                                              <tr key={idx} className="hover:bg-gray-50">
-                                                <td className="px-4 py-2 font-mono text-gray-700">{proc.name}</td>
-                                                <td className="px-4 py-2 text-right text-gray-600">{proc.memory}</td>
-                                                <td className="px-4 py-2 text-right text-gray-600">{proc.cpu}%</td>
-                                              </tr>
-                                            ))
-                                        ) : (
-                                            <tr>
-                                                <td colSpan={3} className="px-4 py-2 text-center text-gray-500">No process data available</td>
-                                            </tr>
-                                        )}
-                                      </tbody>
-                                    </table>
-                                  </div>
-                                </div>
-                                
-                                <div className="text-right text-xs text-gray-400">
-                                    Last updated: {new Date(monitoringData.timestamp).toLocaleTimeString()}
-                                </div>
+                              <div className="text-center">
+                                  <Activity className="w-16 h-16 mx-auto mb-4 opacity-20"/>
+                                  <p>Waiting for student to login...</p>
                               </div>
                           )}
                       </div>
