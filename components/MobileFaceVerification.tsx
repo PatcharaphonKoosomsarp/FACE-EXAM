@@ -24,81 +24,44 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
     const [labeledDescriptors, setLabeledDescriptors] = useState<any[]>([]);
     const [faceMatcher, setFaceMatcher] = useState<any | null>(null);
 
-    // 1. Fetch Exam & User Info
+    // 1. Fetch User Photos (Critical) & Exam Info (Optional)
     useEffect(() => {
         const fetchInfo = async () => {
             try {
-                // Fetch Exam
-                const { data: examData, error: examError } = await supabase
-                    .from('exam_rooms')
-                    .select('*, room_seat_layouts(id, columns)')
-                    .eq('id', examId)
-                    .single();
-                
-                if (examError || !examData) throw new Error("ไม่พบข้อมูลการสอบ");
-
-                // Fetch User (from auth.users via wrapper or just trust the ID if we can't access auth table directly? 
-                // Actually we need the name and email. We can get it from exam_attendance or user_photos if needed, 
-                // but ideally we should have a way to get user info.
-                // Since we are in a public context (maybe), we might not have auth session.
-                // However, for verification, we need the descriptors which are in `user_photos`.
-                // Let's try to fetch from `user_photos` to verify user exists and get photos.
-                // We also need the name/email for the session record.
-                
-                // Let's try to get user metadata from a public profile table if it exists, or assume we can get it.
-                // Wait, `FaceVerification` uses `user` object passed from App.
-                // Here we only have ID.
-                // We can fetch `user_photos` to get the photos.
-                // For name/email, we might need to look up `exam_attendance` if available.
-                
-                const { data: attendance, error: attError } = await supabase
-                    .from('exam_attendance')
-                    .select('student_name, student_email') // Assuming these fields exist or we join
-                    .eq('exam_id', examId)
-                    .eq('student_id', userId)
-                    .maybeSingle();
-
-                // If not in attendance, we might have a problem getting the name if we don't have a users table accessible.
-                // But let's assume we can get it or use placeholders if strictly needed.
-                // Actually, `user_photos` has `user_id`.
-                
-                // Let's fetch user_photos first as it is critical.
+                // 1. Fetch User Photos (Critical)
                 const { data: photos, error: photoError } = await supabase
                     .from('user_photos')
                     .select('*')
                     .eq('user_id', userId)
                     .single();
 
-                if (photoError || !photos) throw new Error("ไม่พบข้อมูลรูปภาพของคุณ");
+                if (photoError || !photos) {
+                    console.error("Photo fetch error:", photoError);
+                    throw new Error("ไม่พบข้อมูลรูปภาพของคุณ (กรุณาติดต่อเจ้าหน้าที่)");
+                }
+
+                // 2. Fetch Exam Info (Optional - for display only)
+                let subjectName = "การสอบ";
+                try {
+                    const { data: examData } = await supabase
+                        .from('exam_rooms')
+                        .select('course_name')
+                        .eq('id', examId)
+                        .single();
+                    if (examData) subjectName = examData.course_name;
+                } catch (e) {
+                    console.warn("Could not fetch exam details (non-critical)");
+                }
 
                 // Construct user object
                 const userInfo = {
                     id: userId,
-                    name: attendance?.student_name || "Unknown Student",
-                    email: attendance?.student_email || "unknown@email.com",
                     photos: photos
                 };
 
-                // Construct exam object
-                // We need roomId (layout_id)
-                // examData.room_seat_layouts might be an array or object depending on query
-                // But exam_rooms has room_name. We need to find the layout ID.
-                // Actually `exam_rooms` doesn't link to `room_seat_layouts` by FK directly in the schema I saw earlier?
-                // Wait, `App.tsx` maps it by name.
-                // Let's fetch the room layout by name.
-                const { data: roomData } = await supabase
-                    .from('room_seat_layouts')
-                    .select('id, columns')
-                    .eq('room_name', examData.room_name)
-                    .single();
-
-                if (!roomData) throw new Error("ไม่พบข้อมูลห้องสอบ");
-
                 const examInfo = {
-                    id: examData.id,
-                    roomId: roomData.id, // This is the layout_id
-                    subjectName: examData.course_name,
-                    columns: roomData.columns
+                    id: examId,
+                    subjectName: subjectName
                 };
 
                 setExam(examInfo);
@@ -278,13 +241,16 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
             
             // Update qr_authentication table for PC to pick up
             // Schema: id, user_id, ip (inet), status, authenticated_at, expires_at
-            // Note: exam_id is not in the schema provided.
             // Note: ip must be valid inet type. Use 0.0.0.0 if unknown.
             const safeIp = (ip && ip.match(/^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/)) ? ip : '0.0.0.0';
 
+            // 1. Delete existing records (Clean slate, like in the HTML reference)
+            await supabase.from('qr_authentication').delete().eq('user_id', userId);
+
+            // 2. Insert new record
             const { error } = await supabase
                 .from('qr_authentication')
-                .upsert({
+                .insert({
                     user_id: userId,
                     status: 'authenticated',
                     ip: safeIp,
@@ -293,53 +259,9 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
 
             if (error) throw error;
 
-            setStatus('SUCCESS');
-            
-            let seatNumber = 0;
-            // Calculate seat (same logic as desktop, but we might not have IP mapping for mobile IP)
-            // Fallback to attendance
-            try {
-                const { data: attendance } = await supabase
-                    .from('exam_attendance')
-                    .select('row_number, col_number')
-                    .eq('exam_id', exam.id)
-                    .eq('student_id', user.id)
-                    .maybeSingle();
-                
-                if (attendance) {
-                    seatNumber = ((attendance.row_number - 1) * exam.columns) + attendance.col_number;
-                }
-            } catch (e) {}
-
-            // Upsert Session
-            const { data: existingSession } = await supabase
-                .from('exam_student_sessions')
-                .select('id')
-                .eq('layout_id', exam.roomId)
-                .eq('student_email', user.email)
-                .eq('is_active', true)
-                .maybeSingle();
-
-            const sessionData = {
-                layout_id: exam.roomId,
-                student_email: user.email,
-                student_name: user.name,
-                seat_number: seatNumber,
-                ip_address: safeIp === '0.0.0.0' ? null : safeIp, // exam_student_sessions allows null ip
-                face_descriptor: JSON.stringify(Array.from(descriptor)),
-                is_active: true,
-                updated_at: new Date().toISOString()
-            };
-
-            if (existingSession) {
-                await supabase.from('exam_student_sessions').update(sessionData).eq('id', existingSession.id);
-            } else {
-                await supabase.from('exam_student_sessions').insert({
-                    ...sessionData,
-                    session_start_time: new Date().toISOString(),
-                    created_at: new Date().toISOString()
-                });
-            }
+            // Note: We do NOT create the exam session here. 
+            // The PC (FaceVerification.tsx) polls this table, sees 'authenticated', 
+            // and then creates the session using the PC's IP and context.
 
             setStatus('SUCCESS');
 
