@@ -366,14 +366,13 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
           } else {
              console.log("Proceeding with targetUserId (QR Mode):", userId);
              
-             // QR Mode Strategy:
-             // The "Fake Session" hack (temp_qr_access_token) is rejected by Supabase Storage with "Invalid Compact JWS".
-             // This means we cannot use that token for Storage uploads.
-             // We must rely on the bucket allowing Anonymous uploads (RLS Policy).
+             // QR Mode Strategy: Match HTML Logic
+             // 1. Authenticate with Fake Session (as per HTML)
+             // This sets a fake token in localStorage which the HTML version relies on.
+             await authenticateForQRAccess(userId);
              
-             console.log("QR Mode: Attempting upload as Anonymous user (Global Client)");
+             console.log("QR Mode: Attempting upload (matching HTML logic)");
              uploadClient = supabase; 
-
           }
 
           const photoData: any = { user_id: userId };
@@ -476,22 +475,25 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
 
               if (existingId) {
                   console.log('Updating existing record via QR access function...');
-                  const { error: updateError } = await uploadClient
+                  const { data: result, error: updateError } = await uploadClient
                       .rpc('update_user_photos_qr', {
                           p_record_id: existingId,
                           p_photo_data: photoData
                       });
                   
                   if (updateError) throw updateError;
+                  if (result && result.error) throw new Error(result.error);
+
               } else {
                   console.log('Inserting new record via QR access function...');
-                  const { error: insertError } = await uploadClient
+                  const { data: result, error: insertError } = await uploadClient
                       .rpc('insert_user_photos_qr', {
                           p_user_id: userId,
                           p_photo_data: photoData
                       });
                   
                   if (insertError) throw insertError;
+                  if (result && result.error) throw new Error(result.error);
               }
 
           } else {
