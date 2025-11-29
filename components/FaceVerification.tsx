@@ -294,30 +294,48 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
             
             let seatNumber = 0;
 
-            // Attempt to calculate seat number
+            // 1. Try to get seat from IP Mapping (Most accurate for fixed seat rooms)
             try {
-                // Get layout columns to calculate seat index
-                const { data: layout } = await supabase
-                    .from('room_seat_layouts')
-                    .select('columns')
-                    .eq('id', exam.roomId)
-                    .single();
-                
-                if (layout) {
-                    // Get student attendance position
-                    const { data: attendance } = await supabase
-                        .from('exam_attendance')
-                        .select('row_number, col_number')
-                        .eq('exam_id', exam.id)
-                        .eq('student_id', user.id)
-                        .maybeSingle();
-                    
-                    if (attendance) {
-                        seatNumber = ((attendance.row_number - 1) * layout.columns) + attendance.col_number;
-                    }
+                const { data: mapping } = await supabase
+                    .from('room_seat_ip_mappings')
+                    .select('seat_number')
+                    .eq('layout_id', exam.roomId)
+                    .eq('ip_address', ip)
+                    .maybeSingle();
+
+                if (mapping) {
+                    seatNumber = mapping.seat_number;
                 }
-            } catch (calcError) {
-                console.warn("Could not calculate seat number:", calcError);
+            } catch (e) {
+                console.warn("Error fetching seat from IP:", e);
+            }
+
+            // 2. If not found by IP, try to calculate from Attendance (Fallback)
+            if (seatNumber === 0) {
+                try {
+                    // Get layout columns to calculate seat index
+                    const { data: layout } = await supabase
+                        .from('room_seat_layouts')
+                        .select('columns')
+                        .eq('id', exam.roomId)
+                        .single();
+                    
+                    if (layout) {
+                        // Get student attendance position
+                        const { data: attendance } = await supabase
+                            .from('exam_attendance')
+                            .select('row_number, col_number')
+                            .eq('exam_id', exam.id)
+                            .eq('student_id', user.id)
+                            .maybeSingle();
+                        
+                        if (attendance) {
+                            seatNumber = ((attendance.row_number - 1) * layout.columns) + attendance.col_number;
+                        }
+                    }
+                } catch (calcError) {
+                    console.warn("Could not calculate seat number:", calcError);
+                }
             }
 
             // Check for existing active session
