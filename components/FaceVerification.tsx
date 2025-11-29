@@ -104,9 +104,16 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
         checkExistingAuth();
     }, [handleMobileSuccess, user.id]); // Add handleMobileSuccess to deps
 
+    // Ref for the callback to avoid restarting the interval
+    const handleMobileSuccessRef = useRef(handleMobileSuccess);
+    useEffect(() => {
+        handleMobileSuccessRef.current = handleMobileSuccess;
+    }, [handleMobileSuccess]);
+
     // QR Code Logic
     useEffect(() => {
-        let pollInterval: NodeJS.Timeout;
+        let pollInterval: NodeJS.Timeout | null = null;
+        let isMounted = true;
 
         if (method === 'QR') {
             const startProcess = async () => {
@@ -117,6 +124,8 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                         ip = await getPrimaryWiFiIP();
                     }
                     
+                    if (!isMounted) return;
+
                     console.log('Generating QR with IP:', ip);
 
                     const baseUrl = window.location.origin;
@@ -126,7 +135,9 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
 
                     // 2. Start Polling for Handshake
                     pollInterval = setInterval(async () => {
+                        if (!isMounted) return;
                         try {
+                            console.log("Polling for mobile auth...");
                             // Check qr_authentication table for the LATEST authenticated record
                             const { data } = await supabase
                                 .from('qr_authentication')
@@ -140,9 +151,11 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
 
                             if (data) {
                                 console.log('Mobile authentication successful:', data);
-                                clearInterval(pollInterval);
+                                if (pollInterval) clearInterval(pollInterval);
                                 // Proceed to session creation using the IP from the handshake
-                                await handleMobileSuccess(data.ip);
+                                if (handleMobileSuccessRef.current) {
+                                    await handleMobileSuccessRef.current(data.ip);
+                                }
                             }
                         } catch (e) {
                             console.error("Polling error:", e);
@@ -151,7 +164,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
 
                 } catch (err) {
                     console.error("Error generating QR:", err);
-                    setErrorMessage("ไม่สามารถสร้าง QR Code ได้");
+                    if (isMounted) setErrorMessage("ไม่สามารถสร้าง QR Code ได้");
                 }
             };
 
@@ -159,9 +172,10 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
         }
 
         return () => {
+            isMounted = false;
             if (pollInterval) clearInterval(pollInterval);
         };
-    }, [method, exam.id, user.id, handleMobileSuccess]);
+    }, [method, exam.id, user.id]); // Removed handleMobileSuccess from deps
 
     const createSession = async (ip: string, seatNumber: number, descriptorStr: string) => {
          // Check for existing active session
@@ -643,9 +657,33 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                         เพื่อดำเนินการยืนยันตัวตนต่อบนมือถือ
                     </p>
                     
-                    <button onClick={() => setMethod(null)} className="mt-4 text-sm text-gray-500 hover:text-gray-900 underline">
-                        ย้อนกลับ
-                    </button>
+                    <div className="flex flex-col gap-2">
+                        <button 
+                            onClick={async () => {
+                                // Manual check
+                                const { data } = await supabase
+                                    .from('qr_authentication')
+                                    .select('*')
+                                    .eq('user_id', user.id)
+                                    .eq('status', 'authenticated')
+                                    .order('authenticated_at', { ascending: false })
+                                    .limit(1)
+                                    .maybeSingle();
+                                
+                                if (data) {
+                                    handleMobileSuccess(data.ip);
+                                } else {
+                                    alert("ยังไม่พบข้อมูลการยืนยันตัวตน กรุณาทำรายการบนมือถือให้เสร็จสิ้น");
+                                }
+                            }}
+                            className="text-sm bg-[#E35205] text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition"
+                        >
+                            ตรวจสอบสถานะ (หากหน้าจอไม่เปลี่ยน)
+                        </button>
+                        <button onClick={() => setMethod(null)} className="text-sm text-gray-500 hover:text-gray-900 underline">
+                            ย้อนกลับ
+                        </button>
+                    </div>
                 </div>
             </div>
         );
