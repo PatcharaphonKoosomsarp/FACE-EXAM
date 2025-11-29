@@ -4,12 +4,8 @@ import { Camera as CameraIcon, RefreshCw, CheckCircle, Smartphone, Monitor, Aler
 import { FaceRegistrationStep } from '../types';
 import { FaceMesh, Results } from '@mediapipe/face_mesh';
 import { Camera } from '@mediapipe/camera_utils';
+import { createClient } from '@supabase/supabase-js';
 import { supabase } from '../supabaseClient';
-
-interface FaceRegistrationProps {
-  onComplete: () => void;
-  onCancel: () => void;
-}
 
 const stepsData: FaceRegistrationStep[] = [
   { id: '1', instruction: 'หน้าตรง', description: 'มองตรงไปที่กล้อง', isCompleted: false },
@@ -68,7 +64,8 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
       rightTurn: 0.35,
       up: 0.45,
       down: 0.65,
-      blinkEAR: 0.1,
+      blinkEAR: 0.15, // Relaxed from 0.1 for mobile
+      openEAR: 0.25,  // New threshold: Relaxed from 0.4 to allow looking down at screen
       closeRatio: 1.25
   };
 
@@ -216,7 +213,7 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
       }
       // 2. Eye Open
       else if (currentSeq === 'eyeOpen') {
-          if (ear > 0.4) {
+          if (ear > T.openEAR) {
               isPoseValid = true;
               feedbackMsg = "ลืมตา: ค้างไว้...";
           } else {
@@ -323,6 +320,33 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
       setCurrentStepIndex(index + 1);
   };
 
+  // Mimic the HTML's fake authentication for QR access
+  const authenticateForQRAccess = async (userId: string) => {
+      try {
+          console.log('Authenticating for QR access with user ID:', userId);
+          const fakeUser = {
+              id: userId,
+              email: `temp_${userId}@qr.access`,
+              user_metadata: { qr_access: true }
+          };
+          
+          // Set temporary auth state using the structure from HTML (Exact match)
+          const sessionData = {
+              access_token: 'temp_qr_access_token',
+              refresh_token: 'temp_qr_refresh_token',
+              user: fakeUser
+          };
+          
+          // Clear any existing session first to ensure clean state
+          localStorage.removeItem('supabase.auth.token');
+          localStorage.setItem('supabase.auth.token', JSON.stringify(sessionData));
+          
+          return true;
+      } catch (error) {
+          console.error('Error in QR authentication:', error);
+      }
+  };
+
   const finishRegistration = async () => {
       if (isSubmitting) return;
       setIsSubmitting(true);
@@ -332,7 +356,8 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
       try {
           let userId = targetUserId;
           let isQrMode = !!targetUserId;
-          
+          let uploadClient = supabase; // Default to global client
+
           // Check authentication if not in mobile target mode
           if (!userId) {
             const { data: { user } } = await supabase.auth.getUser();
@@ -340,6 +365,39 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
             userId = user.id;
           } else {
              console.log("Proceeding with targetUserId (QR Mode):", userId);
+             
+             // QR Mode Strategy:
+             // 1. Set the fake session in localStorage (matching HTML)
+             await authenticateForQRAccess(userId);
+             
+             // 2. Create a dedicated client that uses this specific storage key
+             const supabaseUrl = (supabase as any).supabaseUrl;
+             const supabaseKey = (supabase as any).supabaseKey;
+             
+             if (supabaseUrl && supabaseKey) {
+                 // Create a dedicated client that forces the fake token in headers
+                 // This bypasses the client-side auth state management and sends the token directly
+                 uploadClient = createClient(supabaseUrl, supabaseKey, {
+                     auth: {
+                         persistSession: false, // We handle auth via headers
+                         autoRefreshToken: false,
+                         detectSessionInUrl: false
+                     },
+                     global: {
+                         fetch: (url, options) => {
+                             const newOptions = { ...options };
+                             newOptions.headers = {
+                                 ...newOptions.headers,
+                                 'Authorization': 'Bearer temp_qr_access_token',
+                                 'apikey': supabaseKey
+                             };
+                             return fetch(url, newOptions);
+                         }
+                     }
+                 });
+                 
+                 console.log("Created dedicated upload client with forced headers for QR mode");
+             }
           }
 
           const photoData: any = { user_id: userId };
@@ -359,33 +417,67 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
               const col = actionMapping[photo.action];
               if (col) {
                   const fileName = `${userId}/${photo.action}.png`;
-                  
-                  // Try uploading to liveness-photos first
-                  const { error: uploadError } = await supabase.storage
-                      .from('liveness-photos')
-                      .upload(fileName, photo.blob, { upsert: true, contentType: 'image/png' });
-                  
                   let publicUrl = '';
 
-                  if (uploadError) {
-                      console.warn("Upload to liveness-photos failed, trying user-photos (legacy)...", uploadError);
-                      // Fallback to user-photos if liveness-photos fails (likely due to RLS or bucket config)
-                      // The legacy HTML uses 'user-photos'
-                      const { error: legacyError } = await supabase.storage
-                          .from('user-photos')
-                          .upload(fileName, photo.blob, { upsert: true, contentType: 'image/png' });
+                  // For QR Mode, prioritize 'user-photos' as it's known to work with the RPC flow
+                  if (isQrMode) {
+                      console.log(`QR Mode: Uploading ${photo.action} to user-photos...`);
                       
-                      if (legacyError) throw legacyError; // If both fail, throw error
+                      // Try with dedicated uploadClient (Fake Session)
+                      let uploadError;
+                      let usedClient = uploadClient;
+                      
+                      const { error: err1 } = await uploadClient.storage
+                          .from('user-photos')
+                          .upload(fileName, photo.blob, { upsert: true });
+                      
+                      uploadError = err1;
 
-                      const { data: urlData } = supabase.storage
+                      // If fake session fails, try fallback to global client (Anon)
+                      if (uploadError) {
+                          console.warn("QR Mode upload with fake session failed, trying anon fallback...", uploadError);
+                          const { error: err2 } = await supabase.storage
+                              .from('user-photos')
+                              .upload(fileName, photo.blob, { upsert: true });
+                          
+                          if (err2) {
+                              console.error("QR Mode anon upload failed:", err2);
+                              throw new Error(`Upload failed for ${photo.action}: ${err2.message}`);
+                          }
+                          usedClient = supabase; // Switch to global client for getPublicUrl
+                          uploadClient = supabase; // Switch to global client for future operations (RPC)
+                          uploadError = null; // Clear error
+                      }
+
+                      const { data: urlData } = usedClient.storage
                           .from('user-photos')
                           .getPublicUrl(fileName);
                       publicUrl = urlData.publicUrl;
                   } else {
-                      const { data: urlData } = supabase.storage
+                      // Normal mode: Try liveness-photos first
+                      const { error: uploadError } = await supabase.storage
                           .from('liveness-photos')
-                          .getPublicUrl(fileName);
-                      publicUrl = urlData.publicUrl;
+                          .upload(fileName, photo.blob, { upsert: true, contentType: 'image/png' });
+                      
+                      if (uploadError) {
+                          console.warn("Upload to liveness-photos failed, trying user-photos (legacy)...", uploadError);
+                          // Fallback to user-photos if liveness-photos fails (likely due to RLS or bucket config)
+                          const { error: legacyError } = await supabase.storage
+                              .from('user-photos')
+                              .upload(fileName, photo.blob, { upsert: true, contentType: 'image/png' });
+                          
+                          if (legacyError) throw legacyError; // If both fail, throw error
+
+                          const { data: urlData } = supabase.storage
+                              .from('user-photos')
+                              .getPublicUrl(fileName);
+                          publicUrl = urlData.publicUrl;
+                      } else {
+                          const { data: urlData } = supabase.storage
+                              .from('liveness-photos')
+                              .getPublicUrl(fileName);
+                          publicUrl = urlData.publicUrl;
+                      }
                   }
                   
                   // Add timestamp to URL to prevent caching issues on client side
@@ -394,12 +486,15 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
           }
 
           // Save to DB
+          console.log("Saving to DB. Mode:", isQrMode ? "QR (RPC)" : "Normal (Direct)", "UserID:", userId);
           if (isQrMode) {
               // Use RPC functions for QR mode to bypass RLS (as seen in qr_register_face.html)
               // These functions must exist in the database as SECURITY DEFINER
               
+              // Use the uploadClient for RPC as well, just in case
+              
               // 1. Check existing via RPC
-              const { data: existingData, error: checkError } = await supabase
+              const { data: existingData, error: checkError } = await uploadClient
                   .rpc('get_user_photos_qr', { p_user_id: userId });
               
               let existingId = null;
@@ -409,7 +504,7 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
 
               if (existingId) {
                   console.log('Updating existing record via QR access function...');
-                  const { error: updateError } = await supabase
+                  const { error: updateError } = await uploadClient
                       .rpc('update_user_photos_qr', {
                           p_record_id: existingId,
                           p_photo_data: photoData
@@ -418,7 +513,7 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
                   if (updateError) throw updateError;
               } else {
                   console.log('Inserting new record via QR access function...');
-                  const { error: insertError } = await supabase
+                  const { error: insertError } = await uploadClient
                       .rpc('insert_user_photos_qr', {
                           p_user_id: userId,
                           p_photo_data: photoData
@@ -697,7 +792,7 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
 
   return (
     <div className="fixed inset-0 bg-gray-900 flex flex-col items-center justify-center z-50">
-      <div className="w-full max-w-5xl bg-white rounded-2xl overflow-hidden shadow-2xl flex flex-col md:flex-row h-[85vh]">
+      <div className={`w-full max-w-5xl bg-white md:rounded-2xl overflow-hidden shadow-2xl flex flex-col md:flex-row ${targetUserId ? 'h-full md:h-[85vh] rounded-none' : 'h-[85vh] rounded-2xl'}`}>
         
         {/* Camera View */}
         <div className="relative bg-black flex-1 flex items-center justify-center overflow-hidden">
@@ -805,14 +900,23 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
         </div>
 
         {/* Sidebar Instructions */}
-        <div className="w-full md:w-80 bg-gray-50 p-6 overflow-y-auto border-l border-gray-200">
-            <h3 className="font-bold text-lg mb-6 text-gray-800 flex items-center">
+        <div className={`w-full md:w-80 bg-gray-50 p-6 overflow-y-auto border-l border-gray-200 transition-all duration-300 ${targetUserId ? 'max-h-[30vh] md:max-h-full' : ''}`}>
+            <h3 className="font-bold text-lg mb-6 text-gray-800 flex items-center sticky top-0 bg-gray-50 z-20 py-2">
                 <CameraIcon className="w-5 h-5 mr-2 text-[#E35205]"/>
                 ขั้นตอนการลงทะเบียน
             </h3>
             <div className="space-y-4 relative before:absolute before:left-5 before:top-4 before:bottom-4 before:w-0.5 before:bg-gray-200">
                 {steps.map((step, index) => (
-                    <div key={step.id} className={`relative pl-4 flex items-start p-3 rounded-xl transition-all duration-300 ${index === currentStepIndex ? 'bg-white shadow-md scale-105 z-10 ring-1 ring-orange-100' : 'opacity-60'}`}>
+                    <div 
+                        key={step.id} 
+                        id={`step-${index}`}
+                        className={`relative pl-4 flex items-start p-3 rounded-xl transition-all duration-300 ${index === currentStepIndex ? 'bg-white shadow-md scale-105 z-10 ring-1 ring-orange-100' : 'opacity-60'}`}
+                        ref={(el) => {
+                            if (index === currentStepIndex && el) {
+                                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }
+                        }}
+                    >
                         {/* Status Indicator */}
                         <div className="absolute -left-[5px] top-1/2 transform -translate-y-1/2 bg-gray-50 p-1">
                              {step.isCompleted ? (
