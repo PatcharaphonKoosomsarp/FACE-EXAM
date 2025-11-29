@@ -48,13 +48,15 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                     // 2. Start Polling for Handshake
                     const pollInterval = setInterval(async () => {
                         try {
-                            // Check qr_authentication table
+                            // Check qr_authentication table for the LATEST authenticated record
                             const { data } = await supabase
                                 .from('qr_authentication')
                                 .select('*')
                                 .eq('user_id', user.id)
                                 .eq('status', 'authenticated')
-                                .gt('authenticated_at', new Date(Date.now() - 60000).toISOString()) // Last 1 minute
+                                .gt('authenticated_at', new Date(Date.now() - 120000).toISOString()) // Increased to 2 minutes
+                                .order('authenticated_at', { ascending: false })
+                                .limit(1)
                                 .maybeSingle();
 
                             if (data) {
