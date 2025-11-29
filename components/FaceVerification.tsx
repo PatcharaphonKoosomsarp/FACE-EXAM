@@ -238,7 +238,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                         // Check if it's a real face (score > 0.5) as per original logic
                         if (detection.detection.score > 0.5) {
                             const match = faceMatcher.findBestMatch(detection.descriptor);
-                            console.log(`Live Detection -> Score: ${detection.detection.score.toFixed(2)} | Match: ${match.label} | Distance: ${match.distance.toFixed(3)} (Threshold: 0.35)`);
+                            console.log(`Live Detection -> Score: ${detection.detection.score.toFixed(2)} | Match: ${match.label} | Distance: ${match.distance.toFixed(3)} (Threshold: 0.60)`);
                             
                             if (match.label === user.id) {
                                 if (!bestMatch || match.distance < bestMatch.distance) {
@@ -248,8 +248,8 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                         }
                     }
 
-                    // Threshold 0.35 as per original authentication_face.html
-                    if (bestMatch && bestMatch.distance < 0.35) { 
+                    // Threshold 0.60 (Adjusted from 0.35 to be more lenient)
+                    if (bestMatch && bestMatch.distance < 0.60) { 
                         clearInterval(interval);
                         handleSuccess(resizedDetections[0].descriptor); // Use the descriptor of the detected face
                     }
