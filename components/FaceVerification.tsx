@@ -26,7 +26,6 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
     const [modelsLoaded, setModelsLoaded] = useState(false);
     const [labeledDescriptors, setLabeledDescriptors] = useState<any[]>([]);
     const [faceMatcher, setFaceMatcher] = useState<any | null>(null);
-    const [debugMsg, setDebugMsg] = useState<string>("");
 
     const handleMobileSuccess = useCallback(async (mobileIp: string) => {
         setStatus('VERIFYING_IP');
@@ -139,7 +138,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                         if (!isMounted) return;
                         try {
                             // Check qr_authentication table for the LATEST authenticated record
-                            const { data, error } = await supabase
+                            const { data } = await supabase
                                 .from('qr_authentication')
                                 .select('*')
                                 .eq('user_id', user.id)
@@ -148,22 +147,16 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                                 .limit(1)
                                 .maybeSingle();
 
-                            if (error) {
-                                setDebugMsg(`Polling Error: ${error.message}`);
-                            } else if (data) {
-                                setDebugMsg(`Success! Found record from ${data.ip}`);
+                            if (data) {
                                 console.log('Mobile authentication successful:', data);
                                 if (pollInterval) clearInterval(pollInterval);
                                 // Proceed to session creation using the IP from the handshake
                                 if (handleMobileSuccessRef.current) {
                                     await handleMobileSuccessRef.current(data.ip);
                                 }
-                            } else {
-                                setDebugMsg(`Polling... User: ${user.id.substring(0, 8)}... No auth record yet.`);
                             }
-                        } catch (e: any) {
+                        } catch (e) {
                             console.error("Polling error:", e);
-                            setDebugMsg(`Exception: ${e.message}`);
                         }
                     }, 2000);
 
@@ -662,45 +655,9 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                         เพื่อดำเนินการยืนยันตัวตนต่อบนมือถือ
                     </p>
                     
-                    <div className="flex flex-col gap-2">
-                        <div className="text-xs text-gray-400 font-mono bg-gray-100 p-2 rounded break-all">
-                            {debugMsg || "Initializing..."}
-                        </div>
-                        <button 
-                            onClick={async () => {
-                                // Manual check
-                                setDebugMsg("Checking manually...");
-                                const { data, error } = await supabase
-                                    .from('qr_authentication')
-                                    .select('*')
-                                    .eq('user_id', user.id)
-                                    .order('authenticated_at', { ascending: false })
-                                    .limit(1)
-                                    .maybeSingle();
-                                
-                                if (error) {
-                                    alert(`Error: ${error.message}`);
-                                    setDebugMsg(`Manual Error: ${error.message}`);
-                                } else if (data) {
-                                    if (data.status === 'authenticated') {
-                                        handleMobileSuccess(data.ip);
-                                    } else {
-                                        alert(`Found record but status is '${data.status}' (Expected: 'authenticated')`);
-                                        setDebugMsg(`Found record but status is ${data.status}`);
-                                    }
-                                } else {
-                                    alert("ยังไม่พบข้อมูลการยืนยันตัวตน กรุณาทำรายการบนมือถือให้เสร็จสิ้น");
-                                    setDebugMsg("Manual check: No record found.");
-                                }
-                            }}
-                            className="text-sm bg-[#E35205] text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition"
-                        >
-                            ตรวจสอบสถานะ (หากหน้าจอไม่เปลี่ยน)
-                        </button>
-                        <button onClick={() => setMethod(null)} className="text-sm text-gray-500 hover:text-gray-900 underline">
-                            ย้อนกลับ
-                        </button>
-                    </div>
+                    <button onClick={() => setMethod(null)} className="mt-4 text-sm text-gray-500 hover:text-gray-900 underline">
+                        ย้อนกลับ
+                    </button>
                 </div>
             </div>
         );
