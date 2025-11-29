@@ -710,20 +710,33 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
                                       {/* Violation Logs */}
                                       {studentViolationLogs && studentViolationLogs.length > 0 && (
-                                        <div className="mt-4 pt-3 border-t border-indigo-100">
-                                            <h5 className="text-xs font-bold text-red-600 mb-2 flex items-center">
-                                                <ShieldAlert className="w-3 h-3 mr-1"/> Violation Logs ({studentViolationLogs.length})
+                                        <div className="mt-4 pt-4 border-t border-indigo-200/60">
+                                            <h5 className="text-sm font-bold text-red-600 mb-3 flex items-center">
+                                                <ShieldAlert className="w-5 h-5 mr-2"/> Violation Logs ({studentViolationLogs.length})
                                             </h5>
-                                            <div className="max-h-40 overflow-y-auto space-y-2">
+                                            <div className="max-h-60 overflow-y-auto space-y-3 pr-1 custom-scrollbar">
                                                 {studentViolationLogs.map((log) => (
-                                                    <div key={log.id} className="text-xs bg-red-50 p-2 rounded border border-red-100">
-                                                        <div className="flex justify-between font-bold text-red-800 mb-1">
-                                                            <span>{log.violation_type}</span>
-                                                            <span>{new Date(log.timestamp).toLocaleTimeString()}</span>
+                                                    <div key={log.id} className="bg-white p-3 rounded-xl border border-red-100 shadow-sm relative overflow-hidden group">
+                                                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-red-500"></div>
+                                                        <div className="flex justify-between items-start mb-2 pl-2">
+                                                            <span className="font-bold text-red-700 text-sm flex items-center uppercase tracking-wide">
+                                                                {log.violation_type.replace(/_/g, ' ')}
+                                                            </span>
+                                                            <span className="text-xs text-gray-500 font-mono bg-gray-50 px-2 py-1 rounded border border-gray-100">
+                                                                {new Date(log.timestamp).toLocaleTimeString()}
+                                                            </span>
                                                         </div>
-                                                        <div className="text-red-700 mb-1 break-all font-medium">{log.resource_name}</div>
-                                                        <div className="flex justify-between items-center">
-                                                            <span className="bg-red-200 text-red-800 px-1.5 py-0.5 rounded text-[10px] font-bold">{log.action_taken}</span>
+                                                        <div className="text-gray-800 text-sm mb-3 font-medium break-words leading-relaxed pl-2">
+                                                            {log.resource_name}
+                                                        </div>
+                                                        <div className="flex items-center pl-2">
+                                                            <span className={`px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider shadow-sm ${
+                                                                log.action_taken.toLowerCase().includes('close') || log.action_taken.toLowerCase().includes('terminate') 
+                                                                ? 'bg-red-500 text-white' 
+                                                                : 'bg-orange-500 text-white'
+                                                            }`}>
+                                                                {log.action_taken}
+                                                            </span>
                                                         </div>
                                                     </div>
                                                 ))}
