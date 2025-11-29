@@ -330,16 +330,17 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
               user_metadata: { qr_access: true }
           };
           
-          // Set temporary auth state using the structure suggested by user (v1 style or specific config)
+          // Set temporary auth state using the structure from HTML (Flat structure)
           const sessionData = {
-              currentSession: {
-                  access_token: 'temp_qr_access_token',
-                  refresh_token: 'temp_qr_refresh_token',
-                  user: fakeUser
-              },
-              expires_at: Math.floor(Date.now() / 1000) + 3600
+              access_token: 'temp_qr_access_token',
+              refresh_token: 'temp_qr_refresh_token',
+              user: fakeUser,
+              token_type: 'bearer',
+              expires_in: 3600
           };
           
+          // Clear any existing session first to ensure clean state
+          localStorage.removeItem('supabase.auth.token');
           localStorage.setItem('supabase.auth.token', JSON.stringify(sessionData));
           
           return true;
@@ -376,15 +377,28 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
              const supabaseKey = (supabase as any).supabaseKey;
              
              if (supabaseUrl && supabaseKey) {
+                 // Create a client that points to the specific storage key
                  uploadClient = createClient(supabaseUrl, supabaseKey, {
                      auth: {
-                         storageKey: 'supabase.auth.token', // Force use of the key we just set
+                         storageKey: 'supabase.auth.token',
                          storage: localStorage,
                          persistSession: true,
                          detectSessionInUrl: false,
                          autoRefreshToken: false
+                     },
+                     global: {
+                         headers: {
+                             'Authorization': `Bearer temp_qr_access_token` // Force header just in case
+                         }
                      }
                  });
+                 
+                 // Manually set the session on the client to ensure it's picked up
+                 await uploadClient.auth.setSession({
+                     access_token: 'temp_qr_access_token',
+                     refresh_token: 'temp_qr_refresh_token'
+                 });
+                 
                  console.log("Created dedicated upload client for QR mode");
              }
           }
