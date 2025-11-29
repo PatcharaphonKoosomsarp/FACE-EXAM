@@ -3,9 +3,32 @@ import { Room, Exam, ResourceConstraint, User, ExamAttendance } from '../types';
 import { 
   Plus, Calendar, Save, Trash2, Cpu, 
   ChevronRight, Check, LayoutGrid, List, 
-  MapPin, Clock, ArrowLeft, MonitorX, AlertCircle, Edit, X, User as UserIcon, Activity, ShieldAlert, Ban, Network, LogOut 
+  MapPin, Clock, ArrowLeft, MonitorX, AlertCircle, Edit, X, User as UserIcon, Activity, ShieldAlert, Ban, Network, LogOut,
+  HardDrive, Wifi, Layers
 } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
+import { supabase } from '../supabaseClient';
+
+interface ResourceLog {
+    cpu_usage: number;
+    cpu_frequency: number;
+    cpu_model: string;
+    ram_usage: number;
+    ram_total_gb: number;
+    ram_available_gb: number;
+    ram_used_gb: number;
+    disk_read_kb: number;
+    disk_write_kb: number;
+    disk_type: string;
+    disk_partitions_info: any;
+    gpu_usage: number;
+    gpu_model: string;
+    network_speed_kbps: number;
+    network_type: string;
+    active_window_title: string;
+    exe_processes: any;
+    timestamp: string;
+}
 
 interface TeacherDashboardProps {
   user: User;
@@ -98,6 +121,65 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   // List View State
   const [selectedExamId, setSelectedExamId] = useState<string | null>(null);
   const [viewingSeat, setViewingSeat] = useState<number | null>(null); 
+
+  // Monitoring Data State
+  const [studentResourceData, setStudentResourceData] = useState<ResourceLog | null>(null);
+
+  // Effect to fetch monitoring data
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+
+    const fetchResourceData = async () => {
+        if (viewingSeat === null || !selectedExamId) return;
+        
+        const exam = exams.find(e => e.id === selectedExamId);
+        const room = rooms.find(r => r.id === exam?.roomId);
+        if (!room) return;
+
+        const row = Math.floor(viewingSeat / room.cols) + 1;
+        const col = (viewingSeat % room.cols) + 1;
+        const seatNumber = (row - 1) * room.cols + col;
+
+        // Try to find active student session first
+        // We query exam_student_sessions directly to ensure we get the correct session ID for logs
+        const { data: sessions } = await supabase
+            .from('exam_student_sessions')
+            .select('id')
+            .eq('layout_id', room.id)
+            .eq('seat_number', seatNumber)
+            .eq('is_active', true)
+            .order('created_at', { ascending: false })
+            .limit(1);
+
+        if (sessions && sessions.length > 0) {
+            const sessionId = sessions[0].id;
+            const { data } = await supabase
+                .from('resource_logs')
+                .select('*')
+                .eq('session_id', sessionId)
+                .order('timestamp', { ascending: false })
+                .limit(1)
+                .single();
+            
+            if (data) {
+                setStudentResourceData(data);
+            }
+        } else {
+            setStudentResourceData(null);
+        }
+    };
+
+    if (viewingSeat !== null) {
+        fetchResourceData();
+        interval = setInterval(fetchResourceData, 5000); // Refresh every 5s
+    } else {
+        setStudentResourceData(null);
+    }
+
+    return () => {
+        if (interval) clearInterval(interval);
+    };
+  }, [viewingSeat, selectedExamId, exams, rooms]);
 
   // Effect to clean up selection if item is deleted
   useEffect(() => {
@@ -522,18 +604,102 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                           </div>
                       </div>
 
-                      <div className="w-full md:w-2/3 bg-white p-6 overflow-y-auto flex items-center justify-center text-gray-400">
-                          {student ? (
-                              <div className="text-center w-full">
-                                  <Activity className="w-16 h-16 mx-auto mb-4 text-green-500"/>
-                                  <h3 className="text-xl font-bold text-gray-800 mb-2">Monitoring Active</h3>
-                                  <p>Student is currently taking the exam.</p>
-                                  {/* Future: Add real-time logs or screen capture here */}
+                      <div className="w-full md:w-2/3 bg-white p-6 overflow-y-auto">
+                          {studentResourceData ? (
+                              <div className="space-y-6">
+                                  {/* Active Window */}
+                                  <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
+                                      <h4 className="text-sm font-bold text-indigo-800 mb-2 flex items-center">
+                                          <Layers className="w-4 h-4 mr-2"/> Active Window
+                                      </h4>
+                                      <div className="bg-white p-3 rounded-lg border border-indigo-100 text-gray-800 font-medium truncate">
+                                          {studentResourceData.active_window_title || 'Unknown'}
+                                      </div>
+                                  </div>
+
+                                  {/* Resources Grid */}
+                                  <div className="grid grid-cols-2 gap-4">
+                                      {/* CPU */}
+                                      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                                          <div className="flex justify-between items-center mb-2">
+                                              <span className="text-sm font-bold text-gray-600 flex items-center"><Cpu className="w-4 h-4 mr-2 text-blue-500"/> CPU</span>
+                                              <span className="text-xl font-bold text-blue-600">{Math.round(studentResourceData.cpu_usage)}%</span>
+                                          </div>
+                                          <div className="w-full bg-gray-100 rounded-full h-2">
+                                              <div className="bg-blue-500 h-2 rounded-full" style={{ width: `${Math.min(studentResourceData.cpu_usage, 100)}%` }}></div>
+                                          </div>
+                                          <div className="mt-2 text-xs text-gray-500 truncate">{studentResourceData.cpu_model}</div>
+                                      </div>
+
+                                      {/* RAM */}
+                                      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                                          <div className="flex justify-between items-center mb-2">
+                                              <span className="text-sm font-bold text-gray-600 flex items-center"><Activity className="w-4 h-4 mr-2 text-green-500"/> RAM</span>
+                                              <span className="text-xl font-bold text-green-600">{Math.round(studentResourceData.ram_usage)}%</span>
+                                          </div>
+                                          <div className="w-full bg-gray-100 rounded-full h-2">
+                                              <div className="bg-green-500 h-2 rounded-full" style={{ width: `${Math.min(studentResourceData.ram_usage, 100)}%` }}></div>
+                                          </div>
+                                          <div className="mt-2 text-xs text-gray-500">
+                                              {studentResourceData.ram_used_gb?.toFixed(1)} / {studentResourceData.ram_total_gb?.toFixed(1)} GB
+                                          </div>
+                                      </div>
+
+                                      {/* Disk */}
+                                      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                                          <div className="flex justify-between items-center mb-2">
+                                              <span className="text-sm font-bold text-gray-600 flex items-center"><HardDrive className="w-4 h-4 mr-2 text-orange-500"/> Disk</span>
+                                              <span className="text-xs font-bold text-orange-600">{studentResourceData.disk_type}</span>
+                                          </div>
+                                          <div className="text-xs text-gray-500 space-y-1">
+                                              <div>Read: {studentResourceData.disk_read_kb} KB/s</div>
+                                              <div>Write: {studentResourceData.disk_write_kb} KB/s</div>
+                                          </div>
+                                      </div>
+
+                                      {/* Network */}
+                                      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                                          <div className="flex justify-between items-center mb-2">
+                                              <span className="text-sm font-bold text-gray-600 flex items-center"><Wifi className="w-4 h-4 mr-2 text-purple-500"/> Network</span>
+                                              <span className="text-xs font-bold text-purple-600">{studentResourceData.network_type}</span>
+                                          </div>
+                                          <div className="text-xl font-bold text-gray-800">{studentResourceData.network_speed_kbps} <span className="text-xs font-normal text-gray-500">Kbps</span></div>
+                                      </div>
+                                  </div>
+
+                                  {/* Processes */}
+                                  <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                                      <h4 className="text-sm font-bold text-gray-800 mb-3">Running Processes (Top 5)</h4>
+                                      <div className="space-y-2">
+                                          {Array.isArray(studentResourceData.exe_processes) && studentResourceData.exe_processes.slice(0, 5).map((proc: any, idx: number) => (
+                                              <div key={idx} className="flex justify-between items-center text-xs p-2 bg-gray-50 rounded">
+                                                  <span className="font-medium text-gray-700">{proc.name}</span>
+                                                  <span className="text-gray-500">PID: {proc.pid}</span>
+                                              </div>
+                                          ))}
+                                          {(!studentResourceData.exe_processes || studentResourceData.exe_processes.length === 0) && (
+                                              <div className="text-xs text-gray-400 italic">No process data available</div>
+                                          )}
+                                      </div>
+                                  </div>
+                                  
+                                  <div className="text-right text-xs text-gray-400">
+                                      Last updated: {new Date(studentResourceData.timestamp).toLocaleTimeString()}
+                                  </div>
                               </div>
                           ) : (
-                              <div className="text-center">
-                                  <Activity className="w-16 h-16 mx-auto mb-4 opacity-20"/>
-                                  <p>Waiting for student to login...</p>
+                              <div className="h-full flex flex-col items-center justify-center text-gray-400">
+                                  {student ? (
+                                      <>
+                                          <Activity className="w-16 h-16 mb-4 animate-pulse text-blue-200"/>
+                                          <p>Waiting for monitoring data...</p>
+                                      </>
+                                  ) : (
+                                      <>
+                                          <MonitorX className="w-16 h-16 mb-4 opacity-20"/>
+                                          <p>No active session to monitor</p>
+                                      </>
+                                  )}
                               </div>
                           )}
                       </div>
