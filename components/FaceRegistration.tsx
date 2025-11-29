@@ -367,37 +367,13 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
              console.log("Proceeding with targetUserId (QR Mode):", userId);
              
              // QR Mode Strategy:
-             // 1. Set the fake session in localStorage (matching HTML)
-             await authenticateForQRAccess(userId);
+             // The "Fake Session" hack (temp_qr_access_token) is rejected by Supabase Storage with "Invalid Compact JWS".
+             // This means we cannot use that token for Storage uploads.
+             // We must rely on the bucket allowing Anonymous uploads (RLS Policy).
              
-             // 2. Create a dedicated client that uses this specific storage key
-             const supabaseUrl = (supabase as any).supabaseUrl;
-             const supabaseKey = (supabase as any).supabaseKey;
-             
-             if (supabaseUrl && supabaseKey) {
-                 // Create a dedicated client that forces the fake token in headers
-                 // This bypasses the client-side auth state management and sends the token directly
-                 uploadClient = createClient(supabaseUrl, supabaseKey, {
-                     auth: {
-                         persistSession: false, // We handle auth via headers
-                         autoRefreshToken: false,
-                         detectSessionInUrl: false
-                     },
-                     global: {
-                         fetch: (url, options) => {
-                             const newOptions = { ...options };
-                             newOptions.headers = {
-                                 ...newOptions.headers,
-                                 'Authorization': 'Bearer temp_qr_access_token',
-                                 'apikey': supabaseKey
-                             };
-                             return fetch(url, newOptions);
-                         }
-                     }
-                 });
-                 
-                 console.log("Created dedicated upload client with forced headers for QR mode");
-             }
+             console.log("QR Mode: Attempting upload as Anonymous user (Global Client)");
+             uploadClient = supabase; 
+
           }
 
           const photoData: any = { user_id: userId };
@@ -435,18 +411,14 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
 
                       // If fake session fails, try fallback to global client (Anon)
                       if (uploadError) {
-                          console.warn("QR Mode upload with fake session failed, trying anon fallback...", uploadError);
-                          const { error: err2 } = await supabase.storage
-                              .from('user-photos')
-                              .upload(fileName, photo.blob, { upsert: true });
+                          console.warn("QR Mode upload failed:", uploadError);
                           
-                          if (err2) {
-                              console.error("QR Mode anon upload failed:", err2);
-                              throw new Error(`Upload failed for ${photo.action}: ${err2.message}`);
+                          // Check for RLS error specifically
+                          if (uploadError.message.includes('row-level security')) {
+                              throw new Error(`ไม่สามารถบันทึกรูปภาพได้เนื่องจากติดสิทธิ์การเข้าถึง (RLS) กรุณาแจ้งผู้ดูแลระบบให้ตรวจสอบ Policy ของ Storage Bucket 'user-photos' ให้รองรับการอัปโหลดแบบ Anonymous หรือตรวจสอบ Service Key`);
                           }
-                          usedClient = supabase; // Switch to global client for getPublicUrl
-                          uploadClient = supabase; // Switch to global client for future operations (RPC)
-                          uploadError = null; // Clear error
+                          
+                          throw new Error(`Upload failed for ${photo.action}: ${uploadError.message}`);
                       }
 
                       const { data: urlData } = usedClient.storage
