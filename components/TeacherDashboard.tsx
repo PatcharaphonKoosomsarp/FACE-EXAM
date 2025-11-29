@@ -4,7 +4,7 @@ import {
   Plus, Calendar, Save, Trash2, Cpu, 
   ChevronRight, Check, LayoutGrid, List, 
   MapPin, Clock, ArrowLeft, MonitorX, AlertCircle, Edit, X, User as UserIcon, Activity, ShieldAlert, Ban, Network, LogOut,
-  HardDrive, Wifi, Layers
+  HardDrive, Wifi, Layers, Settings
 } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 import { supabase } from '../supabaseClient';
@@ -674,10 +674,10 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                 </div>
                                 {student ? (
                                     <>
-                                        <h2 className="text-3xl font-bold text-gray-800">{student.studentName}</h2>
-                                        <p className="text-lg text-gray-500">{student.studentCode}</p>
-                                        <div className="mt-3 px-4 py-1.5 rounded-full text-base font-bold bg-green-100 text-green-700 flex items-center gap-2">
-                                            <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></div> ONLINE
+                                        <h2 className="text-xl font-bold text-gray-800">{student.studentName}</h2>
+                                        <p className="text-sm text-gray-500">{student.studentCode}</p>
+                                        <div className="mt-2 px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700 flex items-center gap-1.5">
+                                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div> ONLINE
                                         </div>
                                         <button 
                                             onClick={() => {
@@ -693,9 +693,9 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                     </>
                                 ) : (
                                     <>
-                                        <h2 className="text-3xl font-bold text-gray-800">Waiting for Student</h2>
-                                        <p className="text-lg text-gray-500">No active session</p>
-                                        <div className={`mt-3 px-4 py-1.5 rounded-full text-base font-bold ${assignedIp ? 'bg-blue-100 text-blue-700' : 'bg-gray-200 text-gray-600'}`}>
+                                        <h2 className="text-xl font-bold text-gray-800">Waiting for Student</h2>
+                                        <p className="text-sm text-gray-500">No active session</p>
+                                        <div className={`mt-2 px-3 py-1 rounded-full text-xs font-bold ${assignedIp ? 'bg-blue-100 text-blue-700' : 'bg-gray-200 text-gray-600'}`}>
                                             {assignedIp ? 'READY TO CONNECT' : 'NO IP CONFIG'}
                                         </div>
                                     </>

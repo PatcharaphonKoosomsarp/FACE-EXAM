@@ -7,6 +7,7 @@ import MobileFaceVerification from './components/MobileFaceVerification';
 import { User, UserRole, Room, Exam, ExamAttendance } from './types';
 import { supabase } from './supabaseClient';
 import { determineUserRole } from './utils';
+import { LogOut } from 'lucide-react';
 
 // Initial Mock Data
 const INITIAL_ROOMS: Room[] = [];
@@ -601,9 +602,10 @@ const App: React.FC = () => {
                 </div>
                 <button 
                     onClick={handleLogout}
-                    className="text-sm text-gray-500 hover:text-red-500 border-l pl-4"
+                    className="text-sm text-gray-500 hover:text-red-500 border-l pl-4 transition-colors"
+                    title="ออกจากระบบ"
                 >
-                    ออกจากระบบ
+                    <LogOut className="w-5 h-5" />
                 </button>
             </div>
         </div>
