@@ -14,14 +14,16 @@ interface StudentDashboardProps {
 type ViewMode = 'MENU' | 'FACE_REG' | 'EXAM_LIST';
 
 const StudentDashboard: React.FC<StudentDashboardProps> = ({ user, exams, rooms, onUpdateUser }) => {
-  const [viewMode, setViewMode] = useState<ViewMode>('MENU');
+  const [viewMode, setViewMode] = useState<ViewMode>(user.isFaceRegistered ? 'EXAM_LIST' : 'MENU');
   const [verifyingExam, setVerifyingExam] = useState<Exam | null>(null);
   const [activeExam, setActiveExam] = useState<Exam | null>(null);
+  const [isReregistering, setIsReregistering] = useState(false);
 
   const handleFaceRegComplete = () => {
-    setViewMode('MENU');
     onUpdateUser({ ...user, isFaceRegistered: true });
+    setIsReregistering(false);
     alert('ลงทะเบียนใบหน้าสำเร็จ!');
+    setViewMode('EXAM_LIST');
   };
 
   const handleEnterExam = (exam: Exam) => {
@@ -108,28 +110,36 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user, exams, rooms,
       {/* Face Registration View */}
       {viewMode === 'FACE_REG' && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <button onClick={() => setViewMode('MENU')} className="flex items-center text-gray-500 hover:text-[#E35205] mb-6 font-medium transition-colors">
+              <button onClick={() => { setViewMode('MENU'); setIsReregistering(false); }} className="flex items-center text-gray-500 hover:text-[#E35205] mb-6 font-medium transition-colors">
                 <ArrowLeft className="w-5 h-5 mr-1"/> กลับสู่เมนูหลัก
               </button>
               
-              {user.isFaceRegistered ? (
+              {user.isFaceRegistered && !isReregistering ? (
                   <div className="bg-green-50 border border-green-200 rounded-xl p-8 text-center">
                       <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                           <Check className="w-10 h-10 text-green-600" />
                       </div>
                       <h2 className="text-xl font-bold text-gray-800 mb-2">คุณลงทะเบียนใบหน้าเรียบร้อยแล้ว</h2>
                       <p className="text-gray-600 mb-6">สามารถเข้าสอบได้ตามตาราง</p>
-                      <button 
-                        onClick={() => setViewMode('MENU')}
-                        className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg font-bold hover:bg-gray-300 transition"
-                      >
-                          กลับสู่เมนูหลัก
-                      </button>
+                      <div className="flex gap-3 justify-center">
+                        <button 
+                            onClick={() => setViewMode('EXAM_LIST')}
+                            className="bg-[#E35205] text-white px-6 py-2 rounded-lg font-bold hover:bg-orange-700 transition shadow-md"
+                        >
+                            ไปที่ตารางสอบ
+                        </button>
+                        <button 
+                            onClick={() => setIsReregistering(true)}
+                            className="bg-white text-gray-700 border border-gray-300 px-6 py-2 rounded-lg font-bold hover:bg-gray-50 transition"
+                        >
+                            ลงทะเบียนใหม่
+                        </button>
+                      </div>
                   </div>
               ) : (
                   <FaceRegistration 
                     onComplete={handleFaceRegComplete} 
-                    onCancel={() => setViewMode('MENU')} 
+                    onCancel={() => { setViewMode('MENU'); setIsReregistering(false); }} 
                   />
               )}
           </div>
@@ -138,9 +148,16 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user, exams, rooms,
       {/* Exam List View */}
       {viewMode === 'EXAM_LIST' && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <button onClick={() => setViewMode('MENU')} className="flex items-center text-gray-500 hover:text-[#E35205] mb-6 font-medium transition-colors">
-                <ArrowLeft className="w-5 h-5 mr-1"/> กลับสู่เมนูหลัก
-              </button>
+              <div className="flex justify-between items-center mb-6">
+                  <button onClick={() => setViewMode('MENU')} className="flex items-center text-gray-500 hover:text-[#E35205] font-medium transition-colors">
+                    <ArrowLeft className="w-5 h-5 mr-1"/> เมนูหลัก
+                  </button>
+                  {user.isFaceRegistered && (
+                      <button onClick={() => { setViewMode('FACE_REG'); setIsReregistering(true); }} className="text-sm text-blue-600 hover:underline flex items-center bg-blue-50 px-3 py-1.5 rounded-lg">
+                          <Camera className="w-4 h-4 mr-1.5"/> อัปเดตข้อมูลใบหน้า
+                      </button>
+                  )}
+              </div>
 
               {!user.isFaceRegistered ? (
                   <div className="bg-orange-50 border border-orange-200 rounded-xl p-8 text-center">
