@@ -284,7 +284,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
 
             // 2. Verify IP Access (Only if IP is detected)
             if (ip) {
-                const hasAccess = await verifyIPAccess(exam.roomId, ip);
+                const hasAccess = await verifyIPAccess(exam.id, ip);
                 if (!hasAccess) {
                     throw new Error(`IP Address ของคุณ (${ip}) ไม่ได้รับอนุญาตให้เข้าห้องสอบนี้`);
                 }
