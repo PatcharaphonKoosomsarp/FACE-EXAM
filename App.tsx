@@ -202,15 +202,31 @@ const App: React.FC = () => {
           }
 
           if (userIdToDelete) {
-              const { error: qrError } = await supabase
-                  .from('qr_authentication')
-                  .delete()
-                  .eq('user_id', userIdToDelete);
-              
-              if (qrError) {
-                  console.error("Error deleting QR auth:", qrError);
+              // Try RPC first (Bypass RLS)
+              const { error: rpcError } = await supabase.rpc('delete_student_qr_auth', {
+                  target_user_id: userIdToDelete
+              });
+
+              if (rpcError) {
+                  console.warn("RPC delete failed (function might not exist), trying direct delete...", rpcError);
+                  
+                  // Fallback to direct delete
+                  const { error: qrError, count } = await supabase
+                      .from('qr_authentication')
+                      .delete({ count: 'exact' })
+                      .eq('user_id', userIdToDelete);
+                  
+                  if (qrError) {
+                      console.error("Error deleting QR auth:", qrError);
+                  } else {
+                      console.log(`Direct delete result: ${count} rows deleted.`);
+                      if (count === 0) {
+                          // If count is 0, it likely means RLS blocked it or ID not found
+                          console.warn("Direct delete returned 0 rows. RLS might be blocking deletion.");
+                      }
+                  }
               } else {
-                  console.log("Successfully deleted QR auth for user:", userIdToDelete);
+                  console.log("Successfully deleted QR auth via RPC for user:", userIdToDelete);
               }
           } else {
               console.warn("Could not find UserID to delete QR record. Student removed from session only.");
