@@ -607,7 +607,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                             <UserIcon className="w-12 h-12 text-gray-400"/>
                                         )}
                                     </div>
-                                    <div className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-4 border-white shadow-sm ${student ? 'bg-green-500' : assignedIp ? 'bg-orange-500' : 'bg-gray-400'}`}></div>
+                                    <div className={`absolute bottom-0 right-0 w-6 h-6 rounded-full border-4 border-white shadow-sm ${student ? 'bg-green-500' : assignedIp ? 'bg-orange-500' : 'bg-gray-400'}`}></div>
                                 </div>
                                 {student ? (
                                     <>
