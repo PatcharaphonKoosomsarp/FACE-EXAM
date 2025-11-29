@@ -26,8 +26,12 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
     const [modelsLoaded, setModelsLoaded] = useState(false);
     const [labeledDescriptors, setLabeledDescriptors] = useState<any[]>([]);
     const [faceMatcher, setFaceMatcher] = useState<any | null>(null);
+    const isVerifyingRef = useRef(false);
 
     const handleMobileSuccess = useCallback(async (mobileIp: string) => {
+        if (isVerifyingRef.current) return;
+        isVerifyingRef.current = true;
+
         setStatus('VERIFYING_IP');
         try {
             // 1. Get PC IP (The machine running the exam)
@@ -72,6 +76,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
             console.error("Mobile success handling error:", err);
             setErrorMessage(err.message);
             setStatus('FAILED');
+            isVerifyingRef.current = false; // Reset lock on failure
         }
     }, [exam.id, exam.roomId, user.email, user.name, onVerified]); // Add dependencies
 
@@ -471,6 +476,9 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
     }, [method, status, faceMatcher, user.id]);
 
     const handleSuccess = async (descriptor: Float32Array) => {
+        if (isVerifyingRef.current) return;
+        isVerifyingRef.current = true;
+
         setStatus('VERIFYING_IP');
         
         try {
@@ -516,67 +524,8 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
             // 2. If not found by IP, try to calculate from Attendance (Fallback)
             // REMOVED: exam_attendance table does not exist.
 
-            // Check for existing active session
-            const { data: existingSession, error: findError } = await supabase
-                .from('exam_student_sessions')
-                .select('id, seat_number')
-                .eq('layout_id', exam.roomId)
-                .eq('student_email', user.email)
-                .eq('is_active', true)
-                .order('created_at', { ascending: false })
-                .limit(1);
-
-            // Prepare profile URL with User ID hash for "Kick" functionality
-            const profileUrl = user.avatarUrl 
-                ? `${user.avatarUrl}#${user.id}`
-                : `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random#${user.id}`;
-
-            if (!findError && existingSession && existingSession.length > 0) {
-                // Use existing seat number if we couldn't determine it from IP
-                if (seatNumber === 0 && existingSession[0].seat_number) {
-                    seatNumber = existingSession[0].seat_number;
-                }
-
-                // Update existing session
-                console.log('Updating existing session:', existingSession[0].id);
-                const { error: updateError } = await supabase
-                    .from('exam_student_sessions')
-                    .update({
-                        student_name: user.name,
-                        seat_number: seatNumber,
-                        ip_address: ip,
-                        face_descriptor: JSON.stringify(Array.from(descriptor)),
-                        student_profile_url: profileUrl,
-                        updated_at: new Date().toISOString()
-                    })
-                    .eq('id', existingSession[0].id);
-
-                if (updateError) {
-                    console.error("Supabase update error:", updateError);
-                    throw updateError;
-                }
-            } else {
-                // Insert Session Record
-                console.log('Creating new session record...');
-                const { error: insertError } = await supabase.from('exam_student_sessions').insert({
-                    layout_id: exam.roomId,
-                    student_email: user.email,
-                    student_name: user.name,
-                    seat_number: seatNumber,
-                    ip_address: ip,
-                    face_descriptor: JSON.stringify(Array.from(descriptor)),
-                    student_profile_url: profileUrl,
-                    is_active: true,
-                    session_start_time: new Date().toISOString(),
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString()
-                });
-
-                if (insertError) {
-                    console.error("Supabase insert error:", insertError);
-                    throw insertError;
-                }
-            }
+            // Use createSession to handle DB logic (avoid duplication)
+            await createSession(ip || '', seatNumber, JSON.stringify(Array.from(descriptor)));
 
             setTimeout(() => {
                 onVerified();
@@ -586,6 +535,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
             console.error("Error saving session:", err);
             setErrorMessage(err.message || "เกิดข้อผิดพลาดในการตรวจสอบสิทธิ์");
             setStatus('FAILED');
+            isVerifyingRef.current = false; // Reset lock on failure
         }
     };
 
