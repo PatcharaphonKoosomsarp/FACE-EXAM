@@ -340,12 +340,17 @@ import { createClient } from '@supabase/supabase-js';
               user_metadata: { qr_access: true }
           };
           
-          // Set temporary auth state using the specific key used in HTML
-          localStorage.setItem('supabase.auth.token', JSON.stringify({
-              access_token: 'temp_qr_access_token',
-              refresh_token: 'temp_qr_refresh_token',
-              user: fakeUser
-          }));
+          // Set temporary auth state using the structure suggested by user (v1 style or specific config)
+          const sessionData = {
+              currentSession: {
+                  access_token: 'temp_qr_access_token',
+                  refresh_token: 'temp_qr_refresh_token',
+                  user: fakeUser
+              },
+              expires_at: Math.floor(Date.now() / 1000) + 3600
+          };
+          
+          localStorage.setItem('supabase.auth.token', JSON.stringify(sessionData));
           
           return true;
       } catch (error) {
@@ -377,7 +382,6 @@ import { createClient } from '@supabase/supabase-js';
              await authenticateForQRAccess(userId);
              
              // 2. Create a dedicated client that uses this specific storage key
-             // This ensures we match the HTML's behavior exactly
              const supabaseUrl = (supabase as any).supabaseUrl;
              const supabaseKey = (supabase as any).supabaseKey;
              
@@ -388,7 +392,7 @@ import { createClient } from '@supabase/supabase-js';
                          storage: localStorage,
                          persistSession: true,
                          detectSessionInUrl: false,
-                         autoRefreshToken: false // Don't try to refresh the fake token
+                         autoRefreshToken: false
                      }
                  });
                  console.log("Created dedicated upload client for QR mode");
@@ -418,17 +422,33 @@ import { createClient } from '@supabase/supabase-js';
                   if (isQrMode) {
                       console.log(`QR Mode: Uploading ${photo.action} to user-photos...`);
                       
-                      // Use the dedicated uploadClient
-                      const { error: uploadError } = await uploadClient.storage
+                      // Try with dedicated uploadClient (Fake Session)
+                      let uploadError;
+                      let usedClient = uploadClient;
+                      
+                      const { error: err1 } = await uploadClient.storage
                           .from('user-photos')
                           .upload(fileName, photo.blob, { upsert: true });
                       
+                      uploadError = err1;
+
+                      // If fake session fails, try fallback to global client (Anon)
                       if (uploadError) {
-                          console.error("QR Mode upload failed:", uploadError);
-                          throw new Error(`Upload failed for ${photo.action}: ${uploadError.message}`);
+                          console.warn("QR Mode upload with fake session failed, trying anon fallback...", uploadError);
+                          const { error: err2 } = await supabase.storage
+                              .from('user-photos')
+                              .upload(fileName, photo.blob, { upsert: true });
+                          
+                          if (err2) {
+                              console.error("QR Mode anon upload failed:", err2);
+                              throw new Error(`Upload failed for ${photo.action}: ${err2.message}`);
+                          }
+                          usedClient = supabase; // Switch to global client for getPublicUrl
+                          uploadClient = supabase; // Switch to global client for future operations (RPC)
+                          uploadError = null; // Clear error
                       }
 
-                      const { data: urlData } = uploadClient.storage
+                      const { data: urlData } = usedClient.storage
                           .from('user-photos')
                           .getPublicUrl(fileName);
                       publicUrl = urlData.publicUrl;
