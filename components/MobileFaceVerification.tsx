@@ -316,39 +316,46 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
                             autoPlay 
                             muted 
                             playsInline 
-                            className="absolute inset-0 w-full h-full object-cover"
+                            className="absolute inset-0 w-full h-full object-cover transform scale-x-[-1]"
                         />
                         
                         {/* Overlays */}
-                        <div className="absolute inset-0 pointer-events-none">
-                            {/* Scan Frame */}
-                            <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="w-64 h-64 border-2 border-[#E35205]/50 rounded-3xl relative overflow-hidden">
-                                    <div className="absolute top-0 w-full h-1 bg-[#E35205] shadow-[0_0_20px_#E35205] animate-[scan_2s_linear_infinite]"></div>
-                                    
-                                    {/* Corner Markers */}
-                                    <div className="absolute top-0 left-0 w-6 h-6 border-t-4 border-l-4 border-[#E35205] rounded-tl-xl"></div>
-                                    <div className="absolute top-0 right-0 w-6 h-6 border-t-4 border-r-4 border-[#E35205] rounded-tr-xl"></div>
-                                    <div className="absolute bottom-0 left-0 w-6 h-6 border-b-4 border-l-4 border-[#E35205] rounded-bl-xl"></div>
-                                    <div className="absolute bottom-0 right-0 w-6 h-6 border-b-4 border-r-4 border-[#E35205] rounded-br-xl"></div>
-                                </div>
+                        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                            {/* Live Indicator */}
+                            <div className="absolute top-4 left-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm flex items-center z-20 backdrop-blur-sm border border-white/10">
+                                <div className="w-2 h-2 bg-red-500 rounded-full mr-2 animate-pulse"></div>
+                                Live Face Detection
                             </div>
 
-                            {/* Status Text */}
-                            <div className="absolute bottom-10 left-0 right-0 text-center">
-                                <div className="inline-flex items-center bg-black/60 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
+                            {/* Face Box Overlay (Oval with dark background outside) */}
+                            <div className="absolute w-72 h-96 border-2 border-white/40 rounded-[50%] top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 shadow-[0_0_0_9999px_rgba(0,0,0,0.7)] z-10">
+                                {/* Corner Markers (Optional, but adds tech feel) */}
+                                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1 w-1 h-2 bg-[#E35205]"></div>
+                                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1 w-1 h-2 bg-[#E35205]"></div>
+                                <div className="absolute top-1/2 left-0 transform -translate-x-1 -translate-y-1/2 w-2 h-1 bg-[#E35205]"></div>
+                                <div className="absolute top-1/2 right-0 transform translate-x-1 -translate-y-1/2 w-2 h-1 bg-[#E35205]"></div>
+                                
+                                {/* Scanning Line Animation */}
+                                {status === 'SCANNING' && (
+                                    <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-transparent via-[#E35205]/80 to-transparent animate-[scan_2s_linear_infinite] opacity-50"></div>
+                                )}
+                            </div>
+
+                            {/* Status Text (Centered below face box) */}
+                            <div className="absolute bottom-20 left-0 right-0 flex flex-col items-center z-20 gap-3">
+                                <div className="bg-black/70 text-white px-6 py-2 rounded-full text-lg font-semibold backdrop-blur-sm border border-white/10 whitespace-nowrap shadow-lg animate-in slide-in-from-bottom-4">
                                     {status === 'LOADING_MODELS' || status === 'LOADING_DATA' || status === 'FETCHING_INFO' ? (
-                                        <>
-                                            <Loader2 className="w-4 h-4 text-[#E35205] animate-spin mr-2" />
-                                            <span className="text-white text-sm">กำลังเตรียมระบบ...</span>
-                                        </>
+                                        <span className="flex items-center">
+                                            <Loader2 className="w-5 h-5 text-[#E35205] animate-spin mr-2" />
+                                            กำลังเตรียมระบบ...
+                                        </span>
                                     ) : status === 'VERIFYING_IP' ? (
-                                        <>
-                                            <Loader2 className="w-4 h-4 text-blue-500 animate-spin mr-2" />
-                                            <span className="text-white text-sm">กำลังบันทึกข้อมูล...</span>
-                                        </>
+                                        <span className="flex items-center">
+                                            <Loader2 className="w-5 h-5 text-blue-500 animate-spin mr-2" />
+                                            กำลังบันทึกข้อมูล...
+                                        </span>
                                     ) : (
-                                        <span className="text-white text-sm">มองตรงไปที่กล้อง</span>
+                                        <span>มองตรงไปที่กล้อง</span>
                                     )}
                                 </div>
                             </div>
