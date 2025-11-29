@@ -144,6 +144,7 @@ const App: React.FC = () => {
                   studentName: s.student_name,
                   studentCode: s.student_email,
                   studentProfileUrl: s.student_profile_url,
+                  studentUuid: s.student_id,
                   row: row,
                   col: col,
                   ipAddress: s.ip_address,
@@ -156,16 +157,28 @@ const App: React.FC = () => {
   };
 
   const handleKickStudent = async (attendanceId: string) => {
-      // Instead of deleting from exam_attendance (which doesn't exist),
-      // we update the session to be inactive.
+      // Find the student to get UUID if available
+      const student = activeStudents.find(s => s.id === attendanceId);
+
+      // 1. Delete from exam_student_sessions
       const { error } = await supabase
           .from('exam_student_sessions')
-          .update({ is_active: false })
+          .delete()
           .eq('id', attendanceId);
       
       if (error) {
           alert('Error kicking student: ' + error.message);
       } else {
+          // 2. Delete from qr_authentication if UUID is available
+          if (student && student.studentUuid) {
+              const { error: qrError } = await supabase
+                  .from('qr_authentication')
+                  .delete()
+                  .eq('user_id', student.studentUuid);
+              
+              if (qrError) console.error("Error deleting QR auth:", qrError);
+          }
+
           setActiveStudents(prev => prev.filter(s => s.id !== attendanceId));
       }
   };
