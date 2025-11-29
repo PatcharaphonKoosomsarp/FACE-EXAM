@@ -22,7 +22,7 @@ const App: React.FC = () => {
   // Mobile Registration Mode State
   const [mobileRegisterUserId, setMobileRegisterUserId] = useState<string | null>(null);
   // Mobile Verification Mode State
-  const [mobileVerifyParams, setMobileVerifyParams] = useState<{examId: string, userId: string} | null>(null);
+  const [mobileVerifyParams, setMobileVerifyParams] = useState<{examId: string, userId: string, ip?: string} | null>(null);
 
   useEffect(() => {
     // Check for Mobile Registration/Verification Mode URL parameters
@@ -30,6 +30,7 @@ const App: React.FC = () => {
     const mode = params.get('mode');
     const userId = params.get('user_id');
     const examId = params.get('exam_id');
+    const ip = params.get('ip');
 
     if (mode === 'mobile-register' && userId) {
         setMobileRegisterUserId(userId);
@@ -37,7 +38,7 @@ const App: React.FC = () => {
     }
 
     if (mode === 'mobile-verify' && userId && examId) {
-        setMobileVerifyParams({ examId, userId });
+        setMobileVerifyParams({ examId, userId, ip: ip || undefined });
         return; // Skip normal auth check
     }
 
@@ -478,7 +479,7 @@ const App: React.FC = () => {
 
   // Render Mobile Verification View if active
   if (mobileVerifyParams) {
-      return <MobileFaceVerification examId={mobileVerifyParams.examId} userId={mobileVerifyParams.userId} />;
+      return <MobileFaceVerification examId={mobileVerifyParams.examId} userId={mobileVerifyParams.userId} agentIp={mobileVerifyParams.ip} />;
   }
 
   if (!user) {

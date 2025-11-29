@@ -9,9 +9,10 @@ declare const faceapi: any;
 interface MobileFaceVerificationProps {
     examId: string;
     userId: string;
+    agentIp?: string;
 }
 
-const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId, userId }) => {
+const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId, userId, agentIp }) => {
     const videoRef = useRef<HTMLVideoElement>(null);
     const [status, setStatus] = useState<'FETCHING_INFO' | 'LOADING_MODELS' | 'LOADING_DATA' | 'SCANNING' | 'VERIFYING_IP' | 'SUCCESS' | 'FAILED'>('FETCHING_INFO');
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -241,7 +242,14 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
         setStatus('VERIFYING_IP');
         
         try {
-            const ip = await getPrimaryWiFiIP();
+            // Use Agent IP from URL if available (Preferred), otherwise try to detect (Fallback)
+            let ip = agentIp;
+            if (!ip) {
+                console.warn("No Agent IP provided in URL, falling back to local detection...");
+                ip = await getPrimaryWiFiIP();
+            }
+            
+            console.log("Using IP for authentication:", ip);
             
             // Update qr_authentication table for PC to pick up
             // Schema: id, user_id, ip (inet), status, authenticated_at, expires_at
