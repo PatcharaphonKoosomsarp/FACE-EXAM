@@ -668,26 +668,29 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
 
   if (method === 'QR') {
       return (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl p-8 max-w-md w-full text-center animate-in zoom-in-95 duration-200">
-                <h2 className="text-xl font-bold mb-4">สแกนเพื่อเปิดกล้องมือถือ</h2>
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+            <div className="bg-white rounded-[2rem] p-10 max-w-[400px] w-full text-center animate-in zoom-in-95 duration-200 shadow-2xl">
+                <h2 className="text-xl font-bold mb-8 text-gray-900">สแกนเพื่อเปิดกล้องมือถือ</h2>
                 
-                <div className="bg-white p-4 rounded-xl shadow-lg border border-gray-100 mb-6 inline-block">
+                <div className="bg-white p-3 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] border border-gray-50 mb-8 inline-block">
                     {qrUrl ? (
                         <QRCodeCanvas value={qrUrl} size={200} level="H" />
                     ) : (
-                        <div className="w-[200px] h-[200px] flex items-center justify-center bg-gray-100 rounded-lg">
-                            <span className="text-gray-400">กำลังสร้าง QR Code...</span>
+                        <div className="w-[200px] h-[200px] flex items-center justify-center bg-gray-50 rounded-xl">
+                            <span className="text-gray-400 animate-pulse text-sm">กำลังสร้าง...</span>
                         </div>
                     )}
                 </div>
 
-                <p className="text-sm text-gray-600 mb-4 leading-relaxed">
+                <p className="text-gray-600 mb-10 leading-relaxed text-sm font-medium">
                     ใช้โทรศัพท์มือถือสแกน QR Code นี้<br/>
                     เพื่อดำเนินการลงทะเบียนใบหน้าต่อบนมือถือ
                 </p>
                 
-                <button onClick={() => setMethod(null)} className="mt-4 text-sm text-gray-500 hover:text-gray-900 underline">
+                <button 
+                    onClick={() => setMethod(null)} 
+                    className="text-gray-500 hover:text-gray-800 underline decoration-1 underline-offset-4 transition-colors text-sm"
+                >
                     ย้อนกลับ
                 </button>
             </div>
