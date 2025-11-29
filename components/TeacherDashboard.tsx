@@ -9,6 +9,7 @@ import {
 import { GoogleGenAI } from "@google/genai";
 import { supabase } from '../supabaseClient';
 
+// Trigger Vercel Deployment
 interface ResourceLog {
     cpu_usage: number;
     cpu_frequency: number;
