@@ -4,7 +4,7 @@ import { supabase } from '../supabaseClient';
 import { 
   Plus, Calendar, Save, Trash2, Cpu, 
   ChevronRight, Check, LayoutGrid, List, 
-  MapPin, Clock, ArrowLeft, MonitorX, AlertCircle, Edit, X, User as UserIcon, Activity, ShieldAlert, Ban, Network, LogOut, HardDrive, MemoryStick, Wifi 
+  MapPin, Clock, ArrowLeft, MonitorX, AlertCircle, Edit, X, User as UserIcon, Activity, ShieldAlert, Ban, Network, LogOut, HardDrive, MemoryStick, Wifi, Monitor, AlertTriangle 
 } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 
