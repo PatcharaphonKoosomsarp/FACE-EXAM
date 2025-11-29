@@ -637,9 +637,9 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                 </div>
                                 {student ? (
                                     <>
-                                        <h2 className="text-xl font-bold text-gray-800">{student.studentName}</h2>
-                                        <p className="text-gray-500">{student.studentCode}</p>
-                                        <div className="mt-3 px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700 flex items-center gap-1">
+                                        <h2 className="text-2xl font-bold text-gray-800">{student.studentName}</h2>
+                                        <p className="text-base text-gray-500">{student.studentCode}</p>
+                                        <div className="mt-3 px-3 py-1 rounded-full text-sm font-bold bg-green-100 text-green-700 flex items-center gap-1">
                                             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div> ONLINE
                                         </div>
                                         <button 
@@ -649,16 +649,16 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                                     setViewingSeat(null);
                                                 }
                                             }}
-                                            className="mt-4 w-full bg-red-100 text-red-600 py-2 rounded-lg font-bold hover:bg-red-200 transition flex items-center justify-center text-sm"
+                                            className="mt-4 w-full bg-red-100 text-red-600 py-2 rounded-lg font-bold hover:bg-red-200 transition flex items-center justify-center text-base"
                                         >
                                             <LogOut className="w-4 h-4 mr-2"/> ลบออกจากที่นั่ง
                                         </button>
                                     </>
                                 ) : (
                                     <>
-                                        <h2 className="text-xl font-bold text-gray-800">Waiting for Student</h2>
-                                        <p className="text-gray-500">No active session</p>
-                                        <div className={`mt-3 px-3 py-1 rounded-full text-xs font-bold ${assignedIp ? 'bg-blue-100 text-blue-700' : 'bg-gray-200 text-gray-600'}`}>
+                                        <h2 className="text-2xl font-bold text-gray-800">Waiting for Student</h2>
+                                        <p className="text-base text-gray-500">No active session</p>
+                                        <div className={`mt-3 px-3 py-1 rounded-full text-sm font-bold ${assignedIp ? 'bg-blue-100 text-blue-700' : 'bg-gray-200 text-gray-600'}`}>
                                             {assignedIp ? 'READY TO CONNECT' : 'NO IP CONFIG'}
                                         </div>
                                     </>
@@ -667,13 +667,13 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
                           <div className="space-y-4">
                                 <div className="bg-white p-4 rounded-xl border shadow-sm">
-                                    <div className="text-xs text-gray-400 uppercase font-bold mb-1">Configuration</div>
-                                    <div className="flex items-center text-gray-700 font-medium mb-2">
+                                    <div className="text-sm text-gray-400 uppercase font-bold mb-1">Configuration</div>
+                                    <div className="flex items-center text-base text-gray-700 font-medium mb-2">
                                         <Network className="w-4 h-4 mr-2 text-blue-500"/>
                                         IP: {assignedIp || 'Not Assigned'}
                                     </div>
                                     {student && (
-                                        <div className="flex items-center text-gray-700 font-medium">
+                                        <div className="flex items-center text-base text-gray-700 font-medium">
                                             <MonitorX className="w-4 h-4 mr-2 text-green-500"/>
                                             Client IP: {student.ipAddress}
                                         </div>
@@ -687,10 +687,10 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                               <div className="space-y-6">
                                   {/* Active Window */}
                                   <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                                      <h4 className="text-sm font-bold text-gray-600 mb-3 flex items-center">
+                                      <h4 className="text-base font-bold text-gray-600 mb-3 flex items-center">
                                           <Layers className="w-4 h-4 mr-2 text-indigo-500"/> Active Window
                                       </h4>
-                                      <div className="bg-indigo-50 p-3 rounded-lg border border-indigo-100 text-gray-800 font-medium truncate flex items-center">
+                                      <div className="bg-indigo-50 p-3 rounded-lg border border-indigo-100 text-base text-gray-800 font-medium truncate flex items-center">
                                           <div className="w-2 h-2 rounded-full bg-indigo-500 mr-2 animate-pulse"></div>
                                           {studentResourceData.active_window_title || 'Unknown'}
                                       </div>
@@ -699,13 +699,13 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                   {/* All Open Windows */}
                                   {studentResourceData.all_open_windows && Array.isArray(studentResourceData.all_open_windows) && studentResourceData.all_open_windows.length > 0 && (
                                     <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                                        <h5 className="text-sm font-bold text-gray-600 mb-3 flex items-center justify-between">
+                                        <h5 className="text-base font-bold text-gray-600 mb-3 flex items-center justify-between">
                                             <span className="flex items-center"><List className="w-4 h-4 mr-2 text-gray-500"/> All Open Windows</span>
-                                            <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-[10px]">{studentResourceData.all_open_windows.length}</span>
+                                            <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs">{studentResourceData.all_open_windows.length}</span>
                                         </h5>
                                         <div className="max-h-32 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
                                             {studentResourceData.all_open_windows.map((win: any, idx: number) => (
-                                                <div key={idx} className="text-xs text-gray-600 bg-gray-50 px-2 py-1.5 rounded border border-gray-100 truncate hover:bg-gray-100 transition">
+                                                <div key={idx} className="text-sm text-gray-600 bg-gray-50 px-2 py-1.5 rounded border border-gray-100 truncate hover:bg-gray-100 transition">
                                                     {typeof win === 'string' ? win : win.title || JSON.stringify(win)}
                                                 </div>
                                             ))}
@@ -716,7 +716,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                   {/* Violation Logs */}
                                   {studentViolationLogs && studentViolationLogs.length > 0 && (
                                     <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                                        <h5 className="text-sm font-bold text-red-600 mb-3 flex items-center">
+                                        <h5 className="text-base font-bold text-red-600 mb-3 flex items-center">
                                             <ShieldAlert className="w-5 h-5 mr-2"/> Violation Logs ({studentViolationLogs.length})
                                         </h5>
                                         <div className="max-h-60 overflow-y-auto space-y-3 pr-1 custom-scrollbar">
@@ -724,18 +724,18 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                                 <div key={log.id} className="bg-red-50 p-3 rounded-xl border border-red-100 shadow-sm relative overflow-hidden group">
                                                     <div className="absolute left-0 top-0 bottom-0 w-1 bg-red-500"></div>
                                                     <div className="flex justify-between items-start mb-2 pl-2">
-                                                        <span className="font-bold text-red-700 text-sm flex items-center uppercase tracking-wide">
+                                                        <span className="font-bold text-red-700 text-base flex items-center uppercase tracking-wide">
                                                             {log.violation_type.replace(/_/g, ' ')}
                                                         </span>
-                                                        <span className="text-xs text-gray-500 font-mono bg-white px-2 py-1 rounded border border-gray-200">
+                                                        <span className="text-sm text-gray-500 font-mono bg-white px-2 py-1 rounded border border-gray-200">
                                                             {new Date(log.timestamp).toLocaleTimeString()}
                                                         </span>
                                                     </div>
-                                                    <div className="text-gray-800 text-sm mb-3 font-medium break-words leading-relaxed pl-2">
+                                                    <div className="text-gray-800 text-base mb-3 font-medium break-words leading-relaxed pl-2">
                                                         {log.resource_name}
                                                     </div>
                                                     <div className="flex items-center pl-2">
-                                                        <span className={`px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider shadow-sm ${
+                                                        <span className={`px-3 py-1 rounded-lg text-sm font-bold uppercase tracking-wider shadow-sm ${
                                                             log.action_taken.toLowerCase().includes('close') || log.action_taken.toLowerCase().includes('terminate') 
                                                             ? 'bg-red-500 text-white' 
                                                             : 'bg-orange-500 text-white'
@@ -754,25 +754,25 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                       {/* CPU */}
                                       <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
                                           <div className="flex justify-between items-center mb-2">
-                                              <span className="text-sm font-bold text-gray-600 flex items-center"><Cpu className="w-4 h-4 mr-2 text-blue-500"/> CPU</span>
-                                              <span className="text-xl font-bold text-blue-600">{Math.round(studentResourceData.cpu_usage)}%</span>
+                                              <span className="text-base font-bold text-gray-600 flex items-center"><Cpu className="w-4 h-4 mr-2 text-blue-500"/> CPU</span>
+                                              <span className="text-2xl font-bold text-blue-600">{Math.round(studentResourceData.cpu_usage)}%</span>
                                           </div>
                                           <div className="w-full bg-gray-100 rounded-full h-2">
                                               <div className="bg-blue-500 h-2 rounded-full" style={{ width: `${Math.min(studentResourceData.cpu_usage, 100)}%` }}></div>
                                           </div>
-                                          <div className="mt-2 text-xs text-gray-500 truncate" title={studentResourceData.cpu_model}>{studentResourceData.cpu_model}</div>
+                                          <div className="mt-2 text-sm text-gray-500 truncate" title={studentResourceData.cpu_model}>{studentResourceData.cpu_model}</div>
                                       </div>
 
                                       {/* RAM */}
                                       <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
                                           <div className="flex justify-between items-center mb-2">
-                                              <span className="text-sm font-bold text-gray-600 flex items-center"><Activity className="w-4 h-4 mr-2 text-green-500"/> RAM</span>
-                                              <span className="text-xl font-bold text-green-600">{Math.round(studentResourceData.ram_usage)}%</span>
+                                              <span className="text-base font-bold text-gray-600 flex items-center"><Activity className="w-4 h-4 mr-2 text-green-500"/> RAM</span>
+                                              <span className="text-2xl font-bold text-green-600">{Math.round(studentResourceData.ram_usage)}%</span>
                                           </div>
                                           <div className="w-full bg-gray-100 rounded-full h-2">
                                               <div className="bg-green-500 h-2 rounded-full" style={{ width: `${Math.min(studentResourceData.ram_usage, 100)}%` }}></div>
                                           </div>
-                                          <div className="mt-2 text-xs text-gray-500">
+                                          <div className="mt-2 text-sm text-gray-500">
                                               {studentResourceData.ram_used_gb?.toFixed(1)} / {studentResourceData.ram_total_gb?.toFixed(1)} GB
                                           </div>
                                       </div>
@@ -780,12 +780,12 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                       {/* Disk */}
                                       <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm col-span-2 md:col-span-1">
                                           <div className="flex justify-between items-center mb-2">
-                                              <span className="text-sm font-bold text-gray-600 flex items-center"><HardDrive className="w-4 h-4 mr-2 text-orange-500"/> Disk</span>
+                                              <span className="text-base font-bold text-gray-600 flex items-center"><HardDrive className="w-4 h-4 mr-2 text-orange-500"/> Disk</span>
                                           </div>
                                           <div className="space-y-2 max-h-32 overflow-y-auto">
                                               {studentResourceData.disk_partitions_info && Array.isArray(studentResourceData.disk_partitions_info) ? (
                                                   studentResourceData.disk_partitions_info.map((disk: any, idx: number) => (
-                                                      <div key={idx} className="text-xs border-b border-gray-100 pb-1 last:border-0">
+                                                      <div key={idx} className="text-sm border-b border-gray-100 pb-1 last:border-0">
                                                           <div className="flex justify-between font-medium text-gray-700">
                                                               <span>{disk.device} ({disk.mountpoint || '-'})</span>
                                                               <span>{disk.percent}%</span>
@@ -793,14 +793,14 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                                           <div className="w-full bg-gray-100 rounded-full h-1.5 mt-1">
                                                               <div className={`h-1.5 rounded-full ${disk.percent > 90 ? 'bg-red-500' : 'bg-orange-500'}`} style={{ width: `${Math.min(disk.percent, 100)}%` }}></div>
                                                           </div>
-                                                          <div className="flex justify-between text-[10px] text-gray-400 mt-0.5">
+                                                          <div className="flex justify-between text-xs text-gray-400 mt-0.5">
                                                               <span>Free: {disk.free_gb?.toFixed(1) || disk.free?.toFixed(1) || 0} GB</span>
                                                               <span>Total: {disk.total_gb?.toFixed(1) || disk.total?.toFixed(1) || 0} GB</span>
                                                           </div>
                                                       </div>
                                                   ))
                                               ) : (
-                                                  <div className="text-xs text-gray-500">No disk info</div>
+                                                  <div className="text-sm text-gray-500">No disk info</div>
                                               )}
                                           </div>
                                       </div>
@@ -808,16 +808,16 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                       {/* Network */}
                                       <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm col-span-2 md:col-span-1">
                                           <div className="flex justify-between items-center mb-2">
-                                              <span className="text-sm font-bold text-gray-600 flex items-center"><Wifi className="w-4 h-4 mr-2 text-purple-500"/> Network</span>
+                                              <span className="text-base font-bold text-gray-600 flex items-center"><Wifi className="w-4 h-4 mr-2 text-purple-500"/> Network</span>
                                           </div>
                                           <div className="grid grid-cols-2 gap-2 mt-2">
                                               <div className="bg-purple-50 p-2 rounded text-center">
-                                                  <div className="text-[10px] text-purple-400 uppercase font-bold">Download</div>
-                                                  <div className="text-lg font-bold text-purple-700">{studentResourceData.network_download_mb?.toFixed(2) || 0} <span className="text-[10px]">MB</span></div>
+                                                  <div className="text-xs text-purple-400 uppercase font-bold">Download</div>
+                                                  <div className="text-xl font-bold text-purple-700">{studentResourceData.network_download_mb?.toFixed(2) || 0} <span className="text-xs">MB</span></div>
                                               </div>
                                               <div className="bg-blue-50 p-2 rounded text-center">
-                                                  <div className="text-[10px] text-blue-400 uppercase font-bold">Upload</div>
-                                                  <div className="text-lg font-bold text-blue-700">{studentResourceData.network_upload_mb?.toFixed(2) || 0} <span className="text-[10px]">MB</span></div>
+                                                  <div className="text-xs text-blue-400 uppercase font-bold">Upload</div>
+                                                  <div className="text-xl font-bold text-blue-700">{studentResourceData.network_upload_mb?.toFixed(2) || 0} <span className="text-xs">MB</span></div>
                                               </div>
                                           </div>
                                       </div>
@@ -825,13 +825,13 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
                                   {/* Processes */}
                                   <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                                      <h4 className="text-sm font-bold text-gray-800 mb-3 flex justify-between items-center">
+                                      <h4 className="text-base font-bold text-gray-800 mb-3 flex justify-between items-center">
                                           <span>Running Processes (Top 20)</span>
-                                          <span className="text-xs font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded">Sorted by Memory</span>
+                                          <span className="text-sm font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded">Sorted by Memory</span>
                                       </h4>
                                       <div className="space-y-1 max-h-60 overflow-y-auto pr-1">
                                           {Array.isArray(studentResourceData.exe_processes) && studentResourceData.exe_processes.slice(0, 20).map((proc: any, idx: number) => (
-                                              <div key={idx} className="flex justify-between items-center text-xs p-2 bg-gray-50 rounded hover:bg-gray-100 transition">
+                                              <div key={idx} className="flex justify-between items-center text-sm p-2 bg-gray-50 rounded hover:bg-gray-100 transition">
                                                   <div className="flex items-center gap-2 overflow-hidden">
                                                       <span className="font-mono text-gray-400 w-12 text-right">{proc.pid}</span>
                                                       <span className="font-medium text-gray-700 truncate" title={proc.name}>{proc.name}</span>
@@ -840,12 +840,12 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                               </div>
                                           ))}
                                           {(!studentResourceData.exe_processes || studentResourceData.exe_processes.length === 0) && (
-                                              <div className="text-xs text-gray-400 italic text-center py-4">No process data available</div>
+                                              <div className="text-sm text-gray-400 italic text-center py-4">No process data available</div>
                                           )}
                                       </div>
                                   </div>
                                   
-                                  <div className="text-right text-xs text-gray-400">
+                                  <div className="text-right text-sm text-gray-400">
                                       Last updated: {new Date(studentResourceData.timestamp).toLocaleTimeString()}
                                   </div>
                               </div>
