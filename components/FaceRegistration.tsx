@@ -324,6 +324,12 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
       setCurrentStepIndex(index + 1);
   };
 
+import { createClient } from '@supabase/supabase-js';
+
+// ... existing imports ...
+
+// ... existing code ...
+
   // Mimic the HTML's fake authentication for QR access
   const authenticateForQRAccess = async (userId: string) => {
       try {
@@ -334,8 +340,7 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
               user_metadata: { qr_access: true }
           };
           
-          // Set temporary auth state (matching HTML logic)
-          // This might be needed if RLS policies check for specific local storage keys or if the client sends this token
+          // Set temporary auth state using the specific key used in HTML
           localStorage.setItem('supabase.auth.token', JSON.stringify({
               access_token: 'temp_qr_access_token',
               refresh_token: 'temp_qr_refresh_token',
@@ -357,7 +362,8 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
       try {
           let userId = targetUserId;
           let isQrMode = !!targetUserId;
-          
+          let uploadClient = supabase; // Default to global client
+
           // Check authentication if not in mobile target mode
           if (!userId) {
             const { data: { user } } = await supabase.auth.getUser();
@@ -365,8 +371,28 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
             userId = user.id;
           } else {
              console.log("Proceeding with targetUserId (QR Mode):", userId);
-             // Attempt to authenticate for QR access (mimic HTML behavior)
+             
+             // QR Mode Strategy:
+             // 1. Set the fake session in localStorage (matching HTML)
              await authenticateForQRAccess(userId);
+             
+             // 2. Create a dedicated client that uses this specific storage key
+             // This ensures we match the HTML's behavior exactly
+             const supabaseUrl = (supabase as any).supabaseUrl;
+             const supabaseKey = (supabase as any).supabaseKey;
+             
+             if (supabaseUrl && supabaseKey) {
+                 uploadClient = createClient(supabaseUrl, supabaseKey, {
+                     auth: {
+                         storageKey: 'supabase.auth.token', // Force use of the key we just set
+                         storage: localStorage,
+                         persistSession: true,
+                         detectSessionInUrl: false,
+                         autoRefreshToken: false // Don't try to refresh the fake token
+                     }
+                 });
+                 console.log("Created dedicated upload client for QR mode");
+             }
           }
 
           const photoData: any = { user_id: userId };
@@ -390,20 +416,19 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
 
                   // For QR Mode, prioritize 'user-photos' as it's known to work with the RPC flow
                   if (isQrMode) {
-                      console.log("QR Mode: Uploading to user-photos...");
-                      // Remove contentType to match HTML exactly
-                      const { error: uploadError } = await supabase.storage
+                      console.log(`QR Mode: Uploading ${photo.action} to user-photos...`);
+                      
+                      // Use the dedicated uploadClient
+                      const { error: uploadError } = await uploadClient.storage
                           .from('user-photos')
                           .upload(fileName, photo.blob, { upsert: true });
                       
                       if (uploadError) {
                           console.error("QR Mode upload failed:", uploadError);
-                          // If upload fails, we can't proceed with this photo
-                          // But we might want to continue with others? No, usually all are needed.
                           throw new Error(`Upload failed for ${photo.action}: ${uploadError.message}`);
                       }
 
-                      const { data: urlData } = supabase.storage
+                      const { data: urlData } = uploadClient.storage
                           .from('user-photos')
                           .getPublicUrl(fileName);
                       publicUrl = urlData.publicUrl;
@@ -445,8 +470,10 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
               // Use RPC functions for QR mode to bypass RLS (as seen in qr_register_face.html)
               // These functions must exist in the database as SECURITY DEFINER
               
+              // Use the uploadClient for RPC as well, just in case
+              
               // 1. Check existing via RPC
-              const { data: existingData, error: checkError } = await supabase
+              const { data: existingData, error: checkError } = await uploadClient
                   .rpc('get_user_photos_qr', { p_user_id: userId });
               
               let existingId = null;
@@ -456,7 +483,7 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
 
               if (existingId) {
                   console.log('Updating existing record via QR access function...');
-                  const { error: updateError } = await supabase
+                  const { error: updateError } = await uploadClient
                       .rpc('update_user_photos_qr', {
                           p_record_id: existingId,
                           p_photo_data: photoData
@@ -465,7 +492,7 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
                   if (updateError) throw updateError;
               } else {
                   console.log('Inserting new record via QR access function...');
-                  const { error: insertError } = await supabase
+                  const { error: insertError } = await uploadClient
                       .rpc('insert_user_photos_qr', {
                           p_user_id: userId,
                           p_photo_data: photoData
