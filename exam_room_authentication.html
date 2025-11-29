@@ -1,0 +1,2377 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exam Room - FaceTrack Lab</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Supabase CDN -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <!-- MediaPipe CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+    <!-- Responsive Dashboard Script -->
+    <script src="../responsive-dashboard.js"></script>
+</head>
+
+<body class="dashboard-body">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <i class="fas fa-user-shield"></i>
+                <span>FaceTrack Lab</span>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html" class="nav-item">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="register_face.html" class="nav-item">
+                <i class="fas fa-camera"></i>
+                <span>Face Register</span>
+            </a>
+            <a href="authentication_face.html" class="nav-item">
+                <i class="fas fa-camera"></i>
+                <span>Face Authentication</span>
+            </a>
+            <a href="exam_room.html" class="nav-item active">
+                <i class="fas fa-clipboard-list"></i>
+                <span>Exam Room</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Top Bar -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="sidebar-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1>Exam Room</h1>
+            </div>
+            <div class="topbar-right">
+                <div class="notifications">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge">3</span>
+                </div>
+                <div class="user-profile" onclick="toggleProfileDropdown()">
+                    <img src="/placeholder.svg?height=40&width=40" alt="Profile" id="topbar-avatar">
+                    <div class="user-info">
+                        <span class="user-name" id="topbar-name">ชื่อ-นามสกุล</span>
+                        <small class="user-status" id="topbar-status">นักศึกษา</small>
+                    </div>
+                    <i class="fas fa-chevron-down"></i>
+
+                    <!-- Profile Dropdown -->
+                    <div class="profile-dropdown" id="profileDropdown">
+                        <div class="dropdown-info">
+                            <div class="dropdown-item-info">
+                                <i class="fas fa-id-card"></i>
+                                <div class="info-text">
+                                    <span class="info-label">รหัสนักศึกษา</span>
+                                    <span class="info-value" id="dropdown-student-id">-</span>
+                                </div>
+                            </div>
+                            <div class="dropdown-item-info">
+                                <i class="fas fa-envelope"></i>
+                                <div class="info-text">
+                                    <span class="info-label">Gmail</span>
+                                    <span class="info-value" id="dropdown-email">user@example.com</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-actions">
+                            <a href="#" class="dropdown-item" onclick="event.preventDefault(); event.stopPropagation(); handleLogoutFromDropdown()">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>ออกจากระบบ</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Seat Confirmation Section (shown after successful authentication) -->
+        <div class="dashboard-section" id="seatConfirmationSection" style="display: block;">
+            <div class="dashboard-card seat-confirmation-card">
+                <div class="card-header success-header">
+                    <h3><i class="fas fa-check-circle"></i> ยืนยันตำแหน่งที่นั่ง (ยืนยันตัวตนสำเร็จ)</h3>
+                </div>
+                <div class="card-content">
+                    <div class="seat-info-grid">
+                        <!-- Student Information -->
+                        <div class="info-card student-info">
+                            <div class="info-header">
+                                <i class="fas fa-user"></i>
+                                <h4>ข้อมูลนักศึกษา</h4>
+                            </div>
+                            <div class="info-content">
+                                <div class="info-item">
+                                    <span class="label">ชื่อ-นามสกุล:</span>
+                                    <span class="value" id="confirmedName">-</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">รหัสนักศึกษา:</span>
+                                    <span class="value" id="confirmedStudentId">-</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">Email:</span>
+                                    <span class="value" id="confirmedEmail">-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Seat Information -->
+                        <div class="info-card seat-info">
+                            <div class="info-header">
+                                <i class="fas fa-chair"></i>
+                                <h4>ตำแหน่งที่นั่ง</h4>
+                            </div>
+                            <div class="info-content">
+                                <div class="seat-number-display">
+                                    <span class="seat-label">หมายเลขที่นั่ง</span>
+                                    <span class="seat-number" id="confirmedSeatNumber">-</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">IP Address:</span>
+                                    <span class="value" id="confirmedIpAddress">-</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">เวลาเข้าสอบ:</span>
+                                    <span class="value" id="confirmedEntryTime">-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Exam Room Details -->
+                        <div class="info-card exam-details">
+                            <div class="info-header">
+                                <i class="fas fa-clipboard-list"></i>
+                                <h4>รายละเอียดห้องสอบ</h4>
+                            </div>
+                            <div class="info-content">
+                                <div class="info-item">
+                                    <span class="label">ชื่อห้อง:</span>
+                                    <span class="value" id="confirmedRoomName">-</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">รหัสวิชา:</span>
+                                    <span class="value" id="confirmedCourseCode">-</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">ชื่อวิชา:</span>
+                                    <span class="value" id="confirmedCourseName">-</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">Section:</span>
+                                    <span class="value" id="confirmedSection">-</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">วันที่สอบ:</span>
+                                    <span class="value" id="confirmedExamDate">-</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">เวลาสอบ:</span>
+                                    <span class="value" id="confirmedExamTime">-</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">สร้างโดย:</span>
+                                    <span class="value" id="confirmedCreatedBy">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="confirmation-actions">
+                        <button id="btn-remove-student" class="btn btn-danger" onclick="removeStudentFromSeat()" style="background: #ef4444; border-color: #dc2626; color: white; padding: 12px 24px; border-radius: 8px; border: none; cursor: pointer; font-size: 14px; display: inline-flex; align-items: center; gap: 8px;" data-session-id="" data-student-email="" data-seat-number="" data-ip-address="" data-layout-id="">
+                            <i class="fas fa-user-times"></i> ออกจากห้องสอบ
+                        </button>
+                        <button class="btn-back-to-list" onclick="backToExamList()">
+                            <i class="fas fa-arrow-left"></i> กลับไป Dashboard
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <!-- styles moved to ../styles.css -->
+    
+    <style>
+        /* Additional styles for exam room list */
+        .dashboard-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .card-content {
+            padding: 0;
+        }
+        
+        /* Seat Confirmation Styles */
+        .seat-confirmation-card {
+            margin-bottom: 2rem;
+        }
+
+        .success-header {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 1.5rem 2rem;
+        }
+
+        .success-header h3 {
+            margin: 0;
+            font-size: 1.4rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .success-header i {
+            font-size: 1.5rem;
+        }
+
+        .seat-info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1.5rem;
+            padding: 2rem;
+        }
+
+        .info-card {
+            background: #f8fafc;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .info-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .info-header {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .info-header h4 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .info-header i {
+            font-size: 1.1rem;
+        }
+
+        .info-content {
+            padding: 1.5rem;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .info-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .info-item .label {
+            font-weight: 600;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+
+        .info-item .value {
+            font-weight: 600;
+            color: #1e293b;
+            font-size: 0.9rem;
+            text-align: right;
+        }
+
+        .seat-number-display {
+            text-align: center;
+            margin-bottom: 1rem;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+            border-radius: 8px;
+        }
+
+        .seat-label {
+            display: block;
+            font-size: 0.9rem;
+            color: #64748b;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .seat-number {
+            display: block;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1e40af;
+            background: white;
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .confirmation-actions {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            padding: 2rem;
+            border-top: 1px solid #e2e8f0;
+            background: #f8fafc;
+        }
+
+        .btn-start-exam {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-start-exam:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-back-to-list {
+            background: #f8fafc;
+            color: #64748b;
+            border: 1px solid #e2e8f0;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-back-to-list:hover {
+            background: #f1f5f9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Responsive Design for Seat Confirmation */
+        @media (max-width: 1024px) {
+            .seat-info-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 1rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .seat-info-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+                padding: 1rem;
+            }
+
+            .confirmation-actions {
+                flex-direction: column;
+                padding: 1rem;
+            }
+
+            .seat-number {
+                font-size: 2rem;
+                width: 70px;
+                height: 70px;
+            }
+        }
+        
+        .loading-spinner {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+        
+        .loading-spinner i {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            color: #4a6cf7;
+        }
+        
+        .loading-spinner p {
+            font-size: 1rem;
+            margin: 0;
+        }
+    </style>
+    </main>
+
+    <script src="../supabase-config.js"></script>
+    <script src="../script.js"></script>
+    <script>
+        // Format date to Thai format (e.g., 3 กันยายน 2566)
+        function formatThaiDate(dateString) {
+            if (!dateString) return 'ไม่ได้ระบุ';
+            
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return 'วันที่ไม่ถูกต้อง';
+            
+            const thaiMonths = [
+                'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน',
+                'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม',
+                'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+            ];
+            
+            const day = date.getDate();
+            const month = thaiMonths[date.getMonth()];
+            const year = date.getFullYear() + 543; // Convert to Buddhist year
+            
+            return `${day} ${month} ${year}`;
+        }
+        
+        // Format time to HH:MM
+        function formatTime(timeString) {
+            if (!timeString) return 'ไม่ระบุเวลา';
+            
+            // Check if it's a time range (contains dash)
+            if (timeString.includes('-')) {
+                const timeParts = timeString.split('-');
+                if (timeParts.length === 2) {
+                    const startTime = timeParts[0].trim();
+                    const endTime = timeParts[1].trim();
+                    
+                    // Format start time
+                    const startParts = startTime.split(':');
+                    const formattedStart = startParts.length >= 2 ? `${startParts[0]}:${startParts[1]}` : startTime;
+                    
+                    // Format end time - remove existing 'น.' if present
+                    const cleanEndTime = endTime.replace(/\s*น\.\s*$/i, '');
+                    const endParts = cleanEndTime.split(':');
+                    const formattedEnd = endParts.length >= 2 ? `${endParts[0]}:${endParts[1]}` : cleanEndTime;
+                    
+                    return `${formattedStart}-${formattedEnd} น.`;
+                }
+            }
+            
+            // Handle single time 'HH:MM:SS' and 'HH:MM' formats
+            // Remove existing 'น.' if present
+            const cleanTimeString = timeString.replace(/\s*น\.\s*$/i, '');
+            const timeParts = cleanTimeString.split(':');
+            if (timeParts.length >= 2) {
+                return `${timeParts[0]}:${timeParts[1]} น.`;
+            }
+            return cleanTimeString + ' น.';
+        }
+        
+        // Format section to show section number
+        function formatSection(section) {
+            if (!section) return '';
+            return `Sec ${section}`;
+        }
+        
+        // Get status based on exam date and time
+        function getStatusText(examDate, examTime) {
+            if (!examDate) return 'ไม่ระบุ';
+            
+            const now = new Date();
+            const examDateTime = new Date(`${examDate}T${examTime || '00:00'}`);
+            
+            if (examDateTime > now) {
+                return 'กำลังจะมาถึง';
+            } else if (examDateTime.toDateString() === now.toDateString()) {
+                return 'กำลังสอบ';
+            } else {
+                return 'สอบเสร็จแล้ว';
+            }
+        }
+        
+        function getStatusClass(examDate, examTime) {
+            if (!examDate) return 'status-upcoming';
+            
+            const now = new Date();
+            const examDateTime = new Date(`${examDate}T${examTime || '00:00'}`);
+            
+            if (examDateTime > now) {
+                return 'status-upcoming';
+            } else if (examDateTime.toDateString() === now.toDateString()) {
+                return 'status-ongoing';
+            } else {
+                return 'status-finished';
+            }
+        }
+        
+        // ฟังก์ชันดึง IP Address ของผู้ใช้ (เฉพาะ Primary Wi-Fi IP) - Updated from authentication_face.html
+        async function getUserIP() {
+            try {
+                console.log('🌐 Starting Primary Wi-Fi IP detection...');
+                
+                // ใช้เฉพาะ WebRTC เพื่อหา Primary Local IP จาก Wi-Fi adapter
+                const primaryIP = await getPrimaryWiFiIP();
+                if (primaryIP && isValidWiFiIP(primaryIP)) {
+                    console.log('✅ Found Primary Wi-Fi IP:', primaryIP);
+                    return primaryIP;
+                }
+                
+                console.error('❌ Could not determine Primary Wi-Fi IP');
+                return null;
+                
+            } catch (error) {
+                console.error('❌ Error in getUserIP:', error);
+                return null;
+            }
+        }
+
+        // ฟังก์ชันดึง Primary Wi-Fi IP ผ่าน WebRTC (เฉพาะ 10.110.x.x range)
+        function getPrimaryWiFiIP() {
+            console.log('🚀 getPrimaryWiFiIP() called - Starting WebRTC IP detection...');
+            return new Promise((resolve) => {
+                try {
+                    const pc = new RTCPeerConnection({
+                        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+                    });
+                    
+                    let resolved = false;
+                    let candidateIPs = [];
+                    
+                    pc.createDataChannel('test');
+                    console.log('📡 WebRTC DataChannel created');
+                    
+                    pc.onicecandidate = (event) => {
+                        console.log('🔄 ICE candidate event triggered');
+                        if (event.candidate && !resolved) {
+                            const candidate = event.candidate.candidate;
+                            console.log('🔍 WebRTC candidate:', candidate);
+                            
+                            // หา IP จาก candidate
+                            const ipMatch = candidate.match(/([0-9]{1,3}\.){3}[0-9]{1,3}/);
+                            
+                            if (ipMatch) {
+                                const ip = ipMatch[0];
+                                console.log('🔍 WebRTC candidate IP found:', ip);
+                                
+                                // เก็บ IP ทั้งหมดที่พบ
+                                if (!candidateIPs.includes(ip)) {
+                                    candidateIPs.push(ip);
+                                    console.log('📝 Added IP to candidates list:', ip, '| Total candidates:', candidateIPs.length);
+                                }
+                                
+                                // ตรวจสอบว่าเป็น KMUTNB network หรือไม่
+                                if (ip.startsWith('10.110.')) {
+                                    console.log('🎯 KMUTNB network IP found immediately:', ip);
+                                    resolved = true;
+                                    pc.close();
+                                    resolve(ip);
+                                    return;
+                                }
+                                
+                                // ให้ความสำคัญกับ IP ที่อยู่ในช่วง valid WiFi
+                                if (isValidWiFiIP(ip) && !resolved) {
+                                    console.log('✅ Valid WiFi IP found:', ip);
+                                    // ไม่ resolve ทันที เพื่อรอ KMUTNB network ก่อน
+                                }
+                            }
+                        }
+                    };
+                    
+                    pc.createOffer().then(offer => {
+                        console.log('📋 WebRTC offer created');
+                        return pc.setLocalDescription(offer);
+                    }).then(() => {
+                        console.log('🔧 Local description set');
+                    });
+                    
+                    // Timeout หลัง 8 วินาที - ให้เวลามากขึ้นเพื่อรวบรวม candidates
+                    setTimeout(() => {
+                        console.log('⏰ Timeout reached, resolving with best available IP...');
+                        if (!resolved) {
+                            resolved = true;
+                            pc.close();
+                            
+                            console.log('🔍 All candidate IPs found:', candidateIPs);
+                            
+                            // หา IP ที่ดีที่สุดจาก candidates ที่รวบรวมได้
+                            const bestIP = findBestWiFiIP(candidateIPs);
+                            console.log('🏆 Best IP selected:', bestIP);
+                            resolve(bestIP);
+                        }
+                    }, 8000);
+                    
+                } catch (error) {
+                    console.error('❌ WebRTC IP detection failed:', error);
+                    resolve(null);
+                }
+            });
+        }
+        
+        // ฟังก์ชันหา IP ที่ดีที่สุดจาก candidates
+        function findBestWiFiIP(candidateIPs) {
+            // ลำดับความสำคัญ:
+            // 1. 10.110.x.x (KMUTNB network)
+            // 2. 192.168.x.x (Home/Office WiFi)
+            // 3. 10.x.x.x (Private network)
+            // 4. 172.16-31.x.x (Private network)
+            
+            for (const ip of candidateIPs) {
+                if (ip.startsWith('10.110.')) {
+                    console.log('✅ Found KMUTNB network IP:', ip);
+                    return ip;
+                }
+            }
+            
+            for (const ip of candidateIPs) {
+                if (ip.startsWith('192.168.')) {
+                    console.log('✅ Found WiFi network IP:', ip);
+                    return ip;
+                }
+            }
+            
+            for (const ip of candidateIPs) {
+                if (ip.startsWith('10.') && !ip.startsWith('10.110.')) {
+                    console.log('✅ Found private network IP:', ip);
+                    return ip;
+                }
+            }
+            
+            for (const ip of candidateIPs) {
+                const parts = ip.split('.');
+                if (parts[0] === '172' && parseInt(parts[1]) >= 16 && parseInt(parts[1]) <= 31) {
+                    console.log('✅ Found private network IP:', ip);
+                    return ip;
+                }
+            }
+            
+            console.warn('❌ No suitable WiFi IP found in candidates');
+            return null;
+        }
+        
+        // ฟังก์ชันตรวจสอบว่า IP เป็น Valid Wi-Fi IP หรือไม่
+        function isValidWiFiIP(ip) {
+            if (!ip) return false;
+            
+            // ให้ความสำคัญสูงสุดกับ KMUTNB network (10.110.x.x)
+            if (ip.startsWith('10.110.')) {
+                console.log('🎯 KMUTNB network IP detected:', ip);
+                return true;
+            }
+            
+            // รองรับ WiFi networks อื่นๆ
+            if (ip.startsWith('192.168.')) {
+                console.log('📶 WiFi network IP detected:', ip);
+                return true;
+            }
+            
+            // รองรับ private networks
+            if (ip.startsWith('10.')) {
+                console.log('🏠 Private network IP detected:', ip);
+                return true;
+            }
+            
+            // รองรับ private networks (172.16-31.x.x)
+            const parts = ip.split('.');
+            if (parts[0] === '172' && parseInt(parts[1]) >= 16 && parseInt(parts[1]) <= 31) {
+                console.log('🏢 Corporate network IP detected:', ip);
+                return true;
+            }
+            
+            console.log('❌ Invalid or non-WiFi IP:', ip);
+            return false;
+        }
+
+        // ฟังก์ชันตรวจสอบว่าเป็น Local IP หรือไม่
+        function isLocalIP(ip) {
+            if (!ip) return false;
+            
+            const parts = ip.split('.').map(Number);
+            
+            // ตรวจสอบ Private IP ranges
+            return (
+                // 10.0.0.0 - 10.255.255.255
+                (parts[0] === 10) ||
+                // 172.16.0.0 - 172.31.255.255
+                (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31) ||
+                // 192.168.0.0 - 192.168.255.255
+                (parts[0] === 192 && parts[1] === 168)
+            );
+        }
+
+        // IP to Seat Mapping System (Updated for new database schema)
+        async function getActualSeatFromIP(examRoom, layoutData, detectedIP) {
+            try {
+                console.log('🔍 Looking up seat for IP:', detectedIP, 'in layout:', layoutData.id);
+                console.log('🏠 Room:', examRoom.room_name, 'Layout ID:', layoutData.id);
+
+                // Method 1: Check new room seat layout system using find_seat_by_ip function
+                console.log('🔍 Method 1: Using find_seat_by_ip function...');
+                const { data: seatInfo, error: seatError } = await SupabaseAuth.supabase
+                    .rpc('find_seat_by_ip', { 
+                        input_ip: detectedIP,
+                        layout_uuid: layoutData.id 
+                    });
+
+                console.log('RPC find_seat_by_ip result:', seatInfo, 'Error:', seatError);
+
+                if (seatInfo && !seatError) {
+                    console.log('✅ Found seat using find_seat_by_ip:', seatInfo);
+                    return {
+                        seatNumber: seatInfo.seat_number,
+                        method: 'rpc_function',
+                        confidence: 'high',
+                        details: `IP ${detectedIP} พบในระบบที่นั่ง ${seatInfo.seat_number}`,
+                        computerInfo: `ที่นั่ง ${seatInfo.seat_number}`,
+                        roomName: examRoom.room_name
+                    };
+                }
+
+                // Method 2: Direct query to room_seat_ip_mappings table
+                console.log('🔍 Method 2: Direct query to room_seat_ip_mappings...');
+                const { data: mappingData, error: mappingError } = await SupabaseAuth.supabase
+                    .from('room_seat_ip_mappings')
+                    .select('seat_number, ip_address')
+                    .eq('layout_id', layoutData.id)
+                    .eq('ip_address', detectedIP)
+                    .single();
+
+                console.log('Direct mapping query result:', mappingData, 'Error:', mappingError);
+
+                if (mappingData && !mappingError) {
+                    console.log('✅ Found seat using direct mapping:', mappingData);
+                    
+                    // Calculate row and column from seat number
+                    const row = Math.ceil(mappingData.seat_number / layoutData.columns);
+                    const col = ((mappingData.seat_number - 1) % layoutData.columns) + 1;
+                    
+                    return {
+                        seatNumber: mappingData.seat_number,
+                        method: 'direct_mapping',
+                        confidence: 'high',
+                        details: `IP ${detectedIP} พบที่นั่ง ${mappingData.seat_number} (แถว ${row}, คอลัมน์ ${col})`,
+                        computerInfo: `ที่นั่ง ${mappingData.seat_number} - แถว ${row}, คอลัมน์ ${col}`,
+                        roomName: examRoom.room_name,
+                        rowNumber: row,
+                        columnNumber: col
+                    };
+                }
+
+                console.log('❌ No seat mapping found for IP:', detectedIP);
+                
+                // Return that manual selection is required
+                return {
+                    seatNumber: null,
+                    method: 'not_found',
+                    confidence: 'none',
+                    details: `ไม่พบการแมพที่นั่งสำหรับ IP ${detectedIP}`,
+                    requiresManualMapping: true,
+                    computerInfo: `IP: ${detectedIP}`
+                };
+                
+            } catch (error) {
+                console.error('Error in IP-to-Seat mapping:', error);
+                return {
+                    seatNumber: null,
+                    method: 'error',
+                    confidence: 'none',
+                    details: `Error: ${error.message}`,
+                    computerInfo: 'ไม่สามารถระบุได้',
+                    requiresManualMapping: true,
+                    error: error.message
+                };
+            }
+        }
+
+        // Detect seat number from IP address pattern
+        function detectSeatFromIPPattern(ip) {
+            try {
+                // Common patterns for classroom networks:
+                
+                // Pattern 1: 10.110.1.X where X = seat number + 100
+                // Example: 10.110.1.101 = seat 1, 10.110.1.102 = seat 2
+                const pattern1 = ip.match(/^10\.110\.1\.(\d+)$/);
+                if (pattern1) {
+                    const lastOctet = parseInt(pattern1[1]);
+                    if (lastOctet >= 101 && lastOctet <= 150) {
+                        const seatNumber = lastOctet - 100;
+                        return {
+                            detected: true,
+                            seatNumber: seatNumber,
+                            details: `IP pattern: 10.110.1.${lastOctet} → Seat ${seatNumber}`
+                        };
+                    }
+                }
+
+                // Pattern 2: 10.0.X.Y where X = floor, Y = seat
+                // Example: 10.0.2.15 = floor 2, seat 15
+                const pattern2 = ip.match(/^10\.0\.(\d+)\.(\d+)$/);
+                if (pattern2) {
+                    const floor = parseInt(pattern2[1]);
+                    const seat = parseInt(pattern2[2]);
+                    if (seat >= 1 && seat <= 50) {
+                        return {
+                            detected: true,
+                            seatNumber: seat,
+                            details: `IP pattern: 10.0.${floor}.${seat} → Floor ${floor}, Seat ${seat}`
+                        };
+                    }
+                }
+
+                // Pattern 3: 172.16.X.Y where Y = seat number
+                // Example: 172.16.10.5 = seat 5
+                const pattern3 = ip.match(/^172\.16\.\d+\.(\d+)$/);
+                if (pattern3) {
+                    const seat = parseInt(pattern3[1]);
+                    if (seat >= 1 && seat <= 50) {
+                        return {
+                            detected: true,
+                            seatNumber: seat,
+                            details: `IP pattern: ${ip} → Seat ${seat}`
+                        };
+                    }
+                }
+
+                return {
+                    detected: false,
+                    details: `No recognizable pattern found in IP ${ip}`
+                };
+
+            } catch (error) {
+                console.error('Error detecting seat from IP pattern:', error);
+                return {
+                    detected: false,
+                    details: `Error parsing IP pattern: ${error.message}`
+                };
+            }
+        }
+
+        // Network discovery to find seat information
+        async function discoverSeatFromNetwork(ip) {
+            try {
+                // Method 1: Try to get computer hostname/netbios name
+                // This might reveal seat information if computers are named systematically
+                
+                // Method 2: Check if there's a local service that provides seat info
+                // (This would require a local service running on each computer)
+                
+                // Method 3: Use timing-based detection
+                // Measure network latency to determine physical proximity
+                
+                // For now, return not detected as this requires specialized network setup
+                return {
+                    detected: false,
+                    details: 'Network discovery not implemented in current setup',
+                    computerInfo: `Computer at ${ip}`
+                };
+
+            } catch (error) {
+                return {
+                    detected: false,
+                    details: `Network discovery error: ${error.message}`,
+                    computerInfo: 'ไม่สามารถระบุได้'
+                };
+            }
+        }
+
+        // Show manual seat selection dialog
+        function showManualSeatSelection(layoutId, detectedIP, totalSeats = 20) {
+            return new Promise((resolve) => {
+                const modal = document.createElement('div');
+                modal.className = 'manual-seat-modal';
+                modal.innerHTML = `
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3>🪑 เลือกตำแหน่งที่นั่งของคุณ</h3>
+                            <p>ระบบไม่สามารถระบุตำแหน่งที่นั่งจาก IP Address ได้</p>
+                        </div>
+                        <div class="modal-body">
+                            <div class="ip-info">
+                                <p><strong>IP Address ของคุณ:</strong> ${detectedIP}</p>
+                                <p>กรุณาเลือกหมายเลขที่นั่งที่คุณกำลังนั่งอยู่:</p>
+                            </div>
+                            <div class="seat-grid" id="seatGrid">
+                                ${Array.from({length: totalSeats}, (_, i) => `
+                                    <button class="seat-btn" data-seat="${i + 1}">
+                                        ${i + 1}
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn-cancel" onclick="this.closest('.manual-seat-modal').remove()">
+                                ยกเลิก
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                // Add styles
+                modal.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(0,0,0,0.7);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 10000;
+                `;
+
+                // Add event listeners
+                modal.querySelectorAll('.seat-btn').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        const selectedSeat = parseInt(btn.dataset.seat);
+                        
+                        // Save the IP-to-Seat mapping for future use
+                        try {
+                            await SupabaseAuth.supabase
+                                .from('room_seat_ip_mappings')
+                                .upsert({
+                                    layout_id: layoutId,  // ใช้ layout_id แทน room_id
+                                    ip_address: detectedIP,
+                                    seat_number: selectedSeat,
+                                    created_at: new Date().toISOString(),
+                                    updated_at: new Date().toISOString()
+                                });
+                        } catch (error) {
+                            console.warn('Could not save IP mapping:', error);
+                        }
+
+                        modal.remove();
+                        resolve({
+                            seatNumber: selectedSeat,
+                            method: 'manual_selection',
+                            confidence: 'high',
+                            details: `Manually selected seat ${selectedSeat} for IP ${detectedIP}`,
+                            computerInfo: `Computer at seat ${selectedSeat} (${detectedIP})`
+                        });
+                    });
+                });
+
+                document.body.appendChild(modal);
+
+                // Add CSS for the modal
+                const style = document.createElement('style');
+                style.textContent = `
+                    .modal-content {
+                        background: white;
+                        border-radius: 12px;
+                        padding: 2rem;
+                        max-width: 600px;
+                        width: 90%;
+                        max-height: 80vh;
+                        overflow-y: auto;
+                    }
+                    .modal-header h3 {
+                        margin: 0 0 1rem 0;
+                        color: #1e40af;
+                    }
+                    .modal-header p {
+                        margin: 0 0 1rem 0;
+                        color: #64748b;
+                    }
+                    .ip-info {
+                        background: #f8fafc;
+                        padding: 1rem;
+                        border-radius: 8px;
+                        margin-bottom: 1.5rem;
+                    }
+                    .ip-info p {
+                        margin: 0.5rem 0;
+                    }
+                    .seat-grid {
+                        display: grid;
+                        grid-template-columns: repeat(5, 1fr);
+                        gap: 0.5rem;
+                        margin-bottom: 1.5rem;
+                    }
+                    .seat-btn {
+                        background: #e2e8f0;
+                        border: 2px solid #cbd5e1;
+                        border-radius: 8px;
+                        padding: 1rem;
+                        cursor: pointer;
+                        font-weight: 600;
+                        transition: all 0.2s ease;
+                    }
+                    .seat-btn:hover {
+                        background: #3b82f6;
+                        color: white;
+                        transform: scale(1.05);
+                    }
+                    .modal-footer {
+                        display: flex;
+                        justify-content: flex-end;
+                    }
+                    .btn-cancel {
+                        background: #f8fafc;
+                        border: 1px solid #e2e8f0;
+                        padding: 0.75rem 1.5rem;
+                        border-radius: 6px;
+                        cursor: pointer;
+                    }
+                `;
+                document.head.appendChild(style);
+            });
+        }
+
+        // Show seat confirmation after successful authentication
+        async function showSeatConfirmation(roomId) {
+            console.log('🎯 showSeatConfirmation called with roomId:', roomId);
+            try {
+                console.log('🔍 Getting exam room data...');
+                // Get exam room data
+                const { data: examRoom, error: roomError } = await SupabaseAuth.supabase
+                    .from('exam_rooms')
+                    .select('*')
+                    .eq('id', roomId)
+                    .single();
+
+                if (roomError) {
+                    console.error('❌ Room error:', roomError);
+                    throw roomError;
+                }
+                
+                console.log('✅ Exam room data:', examRoom);
+                console.log('📊 Exam room fields available:', Object.keys(examRoom));
+                console.log('� Exam room fields and values:', examRoom);
+                console.log('�🔑 Layout ID field value:', examRoom.layout_id, '(type:', typeof examRoom.layout_id, ')');
+
+                // Check if exam_rooms has layout_id field or similar
+                const layoutId = examRoom.layout_id || examRoom.room_layout_id || examRoom.room_name || examRoom.id;
+                console.log('🎯 Using layout ID (fallback to room_name or room_id):', layoutId);
+
+                if (!layoutId) {
+                    console.error('❌ No layout ID found in exam room data');
+                    console.log('Available fields:', Object.keys(examRoom));
+                    console.log('Exam room object:', examRoom);
+                    throw new Error('ไม่พบ layout_id ในข้อมูลห้องสอบ กรุณาตรวจสอบการตั้งค่าฐานข้อมูล');
+                }
+
+                // Try to find layout data by room_name first
+                console.log('🔍 Trying to find layout data by room_name:', examRoom.room_name);
+                // Try to find layout data by room_name first
+                let layoutData = null;
+                let actualLayoutId = null;
+                
+                console.log('🔍 Trying to find layout data by room_name:', examRoom.room_name);
+                const { data: layoutByName, error: layoutByNameError } = await SupabaseAuth.supabase
+                    .from('room_seat_layouts')
+                    .select('*')
+                    .eq('room_name', examRoom.room_name)
+                    .single();
+
+                if (!layoutByNameError && layoutByName) {
+                    console.log('✅ Found layout by room_name:', layoutByName);
+                    layoutData = layoutByName;
+                    actualLayoutId = layoutByName.id;
+                } else {
+                    console.log('❌ Could not find layout by room_name, trying by layout_id:', layoutId);
+                    const { data: layoutById, error: layoutByIdError } = await SupabaseAuth.supabase
+                        .from('room_seat_layouts')
+                        .select('*')
+                        .eq('id', layoutId)
+                        .single();
+
+                    if (layoutByIdError) {
+                        console.error('❌ Layout error:', layoutByIdError);
+                        throw layoutByIdError;
+                    }
+                    
+                    layoutData = layoutById;
+                    actualLayoutId = layoutById.id;
+                }
+
+                console.log('✅ Final layout data:', layoutData);
+                console.log('✅ Using layout ID:', actualLayoutId);
+
+                // Get current user data
+                console.log('🔍 Getting current user...');
+                const user = await window.SupabaseAuth.getCurrentUserAsync();
+                if (!user) {
+                    console.error('❌ No user found');
+                    alert('ไม่พบข้อมูลผู้ใช้');
+                    return;
+                }
+                
+                console.log('✅ User data:', user);
+
+                // Get detailed user profile
+                const detailedProfile = await window.SupabaseAuth.getUserProfileDetailed();
+                const displayName = (detailedProfile && detailedProfile.name) || user.email.split('@')[0] || 'ไม่ระบุ';
+                
+                console.log('👤 Display name:', displayName);
+                
+                // Show loading for IP address and seat detection
+                const ipElement = document.getElementById('confirmedIpAddress');
+                const seatElement = document.getElementById('confirmedSeatNumber');
+                
+                if (ipElement) ipElement.textContent = 'กำลังตรวจสอบ...';
+                if (seatElement) seatElement.textContent = 'กำลังระบุที่นั่ง...';
+                
+                // Get user IP (this might take a moment)
+                console.log('🌐 Getting user IP...');
+                const userIP = await getUserIP();
+                console.log('🌐 User IP:', userIP);
+                document.getElementById('confirmedIpAddress').textContent = userIP;
+                
+                // Detect actual seat from IP address
+                console.log('🔍 Starting IP-to-Seat detection...');
+                const seatDetection = await getActualSeatFromIP(examRoom, layoutData, userIP);
+                
+                let finalSeatNumber;
+                let seatMethod;
+
+                if (seatDetection.seatNumber) {
+                    // Seat detected automatically
+                    finalSeatNumber = seatDetection.seatNumber;
+                    seatMethod = seatDetection.method;
+                    console.log(`✅ Seat detected: ${finalSeatNumber} via ${seatMethod}`);
+                    
+                    document.getElementById('confirmedSeatNumber').textContent = finalSeatNumber;
+                    
+                    // Show detection details
+                    showSeatDetectionInfo(seatDetection);
+                    
+                } else if (seatDetection.requiresManualMapping) {
+                    // Requires manual seat selection
+                    console.log('🔧 Manual seat selection required');
+                    document.getElementById('confirmedSeatNumber').textContent = 'รอการเลือก...';
+                    
+                    const manualSelection = await showManualSeatSelection(actualLayoutId, userIP, layoutData.total_seats || 20);
+                    finalSeatNumber = manualSelection.seatNumber;
+                    seatMethod = manualSelection.method;
+                    
+                    document.getElementById('confirmedSeatNumber').textContent = finalSeatNumber;
+                    showSeatDetectionInfo(manualSelection);
+                    
+                } else {
+                    // Error or fallback
+                    finalSeatNumber = Math.floor(Math.random() * (examRoom.total_seats || 20)) + 1;
+                    seatMethod = 'random_fallback';
+                    console.warn('⚠️ Using random seat as fallback');
+                    
+                    document.getElementById('confirmedSeatNumber').textContent = finalSeatNumber;
+                    showSeatDetectionInfo({
+                        method: 'random_fallback',
+                        confidence: 'low',
+                        details: 'ไม่สามารถระบุที่นั่งได้ ใช้หมายเลขสุ่ม',
+                        computerInfo: 'ไม่สามารถระบุได้'
+                    });
+                }
+                
+                // Get current time
+                const entryTime = new Date().toLocaleString('th-TH');
+
+                // Update UI with confirmed data
+                console.log('🎨 Updating UI elements...');
+                
+                const nameElement = document.getElementById('confirmedName');
+                const studentIdElement = document.getElementById('confirmedStudentId');
+                const emailElement = document.getElementById('confirmedEmail');
+                const ipAddressElement = document.getElementById('confirmedIpAddress');
+                const seatNumberElement = document.getElementById('confirmedSeatNumber');
+                const entryTimeElement = document.getElementById('confirmedEntryTime');
+                
+                if (nameElement) {
+                    nameElement.textContent = displayName;
+                    console.log('✅ Updated name:', displayName);
+                } else {
+                    console.error('❌ confirmedName element not found');
+                }
+                
+                if (studentIdElement) {
+                    const studentId = getStudentIdFromEmail(user.email);
+                    studentIdElement.textContent = studentId;
+                    console.log('✅ Updated student ID:', studentId);
+                } else {
+                    console.error('❌ confirmedStudentId element not found');
+                }
+                
+                if (emailElement) {
+                    emailElement.textContent = user.email;
+                    console.log('✅ Updated email:', user.email);
+                } else {
+                    console.error('❌ confirmedEmail element not found');
+                }
+                
+                if (ipAddressElement) {
+                    ipAddressElement.textContent = userIP;
+                    console.log('✅ Updated IP:', userIP);
+                } else {
+                    console.error('❌ confirmedIpAddress element not found');
+                }
+                
+                if (seatNumberElement) {
+                    seatNumberElement.textContent = finalSeatNumber;
+                    console.log('✅ Updated seat number:', finalSeatNumber);
+                } else {
+                    console.error('❌ confirmedSeatNumber element not found');
+                }
+                
+                if (entryTimeElement) {
+                    entryTimeElement.textContent = entryTime;
+                    console.log('✅ Updated entry time:', entryTime);
+                } else {
+                    console.error('❌ confirmedEntryTime element not found');
+                }
+
+                // Log seat detection results
+                console.log('🪑 Seat Detection Results:', {
+                    detectedIP: userIP,
+                    finalSeat: finalSeatNumber,
+                    method: seatMethod,
+                    roomId: roomId,
+                    timestamp: new Date().toISOString()
+                });
+
+                // Update exam room details
+                console.log('🏢 Updating exam room details...');
+                
+                const roomNameElement = document.getElementById('confirmedRoomName');
+                const courseCodeElement = document.getElementById('confirmedCourseCode');
+                const courseNameElement = document.getElementById('confirmedCourseName');
+                const sectionElement = document.getElementById('confirmedSection');
+                const examDateElement = document.getElementById('confirmedExamDate');
+                const examTimeElement = document.getElementById('confirmedExamTime');
+                const createdByElement = document.getElementById('confirmedCreatedBy');
+                
+                if (roomNameElement) {
+                    roomNameElement.textContent = examRoom.room_name || 'ไม่ระบุ';
+                    console.log('✅ Updated room name:', examRoom.room_name);
+                } else {
+                    console.error('❌ confirmedRoomName element not found');
+                }
+                
+                if (courseCodeElement) {
+                    courseCodeElement.textContent = examRoom.course_code || 'ไม่ระบุ';
+                    console.log('✅ Updated course code:', examRoom.course_code);
+                } else {
+                    console.error('❌ confirmedCourseCode element not found');
+                }
+                
+                if (courseNameElement) {
+                    courseNameElement.textContent = examRoom.course_name || 'ไม่ระบุ';
+                    console.log('✅ Updated course name:', examRoom.course_name);
+                } else {
+                    console.error('❌ confirmedCourseName element not found');
+                }
+                
+                if (sectionElement) {
+                    sectionElement.textContent = examRoom.section || 'ไม่ระบุ';
+                    console.log('✅ Updated section:', examRoom.section);
+                } else {
+                    console.error('❌ confirmedSection element not found');
+                }
+                
+                if (examDateElement) {
+                    const formattedDate = formatThaiDate(examRoom.exam_date);
+                    examDateElement.textContent = formattedDate;
+                    console.log('✅ Updated exam date:', formattedDate);
+                } else {
+                    console.error('❌ confirmedExamDate element not found');
+                }
+                
+                if (examTimeElement) {
+                    const formattedTime = formatTime(examRoom.exam_time);
+                    examTimeElement.textContent = formattedTime;
+                    console.log('✅ Updated exam time:', formattedTime);
+                } else {
+                    console.error('❌ confirmedExamTime element not found');
+                }
+
+                // Get creator name (same logic as in exam room list)
+                let creatorName = 'ผู้ใช้ไม่ระบุ';
+                if (examRoom.created_by_name) {
+                    // Use the stored creator name (for new rooms)
+                    creatorName = examRoom.created_by_name;
+                } else if (examRoom.created_by) {
+                    try {
+                        // Try to get creator profile
+                        const { data: profile } = await SupabaseAuth.supabase
+                            .from('profiles')
+                            .select('id, full_name, name')
+                            .eq('id', examRoom.created_by)
+                            .single();
+                        
+                        if (profile) {
+                            creatorName = profile.full_name || profile.name || 'ผู้ใช้ไม่ระบุ';
+                        } else {
+                            // Fallback: show partial ID
+                            creatorName = `ผู้ใช้ (${examRoom.created_by.substring(0, 8)}...)`;
+                        }
+                    } catch (profileError) {
+                        console.warn('Could not fetch creator profile:', profileError);
+                        creatorName = `ผู้ใช้ (${examRoom.created_by.substring(0, 8)}...)`;
+                    }
+                }
+
+                if (createdByElement) {
+                    createdByElement.textContent = creatorName;
+                    console.log('✅ Updated created by:', creatorName);
+                } else {
+                    console.error('❌ confirmedCreatedBy element not found');
+                }
+
+                // Store session data
+                const sessionData = {
+                    roomId: roomId,
+                    studentName: displayName,
+                    studentId: getStudentIdFromEmail(user.email),
+                    seatNumber: finalSeatNumber,
+                    ipAddress: userIP,
+                    entryTime: entryTime,
+                    examRoom: examRoom,
+                    seatDetection: {
+                        method: seatMethod,
+                        confidence: seatDetection.confidence || 'unknown',
+                        details: seatDetection.details || 'No details available'
+                    }
+                };
+
+                sessionStorage.setItem('confirmedExamSession', JSON.stringify(sessionData));
+
+                // Save session data to database for monitoring
+                try {
+                    console.log('=== Debug: Saving session data ===');
+                    console.log('Room ID:', roomId);
+                    console.log('User email:', user.email);
+                    console.log('Student name:', displayName);
+                    console.log('Seat number:', finalSeatNumber);
+                    console.log('IP address:', userIP);
+                    
+                    const { data: existingSession, error: findError } = await SupabaseAuth.supabase
+                        .from('exam_student_sessions')
+                        .select('id')
+                        .eq('layout_id', actualLayoutId)  // ใช้ actualLayoutId ที่หาได้
+                        .eq('student_email', user.email)
+                        .eq('is_active', true)  // ใช้ is_active แทน status
+                        .order('created_at', { ascending: false })
+                        .limit(1);
+
+                    console.log('Existing session check:', existingSession, 'Error:', findError);
+
+                    if (!findError && existingSession && existingSession.length > 0) {
+                        // Update existing session
+                        console.log('Updating existing session:', existingSession[0].id);
+                        const { data: updateData, error: updateError } = await SupabaseAuth.supabase
+                            .from('exam_student_sessions')
+                            .update({
+                                student_name: displayName,  // เพิ่มชื่อนักศึกษาในการอัปเดต
+                                seat_number: finalSeatNumber,
+                                ip_address: userIP,
+                                updated_at: new Date().toISOString()
+                            })
+                            .eq('id', existingSession[0].id)
+                            .select();
+
+                        if (updateError) {
+                            console.error('Error updating session:', updateError);
+                        } else {
+                            console.log('Session updated successfully:', updateData);
+                            
+                            // ส่งคำร้องไปยัง agent.py เมื่ออัปเดต session สำเร็จ
+                            if (updateData && updateData.length > 0) {
+                                await sendRequestToAgent(updateData[0], 'session_updated');
+                            }
+                        }
+                    } else {
+                        // Create new session record
+                        console.log('Creating new session record...');
+                        const sessionRecord = {
+                            layout_id: actualLayoutId,  // ใช้ actualLayoutId ที่หาได้
+                            student_email: user.email,
+                            student_name: displayName,  // เพิ่มชื่อนักศึกษา
+                            seat_number: finalSeatNumber,
+                            ip_address: userIP,
+                            is_active: true,  // ใช้ is_active แทน status
+                            session_start_time: new Date().toISOString(),  // ใช้ session_start_time แทน entry_time
+                            created_at: new Date().toISOString(),
+                            updated_at: new Date().toISOString()
+                        };
+                        
+                        console.log('Session record to insert:', sessionRecord);
+                        
+                        const { data: insertData, error: insertError } = await SupabaseAuth.supabase
+                            .from('exam_student_sessions')
+                            .insert(sessionRecord)
+                            .select();
+
+                        if (insertError) {
+                            console.error('Error creating session:', insertError);
+                            
+                            // Try to create the table if it doesn't exist
+                            if (insertError.message && insertError.message.includes('relation "exam_student_sessions" does not exist')) {
+                                console.log('Table does not exist. You need to create it manually in Supabase.');
+                                
+                                console.log(`
+SQL to create the table:
+
+CREATE TABLE exam_student_sessions (
+    id BIGSERIAL PRIMARY KEY,
+    room_id UUID REFERENCES exam_rooms(id),
+    student_email TEXT NOT NULL,
+    student_name TEXT,
+    seat_number INTEGER,
+    ip_address TEXT,
+    status TEXT DEFAULT 'authenticated',
+    entry_time TIMESTAMPTZ,
+    exit_time TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Create indexes for better performance
+CREATE INDEX idx_exam_student_sessions_room_id ON exam_student_sessions(room_id);
+CREATE INDEX idx_exam_student_sessions_ip ON exam_student_sessions(ip_address);
+CREATE INDEX idx_exam_student_sessions_email ON exam_student_sessions(student_email);
+                                `);
+                                
+                                alert(`ตาราง exam_student_sessions ยังไม่มีในฐานข้อมูล
+                                
+กรุณาไปที่ Supabase Dashboard > SQL Editor และรันคำสั่ง SQL นี้:
+
+CREATE TABLE exam_student_sessions (
+    id BIGSERIAL PRIMARY KEY,
+    room_id UUID REFERENCES exam_rooms(id),
+    student_email TEXT NOT NULL,
+    student_name TEXT,
+    seat_number INTEGER,
+    ip_address TEXT,
+    status TEXT DEFAULT 'authenticated',
+    entry_time TIMESTAMPTZ,
+    exit_time TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_exam_student_sessions_room_id ON exam_student_sessions(room_id);
+CREATE INDEX idx_exam_student_sessions_ip ON exam_student_sessions(ip_address);
+CREATE INDEX idx_exam_student_sessions_email ON exam_student_sessions(student_email);`);
+                            }
+                        } else {
+                            console.log('Session created successfully for monitoring:', insertData);
+                            
+                            // ส่งคำร้องไปยัง agent.py เมื่อสร้าง session ใหม่สำเร็จ
+                            if (insertData && insertData.length > 0) {
+                                await sendRequestToAgent(insertData[0], 'session_created');
+                            }
+                        }
+                    }
+                } catch (sessionError) {
+                    console.error('Error handling session data:', sessionError);
+                    // Don't block the UI even if session recording fails
+                }
+
+                // Show seat confirmation section (examRoomListSection has been removed)
+                document.getElementById('seatConfirmationSection').style.display = 'block';
+
+                console.log('Seat confirmation displayed:', sessionData);
+
+            } catch (error) {
+                console.error('Error showing seat confirmation:', error);
+                alert('เกิดข้อผิดพลาดในการแสดงข้อมูลที่นั่ง');
+            }
+        }
+
+        // Show seat detection information
+        function showSeatDetectionInfo(detection) {
+            const existingInfo = document.querySelector('.seat-detection-info');
+            if (existingInfo) {
+                existingInfo.remove();
+            }
+
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'seat-detection-info';
+            
+            const confidenceColor = {
+                'high': '#10b981',
+                'medium': '#f59e0b', 
+                'low': '#ef4444',
+                'none': '#6b7280'
+            }[detection.confidence] || '#6b7280';
+
+            infoDiv.innerHTML = `
+                <div class="detection-header">
+                    <i class="fas fa-info-circle"></i>
+                    <h4>ข้อมูลการตรวจจับที่นั่ง</h4>
+                </div>
+                <div class="detection-content">
+                    <div class="detection-item">
+                        <span class="label">วิธีการตรวจจับ:</span>
+                        <span class="value">${getMethodDisplayName(detection.method)}</span>
+                    </div>
+                    <div class="detection-item">
+                        <span class="label">ความแม่นยำ:</span>
+                        <span class="value confidence" style="color: ${confidenceColor}">
+                            ${getConfidenceDisplayName(detection.confidence)}
+                        </span>
+                    </div>
+                    <div class="detection-item">
+                        <span class="label">รายละเอียด:</span>
+                        <span class="value">${detection.details}</span>
+                    </div>
+                    ${detection.computerInfo ? `
+                        <div class="detection-item">
+                            <span class="label">ข้อมูลคอมพิวเตอร์:</span>
+                            <span class="value">${detection.computerInfo}</span>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+
+            infoDiv.style.cssText = `
+                background: #f8fafc;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                padding: 1rem;
+                margin-top: 1rem;
+                font-size: 0.9rem;
+            `;
+
+            // Insert after the seat confirmation section
+            const seatCard = document.querySelector('.seat-info .info-content');
+            if (seatCard) {
+                seatCard.appendChild(infoDiv);
+            }
+        }
+
+        // Helper functions for display names
+        function getMethodDisplayName(method) {
+            const methods = {
+                'predefined_mapping': 'แผนผัง IP ที่กำหนดไว้',
+                'ip_pattern': 'รูปแบบ IP Address',
+                'network_discovery': 'การค้นหาเครือข่าย',
+                'manual_selection': 'เลือกด้วยตนเอง',
+                'random_fallback': 'สุ่มหมายเลข (สำรอง)',
+                'error': 'เกิดข้อผิดพลาด'
+            };
+            return methods[method] || method;
+        }
+
+        function getConfidenceDisplayName(confidence) {
+            const levels = {
+                'high': 'สูง ✅',
+                'medium': 'ปานกลาง ⚠️',
+                'low': 'ต่ำ ❌',
+                'none': 'ไม่มีข้อมูล'
+            };
+            return levels[confidence] || confidence;
+        }
+
+        // Helper function to extract student ID from email
+        function getStudentIdFromEmail(email) {
+            if (!email) return 'ไม่ระบุ';
+            // Extract student ID from email (assuming format like s65123456@student.university.ac.th)
+            const match = email.match(/^s?(\d+)/i);
+            return match ? match[1] : email.split('@')[0].replace(/^s/i, '');
+        }
+
+        // ฟังก์ชันส่งสัญญาณไปยัง agent.py ผ่าน Supabase
+        async function sendRequestToAgent(sessionData, action) {
+            try {
+                console.log('📤 Sending signal to agent.py via Supabase:', { sessionData, action });
+                
+                // อัปเดตข้อมูลใน Supabase เพื่อให้ agent.py ตรวจจับได้
+                // เพิ่มฟิลด์ agent_signal เพื่อส่งสัญญาณไปยัง agent
+                const updateData = {
+                    updated_at: new Date().toISOString(),
+                    // ใช้ updated_at เป็นสัญญาณให้ agent ตรวจจับ session ใหม่
+                };
+                
+                const { data: updateResult, error: updateError } = await SupabaseAuth.supabase
+                    .from('exam_student_sessions')
+                    .update(updateData)
+                    .eq('id', sessionData.id)
+                    .select();
+                
+                if (updateError) {
+                    console.error('❌ Error updating session for agent signal:', updateError);
+                } else {
+                    console.log('✅ Agent signal sent successfully via Supabase:', updateResult);
+                }
+                
+            } catch (error) {
+                console.error('❌ Error sending signal to agent:', error);
+                // ไม่ให้ error นี้หยุดการทำงานของระบบหลัก
+            }
+        }
+
+        // Start exam session
+        function startExamSession() {
+            const sessionData = JSON.parse(sessionStorage.getItem('confirmedExamSession') || '{}');
+            
+            // In a real application, this would redirect to the actual exam platform
+            alert(`เริ่มการสอบ\n\nข้อมูลการสอบ:\n- ชื่อ: ${sessionData.studentName}\n- รหัสนักศึกษา: ${sessionData.studentId}\n- ที่นั่ง: ${sessionData.seatNumber}\n- IP: ${sessionData.ipAddress}\n\nระบบจะนำคุณไปยังแพลตฟอร์มข้อสอบ`);
+            
+            // Log exam start
+            console.log('Exam session started:', sessionData);
+            
+            // Here you would typically redirect to the actual exam system
+            // window.location.href = '/exam-platform?session=' + btoa(JSON.stringify(sessionData));
+        }
+
+        // Exit exam room function - DELETE record instead of updating status
+        async function exitExamRoom() {
+            console.log('🚪 Exit exam room function called');
+            
+            if (!confirm('คุณแน่ใจหรือไม่ที่ต้องการออกจากห้องสอบ?\n\nการออกจากห้องจะลบข้อมูลการเข้าสอบของคุณออกจากระบบ')) {
+                console.log('❌ User cancelled exit');
+                return;
+            }
+
+            try {
+                const sessionData = JSON.parse(sessionStorage.getItem('confirmedExamSession') || '{}');
+                const user = await getCurrentUser();
+                
+                console.log('🔍 Exit exam room - Session data:', sessionData);
+                console.log('🔍 Exit exam room - User data:', user);
+                
+                if (!user) {
+                    console.error('No user found');
+                    alert('ไม่พบข้อมูลผู้ใช้ กรุณาเข้าสู่ระบบใหม่');
+                    return;
+                }
+
+                console.log('🔍 About to start delete process for user:', user.email);
+                
+                // Test Supabase connection and permissions
+                console.log('🔍 Testing Supabase connection...');
+                console.log('🔍 Supabase client:', SupabaseAuth.supabase);
+                console.log('🔍 Supabase URL:', SupabaseAuth.supabase?.supabaseUrl);
+                
+                // Test if we can read from the table first
+                console.log('🔍 Testing read permissions...');
+                const { data: testRead, error: readError } = await SupabaseAuth.supabase
+                    .from('exam_student_sessions')
+                    .select('id, student_email')
+                    .limit(1);
+                    
+                console.log('🔍 Read test result:', { testRead, readError });
+
+                console.log('Attempting to delete session for user:', user.email);
+                console.log('Session data:', sessionData);
+
+                // Delete session record from database using teacher's delete logic
+                if (user.email) {
+                    console.log('🔍 Checking existing sessions in database...');
+                    const { data: allSessions, error: checkError } = await SupabaseAuth.supabase
+                        .from('exam_student_sessions')
+                        .select('*')
+                        .eq('is_active', true);  // ใช้ is_active แทน status
+
+                    console.log('📊 All active sessions in database:', allSessions);
+                    
+                    if (allSessions) {
+                        const matchingSessions = allSessions.filter(session => 
+                            session.student_email === user.email
+                        );
+                        console.log('🎯 Sessions that match user email:', matchingSessions);
+                    }
+
+                    // Try to find the exact session first
+                    const { data: targetSessions, error: findError } = await SupabaseAuth.supabase
+                        .from('exam_student_sessions')
+                        .select('*')
+                        .eq('student_email', user.email)
+                        .eq('is_active', true);  // ใช้ is_active แทน status
+
+                    console.log('� Target sessions found:', targetSessions, 'Error:', findError);
+
+                    if (!targetSessions || targetSessions.length === 0) {
+                        console.log('❌ No matching session found with the criteria');
+                        alert('ไม่พบ session ที่ตรงกับเงื่อนไข อาจถูกลบไปแล้ว');
+                        // Still proceed to clear and redirect
+                        sessionStorage.removeItem('confirmedExamSession');
+                        sessionStorage.removeItem('selectedRoom');
+                        window.location.href = 'dashboard.html';
+                        return;
+                    }
+
+                    // Update session to inactive instead of delete - safer approach
+                    console.log('🚀 Setting session to inactive instead of delete...');
+                    
+                    // Get seat number from found session
+                    const seatNumber = targetSessions[0]?.seat_number;
+                    const sessionId = targetSessions[0]?.id;
+                    console.log('🔍 Using session data:', { sessionId, seatNumber });
+                    
+                    const { data: updateData, error: updateError } = await SupabaseAuth.supabase
+                        .from('exam_student_sessions')
+                        .update({
+                            is_active: false,
+                            session_end_time: new Date().toISOString(),
+                            updated_at: new Date().toISOString()
+                        })
+                        .eq('id', sessionId)
+                        .select();
+
+                    console.log('📊 Update result:', {
+                        data: updateData,
+                        error: updateError,
+                        hasError: !!updateError
+                    });
+
+                    if (updateError) {
+                        console.error('❌ Update error:', updateError);
+                        console.log('🔍 Error details:', JSON.stringify(updateError, null, 2));
+                        
+                        alert(`เกิดข้อผิดพลาดในการอัปเดต session: ${updateError.message}\n\nรหัสข้อผิดพลาด: ${updateError.code || 'ไม่ระบุ'}`);
+                        return;
+                    }
+
+                    // If no error, update was successful
+                    console.log('✅ Session updated to inactive successfully');
+                    
+                    // Verify update by checking session status
+                    console.log('🔍 Verifying session update...');
+                    const { data: updatedSession, error: verifyError } = await SupabaseAuth.supabase
+                        .from('exam_student_sessions')
+                        .select('*')
+                        .eq('id', sessionId)
+                        .single();
+
+                    console.log('📊 Verification result:', {
+                        updatedSession: updatedSession,
+                        isActive: updatedSession?.is_active,
+                        verifyError: verifyError
+                    });
+
+                    if (updatedSession && !updatedSession.is_active) {
+                        console.log('✅ Session inactivation verified successfully');
+                        
+                        // แสดงข้อความแจ้งเตือนแบบ success notification
+                        const actualSeatNumber = updatedSession?.seat_number || seatNumber || 'ไม่ระบุ';
+                        
+                        // แสดง alert สำเร็จ
+                        alert(`✅ ออกจากห้องสอบเรียบร้อยแล้ว\n\nขอบคุณที่ใช้บริการระบบ FaceTrack Lab\n\nข้อมูลการออก:\n- เวลา: ${new Date().toLocaleString('th-TH')}\n- ที่นั่ง: ${actualSeatNumber}\n- สถานะ: ปิดการใช้งาน session`);
+                    } else {
+                        console.log('⚠️ Session may not have been updated properly');
+                        alert('⚠️ ไม่สามารถยืนยันการอัปเดตได้ แต่จะดำเนินการออกจากระบบ');
+                    }
+                } else {
+                    console.log('No room ID found in session data');
+                }
+                
+                // Clear session data
+                sessionStorage.removeItem('confirmedExamSession');
+                sessionStorage.removeItem('selectedRoom');
+                
+                // Redirect back to dashboard
+                window.location.href = 'dashboard.html';
+                
+            } catch (error) {
+                console.error('Error exiting exam room:', error);
+                alert('เกิดข้อผิดพลาดในการออกจากห้องสอบ กรุณาลองใหม่อีกครั้ง');
+            }
+        }
+
+        // Function to populate button data attributes (like teacher side)
+        async function populateRemoveButtonData() {
+            console.log('🔄 Populating remove button data attributes');
+            
+            try {
+                // Check if SupabaseAuth is loaded
+                if (!window.SupabaseAuth) {
+                    console.warn('⚠️ SupabaseAuth not loaded yet');
+                    return;
+                }
+                
+                // Get current user data (using getCurrentUserAsync like other files)
+                const currentUser = await window.SupabaseAuth.getCurrentUserAsync();
+                if (!currentUser || !currentUser.email) {
+                    console.warn('⚠️ No current user found');
+                    return;
+                }
+                
+                const userEmail = currentUser.email;
+                console.log('👤 Current user email:', userEmail);
+                
+                // Query active session from database (same as teacher side)
+                console.log('🔍 Searching for active session for user:', userEmail);
+                const { data: sessions, error: sessionError } = await window.SupabaseAuth.supabase
+                    .from('exam_student_sessions')
+                    .select('*')
+                    .eq('student_email', userEmail)
+                    .eq('is_active', true)
+                    .order('created_at', { ascending: false })
+                    .limit(1);
+                
+                console.log('📊 Active session query result:', { sessions, sessionError });
+                
+                if (sessionError) {
+                    console.error('❌ Database error:', sessionError);
+                    return;
+                }
+                
+                const removeButton = document.getElementById('btn-remove-student');
+                if (!removeButton) {
+                    console.warn('⚠️ Remove button not found');
+                    return;
+                }
+                
+                if (sessions && sessions.length > 0) {
+                    const activeSession = sessions[0];
+                    console.log('✅ Found active session:', activeSession);
+                    
+                    // Populate button attributes with real session data (same as teacher side)
+                    removeButton.setAttribute('data-session-id', activeSession.id || '');
+                    removeButton.setAttribute('data-student-email', activeSession.student_email || '');
+                    removeButton.setAttribute('data-seat-number', activeSession.seat_number || '');
+                    removeButton.setAttribute('data-ip-address', activeSession.ip_address || '');
+                    removeButton.setAttribute('data-layout-id', activeSession.layout_id || '');
+                    
+                    console.log('✅ Button data attributes populated from database:', {
+                        sessionId: activeSession.id,
+                        studentEmail: activeSession.student_email,
+                        seatNumber: activeSession.seat_number,
+                        ipAddress: activeSession.ip_address,
+                        layoutId: activeSession.layout_id
+                    });
+                } else {
+                    console.warn('⚠️ No active session found for user');
+                    // Clear button attributes if no session
+                    removeButton.setAttribute('data-session-id', '');
+                    removeButton.setAttribute('data-student-email', '');
+                    removeButton.setAttribute('data-seat-number', '');
+                    removeButton.setAttribute('data-ip-address', '');
+                    removeButton.setAttribute('data-layout-id', '');
+                }
+                
+            } catch (error) {
+                console.error('❌ Error populating button data:', error);
+            }
+        }
+
+        // Function to remove student from seat (using data attributes like teacher side)
+        async function removeStudentFromSeat() {
+            console.log('🔥 Remove student from seat - using data attributes');
+            
+            try {
+                // Check if SupabaseAuth is loaded
+                if (!window.SupabaseAuth) {
+                    console.error('❌ SupabaseAuth not loaded');
+                    alert('ระบบยังไม่พร้อม กรุณารอสักครู่');
+                    return;
+                }
+                
+                // Get data from button attributes (same as teacher side)
+                const button = document.getElementById('btn-remove-student');
+                if (!button) {
+                    console.error('❌ Remove button not found');
+                    alert('ไม่พบปุ่มลบ');
+                    return;
+                }
+                
+                const studentEmail = button.getAttribute('data-student-email');
+                const seatNumber = button.getAttribute('data-seat-number');
+                const sessionId = button.getAttribute('data-session-id');
+                const ipAddress = button.getAttribute('data-ip-address');
+                const layoutId = button.getAttribute('data-layout-id');
+                
+                console.log('🔍 Data from button attributes:', {
+                     studentEmail,
+                     seatNumber,
+                     sessionId,
+                     ipAddress,
+                     layoutId
+                 });
+
+                if (!studentEmail || !seatNumber) {
+                    console.error('❌ Missing required data:', {
+                        hasStudentEmail: !!studentEmail,
+                        studentEmail: studentEmail,
+                        hasSeatNumber: !!seatNumber,
+                        seatNumber: seatNumber
+                    });
+                    alert(`ไม่พบข้อมูลที่จำเป็น:\n- Email: ${studentEmail || 'ไม่พบ'}\n- ที่นั่ง: ${seatNumber || 'ไม่พบ'}`);
+                    return;
+                }
+
+                // Confirm removal
+                if (!confirm(`คุณแน่ใจหรือไม่ที่ต้องการลบนักศึกษา "${studentEmail}" ออกจากที่นั่ง ${seatNumber}?\n\nการดำเนินการนี้จะลบข้อมูลการเข้าสอบของนักศึกษาออกจากระบบ`)) {
+                    return;
+                }
+
+                // Use EXACT same logic as teacher side
+                console.log('🔍 Checking existing sessions in database...');
+                const { data: allSessions, error: checkError } = await SupabaseAuth.supabase
+                    .from('exam_student_sessions')
+                    .select('*')
+                    .eq('is_active', true);  // ใช้ is_active แทน status
+
+                console.log('📊 All active sessions in database:', allSessions);
+                
+                if (allSessions) {
+                    const matchingSessions = allSessions.filter(session => 
+                        session.student_email === studentEmail ||
+                        session.seat_number === parseInt(seatNumber)
+                    );
+                    console.log('🎯 Sessions that match our criteria:', matchingSessions);
+                }
+
+                // Try to find the exact session first
+                const { data: targetSessions, error: findError } = await SupabaseAuth.supabase
+                    .from('exam_student_sessions')
+                    .select('*')
+                    .eq('student_email', studentEmail)
+                    .eq('seat_number', parseInt(seatNumber))
+                    .eq('is_active', true);  // ใช้ is_active แทน status
+
+                console.log('🔍 Target sessions found:', targetSessions, 'Error:', findError);
+
+                if (!targetSessions || targetSessions.length === 0) {
+                    console.log('❌ No matching session found with the criteria');
+                    alert('ไม่พบ session ที่ตรงกับเงื่อนไข (email + seat_number)');
+                    return;
+                }
+
+                // Delete the found session(s) - EXACT same as teacher
+                console.log('🚀 Attempting simple delete without .select()...');
+                const { error: deleteError } = await SupabaseAuth.supabase
+                    .from('exam_student_sessions')
+                    .delete()
+                    .eq('student_email', studentEmail)
+                    .eq('seat_number', parseInt(seatNumber))
+                    .eq('is_active', true);  // ใช้ is_active แทน status
+
+                console.log('📊 Simple delete result:', {
+                    error: deleteError,
+                    hasError: !!deleteError
+                });
+
+                if (deleteError) {
+                    console.error('❌ Delete error:', deleteError);
+                    console.log('🔍 Error details:', JSON.stringify(deleteError, null, 2));
+                    alert(`เกิดข้อผิดพลาดในการลบ: ${deleteError.message}`);
+                    return;
+                }
+
+                // If no error, deletion was successful
+                console.log('✅ Simple delete completed without error');
+                
+                // Verify deletion by checking remaining sessions
+                console.log('🔍 Verifying deletion...');
+                const { data: remainingSessions, error: verifyError } = await SupabaseAuth.supabase
+                    .from('exam_student_sessions')
+                    .select('*')
+                    .eq('student_email', studentEmail)
+                    .eq('seat_number', parseInt(seatNumber))
+                    .eq('is_active', true);  // ใช้ is_active แทน status
+
+                console.log('📊 Verification result:', {
+                    remainingSessions: remainingSessions,
+                    count: remainingSessions?.length || 0,
+                    verifyError: verifyError
+                });
+
+                if (remainingSessions && remainingSessions.length === 0) {
+                    console.log('✅ Session deletion verified successfully');
+                    alert(`✅ ลบนักศึกษา "${studentEmail}" ออกจากที่นั่ง ${seatNumber} เรียบร้อยแล้ว`);
+                    
+                    // Clear all authentication data and redirect
+                    sessionStorage.removeItem('confirmedExamSession');
+                    sessionStorage.removeItem('selectedRoom');
+                    localStorage.removeItem('authenticationData');
+                    window.location.href = 'dashboard.html';
+                } else {
+                    console.log('⚠️ Session may not have been deleted');
+                    alert('⚠️ ไม่สามารถยืนยันการลบได้');
+                }
+
+            } catch (error) {
+                console.error('❌ Error in removeStudentFromSeat:', error);
+                alert('เกิดข้อผิดพลาดในการลบข้อมูล: ' + error.message);
+            }
+        }
+
+        // Function to show exit notification
+        function showExitNotification(message, type = 'success') {
+            // สร้าง notification element
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #10b981;
+                color: white;
+                padding: 15px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 10000;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                font-size: 14px;
+                max-width: 400px;
+                word-wrap: break-word;
+                animation: slideIn 0.3s ease-out;
+            `;
+            
+            notification.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="font-size: 18px;">✅</div>
+                    <div>${message}</div>
+                </div>
+            `;
+            
+            // เพิ่ม CSS animation
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes slideIn {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                @keyframes slideOut {
+                    from { transform: translateX(0); opacity: 1; }
+                    to { transform: translateX(100%); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            // แสดง notification
+            document.body.appendChild(notification);
+            
+            // ซ่อนหลัง 3 วินาที
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease-in';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        // Handle browser/tab close events to clean up session
+        window.addEventListener('beforeunload', function(event) {
+            console.log('🚪 Browser/tab is closing - cleaning up session...');
+            
+            const sessionData = JSON.parse(sessionStorage.getItem('confirmedExamSession') || '{}');
+            
+            if (sessionData.roomId || sessionData.studentEmail) {
+                console.log('🧹 Session data found for cleanup:', sessionData);
+                
+                // Use sendBeacon with composite criteria (no ID dependency)
+                const cleanupData = {
+                    student_email: sessionData.studentEmail,
+                    is_active: true  // ใช้ is_active แทน status
+                };
+
+                // Add room_id if available
+                if (sessionData.roomId) {
+                    cleanupData.room_id = sessionData.roomId;
+                }
+
+                // Add seat_number if available  
+                if (sessionData.seatNumber) {
+                    cleanupData.seat_number = parseInt(sessionData.seatNumber);
+                }
+
+                // Build query string for DELETE request
+                const queryParams = Object.keys(cleanupData)
+                    .map(key => `${key}=eq.${cleanupData[key]}`)
+                    .join('&');
+                
+                const cleanupUrl = `${SupabaseAuth.supabase.supabaseUrl}/rest/v1/exam_student_sessions?${queryParams}`;
+                
+                console.log('🔄 Cleanup URL:', cleanupUrl);
+                
+                // Use fetch with headers instead of sendBeacon for DELETE
+                fetch(cleanupUrl, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${SupabaseAuth.supabase.supabaseKey}`,
+                        'apikey': SupabaseAuth.supabase.supabaseKey,
+                        'Content-Type': 'application/json'
+                    },
+                    keepalive: true
+                }).then(() => {
+                    console.log('✅ Cleanup request sent');
+                }).catch(error => {
+                    console.log('❌ Cleanup failed:', error);
+                });
+            } else {
+                console.log('⚠️ No session data found for cleanup');
+            }
+        });
+
+        // Back to dashboard (since exam list is removed)
+        function backToExamList() {
+            // Clear all authentication data
+            sessionStorage.removeItem('confirmedExamSession');
+            sessionStorage.removeItem('pendingExamRoomId');
+            localStorage.removeItem('authenticationData');
+            
+            // Redirect to dashboard since exam room list is no longer available
+            window.location.href = 'dashboard.html';
+        }
+        
+        // Load authentication data when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 DOM Content Loaded');
+            
+            // Check if returning from face authentication with confirmed exam entry
+            const urlParams = new URLSearchParams(window.location.search);
+            const authSuccess = urlParams.get('authSuccess');
+            const roomId = urlParams.get('roomId');
+            
+            console.log('🔍 URL Params:', { authSuccess, roomId });
+            
+            // Check localStorage for persistent authentication data
+            const storedAuthData = localStorage.getItem('authenticationData');
+            console.log('💾 Stored auth data:', storedAuthData);
+            
+            // Always show the seat confirmation section
+            const seatSection = document.getElementById('seatConfirmationSection');
+            if (seatSection) {
+                seatSection.style.display = 'block';
+                console.log('✅ Seat confirmation section displayed');
+            } else {
+                console.error('❌ Seat confirmation section not found');
+            }
+            
+            if (authSuccess === 'true' && roomId) {
+                console.log('🎯 Processing authSuccess with roomId');
+                // Store authentication data in localStorage for persistence
+                const authData = {
+                    authSuccess: true,
+                    roomId: roomId,
+                    timestamp: new Date().toISOString()
+                };
+                localStorage.setItem('authenticationData', JSON.stringify(authData));
+                
+                if (window.SupabaseAuth && window.SupabaseAuth.supabase) {
+                    showSeatConfirmation(roomId);
+                } else {
+                    console.warn('⚠️ Supabase not ready, waiting...');
+                    // Wait for Supabase to be initialized
+                    let attempts = 0;
+                    const checkSupabase = setInterval(() => {
+                        attempts++;
+                        if (window.SupabaseAuth && window.SupabaseAuth.supabase) {
+                            clearInterval(checkSupabase);
+                            showSeatConfirmation(roomId);
+                        } else if (attempts > 50) { // 5 seconds timeout
+                            clearInterval(checkSupabase);
+                            console.error('Supabase initialization timeout');
+                            showFallbackData(roomId);
+                        }
+                    }, 100);
+                }
+                
+            } else if (storedAuthData) {
+                console.log('📂 Loading from stored auth data');
+                // Load from stored authentication data (for refresh scenarios)
+                try {
+                    const parsedAuthData = JSON.parse(storedAuthData);
+                    if (parsedAuthData.authSuccess && parsedAuthData.roomId) {
+                        
+                        if (window.SupabaseAuth && window.SupabaseAuth.supabase) {
+                            showSeatConfirmation(parsedAuthData.roomId);
+                        } else {
+                            console.warn('⚠️ Supabase not ready for stored data, waiting...');
+                            // Wait for Supabase to be initialized
+                            let attempts = 0;
+                            const checkSupabase = setInterval(() => {
+                                attempts++;
+                                if (window.SupabaseAuth && window.SupabaseAuth.supabase) {
+                                    clearInterval(checkSupabase);
+                                    showSeatConfirmation(parsedAuthData.roomId);
+                                } else if (attempts > 50) { // 5 seconds timeout
+                                    clearInterval(checkSupabase);
+                                    console.error('Supabase initialization timeout for stored auth data');
+                                    showFallbackData(parsedAuthData.roomId);
+                                }
+                            }, 100);
+                        }
+                    } else {
+                        // Invalid stored data, show fallback
+                        localStorage.removeItem('authenticationData');
+                        showFallbackData();
+                    }
+                } catch (error) {
+                    console.error('Error parsing stored auth data:', error);
+                    localStorage.removeItem('authenticationData');
+                    showFallbackData();
+                }
+            } else {
+                // No authentication data - show fallback
+                console.log('🔄 No auth data, showing fallback');
+                showFallbackData();
+            }
+            
+            // Populate remove button data attributes after a delay to ensure user data is loaded
+            setTimeout(async () => {
+                await populateRemoveButtonData();
+            }, 2000);
+        });
+        
+        // Function to show fallback data when unable to load from database
+        function showFallbackData(roomId = 'Unknown') {
+            console.log('🆘 Showing fallback data');
+            
+            // Show basic information
+            const elements = {
+                'confirmedName': 'กำลังโหลด...',
+                'confirmedStudentId': 'กำลังโหลด...',
+                'confirmedEmail': 'กำลังโหลด...',
+                'confirmedIpAddress': 'กำลังระบุ...',
+                'confirmedSeatNumber': '?',
+                'confirmedEntryTime': new Date().toLocaleString('th-TH'),
+                'confirmedRoomName': 'ห้องสอบ',
+                'confirmedCourseCode': 'กำลังโหลด...',
+                'confirmedCourseName': 'กำลังโหลด...',
+                'confirmedSection': 'กำลังโหลด...',
+                'confirmedExamDate': new Date().toLocaleDateString('th-TH'),
+                'confirmedExamTime': 'กำลังโหลด...',
+                'confirmedCreatedBy': 'กำลังโหลด...'
+            };
+            
+            Object.entries(elements).forEach(([id, text]) => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.textContent = text;
+                    console.log(`✅ Set fallback for ${id}: ${text}`);
+                } else {
+                    console.error(`❌ Element ${id} not found for fallback`);
+                }
+            });
+            
+            // Try to get basic user info from localStorage if available
+            try {
+                const userData = localStorage.getItem('userData');
+                if (userData) {
+                    const parsedUserData = JSON.parse(userData);
+                    if (parsedUserData.email) {
+                        document.getElementById('confirmedEmail').textContent = parsedUserData.email;
+                        document.getElementById('confirmedName').textContent = parsedUserData.full_name || parsedUserData.email.split('@')[0];
+                        document.getElementById('confirmedStudentId').textContent = getStudentIdFromEmail(parsedUserData.email);
+                    }
+                }
+            } catch (error) {
+                console.warn('Could not load user data from localStorage:', error);
+            }
+        }
+        
+        // Function to show exam room list (removed since we only show authentication data now)
+        function showExamRoomList() {
+            // This function is now simplified as we only show authentication data
+            document.getElementById('seatConfirmationSection').style.display = 'none';
+            // Note: examRoomListSection has been removed from HTML
+            console.log('Exam room list functionality has been removed');
+        };
+        
+        // Load User Data Function (align with dashboard)
+        // Load User Data Function (align with dashboard)
+        async function loadUserData() {
+            try {
+                let currentEmail = null;
+                if (window.SupabaseAuth && window.SupabaseAuth.getCurrentUser) {
+                    const user = await window.SupabaseAuth.getCurrentUser();
+                    if (user) {
+                        currentEmail = user.email;
+                    }
+                } else if (window.SupabaseAuth && window.SupabaseAuth.getCurrentUserAsync) {
+                    const u = await window.SupabaseAuth.getCurrentUserAsync();
+                    if (u) currentEmail = u.email;
+                }
+
+                const userData = JSON.parse(localStorage.getItem('userData'));
+                const lsEmail = localStorage.getItem('userEmail');
+                const userRole = localStorage.getItem('userRole');
+                const userStatus = localStorage.getItem('userStatus');
+                const email = currentEmail || (userData && userData.email) || lsEmail || 'user@example.com';
+
+                let detailedProfile = null;
+                if (window.SupabaseAuth && window.SupabaseAuth.getUserProfileDetailed) {
+                    detailedProfile = await window.SupabaseAuth.getUserProfileDetailed();
+                }
+
+                const displayName = (detailedProfile && detailedProfile.name) ||
+                                    (userData && userData.full_name) ||
+                                    (email ? email.split('@')[0] : 'ชื่อ-นามสกุล');
+                let role = (detailedProfile && detailedProfile.role) || (userData && userData.role) || userRole;
+                if (!role && email) { role = email.endsWith('@itm.kmutnb.ac.th') ? 'teacher' : 'user'; }
+                const statusText = role === 'teacher' ? 'อาจารย์' : (role === 'user' ? 'นักศึกษา' : (userStatus || 'ผู้ใช้งาน'));
+                const avatarSrc = (detailedProfile && detailedProfile.avatar) ||
+                                  (userData && userData.avatar_url) ||
+                                  `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=0D8ABC&color=fff&size=128`;
+
+                const topbarName = document.getElementById('topbar-name');
+                const topbarStatus = document.getElementById('topbar-status');
+                const topbarAvatar = document.getElementById('topbar-avatar');
+                if (topbarName) topbarName.textContent = displayName;
+                if (topbarStatus) topbarStatus.textContent = statusText;
+                if (topbarAvatar) topbarAvatar.src = avatarSrc;
+
+                const dropdownStudentId = document.getElementById('dropdown-student-id');
+                const dropdownEmail = document.getElementById('dropdown-email');
+                if (dropdownStudentId) {
+                    const toDigitsId = (v) => (v || '').replace(/^s/i, '').replace(/[^0-9]/g, '');
+                    if (email && email.includes('@email.kmutnb.ac.th')) {
+                        const raw = email.split('@')[0];
+                        dropdownStudentId.textContent = toDigitsId(raw) || raw;
+                    } else if (userData && userData.student_id) {
+                        dropdownStudentId.textContent = toDigitsId(userData.student_id) || userData.student_id;
+                    } else {
+                        dropdownStudentId.textContent = '-';
+                    }
+                }
+                if (dropdownEmail) dropdownEmail.textContent = email;
+
+                const studentOnlyElements = document.querySelectorAll('.student-only');
+                const adminOnlyElements = document.querySelectorAll('.admin-only');
+                if (role === 'teacher') {
+                    studentOnlyElements.forEach(el => el.style.display = 'none');
+                    adminOnlyElements.forEach(el => el.style.display = 'block');
+                } else {
+                    studentOnlyElements.forEach(el => el.style.display = 'block');
+                    adminOnlyElements.forEach(el => el.style.display = 'none');
+                }
+            } catch (error) {
+                console.error('Error loading user data:', error);
+            }
+        }
+    
+        // Load user data on page load (ensure Supabase is ready)
+        window.addEventListener('load', function () { loadUserData(); });
+    
+        // Profile Dropdown Functions
+    // ...existing code... (dropdown handled by shared script.js)
+    </script>
+    
+</body>
+
+</html>
