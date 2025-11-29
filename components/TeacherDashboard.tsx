@@ -193,7 +193,8 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         if (seatMapping) {
             setCurrentSeatNumber(seatMapping.seat_number);
         } else {
-            setCurrentSeatNumber(null);
+            // Fallback to calculated seat number if not found in DB
+            setCurrentSeatNumber(seatNumber.toString());
         }
 
         // Try to find active student session first
