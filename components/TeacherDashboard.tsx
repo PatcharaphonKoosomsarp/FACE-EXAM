@@ -606,7 +606,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
       return (
           <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-              <div className="bg-white w-full max-w-6xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh]">
+              <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh]">
                   <div className="bg-gray-800 text-white p-4 flex justify-between items-center">
                       <div className="flex items-center gap-3">
                           <div className="bg-white/10 p-2 rounded-lg">
