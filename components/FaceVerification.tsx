@@ -496,7 +496,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
 
                     <p className="text-sm text-gray-600 mb-4 leading-relaxed">
                         ใช้โทรศัพท์มือถือสแกน QR Code นี้<br/>
-                        เพื่อดำเนินการยืนยันตัวตนบนมือถือ
+                        เพื่อดำเนินการยืนยันตัวตนต่อบนมือถือ
                     </p>
                     
                     <button onClick={() => setMethod(null)} className="mt-4 text-sm text-gray-500 hover:text-gray-900 underline">
