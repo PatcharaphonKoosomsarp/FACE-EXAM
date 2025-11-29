@@ -124,6 +124,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
   // Monitoring Data State
   const [studentResourceData, setStudentResourceData] = useState<ResourceLog | null>(null);
+  const [sessionStudent, setSessionStudent] = useState<any | null>(null);
 
   // Effect to fetch monitoring data
   useEffect(() => {
@@ -144,7 +145,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         // We query exam_student_sessions directly to ensure we get the correct session ID for logs
         const { data: sessions } = await supabase
             .from('exam_student_sessions')
-            .select('id')
+            .select('id, student_name, student_email, ip_address')
             .eq('layout_id', room.id)
             .eq('seat_number', seatNumber)
             .eq('is_active', true)
@@ -152,11 +153,13 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             .limit(1);
 
         if (sessions && sessions.length > 0) {
-            const sessionId = sessions[0].id;
+            const session = sessions[0];
+            setSessionStudent(session);
+            
             const { data } = await supabase
                 .from('resource_logs')
                 .select('*')
-                .eq('session_id', sessionId)
+                .eq('session_id', session.id)
                 .order('timestamp', { ascending: false })
                 .limit(1)
                 .single();
@@ -166,6 +169,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             }
         } else {
             setStudentResourceData(null);
+            setSessionStudent(null);
         }
     };
 
@@ -174,6 +178,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         interval = setInterval(fetchResourceData, 5000); // Refresh every 5s
     } else {
         setStudentResourceData(null);
+        setSessionStudent(null);
     }
 
     return () => {
@@ -526,11 +531,27 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
       const assignedIp = room.ipMapping?.[seatKey];
 
       // Find active student
-      const student = activeStudents.find(s => 
+      let student = activeStudents.find(s => 
           s.examId === selectedExamId && 
           s.row === row && 
           s.col === col
       );
+
+      // Fallback to session data if prop student is missing but we found a session
+      if (!student && sessionStudent) {
+          student = {
+              id: sessionStudent.id,
+              studentName: sessionStudent.student_name,
+              studentCode: sessionStudent.student_email, // Use email as code fallback
+              ipAddress: sessionStudent.ip_address,
+              examId: selectedExamId,
+              studentId: 'unknown',
+              row: row,
+              col: col,
+              status: 'ONLINE',
+              joinedAt: new Date().toISOString()
+          } as ExamAttendance;
+      }
 
       return (
           <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
