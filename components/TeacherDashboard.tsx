@@ -690,64 +690,64 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                       <h4 className="text-sm font-bold text-gray-600 mb-3 flex items-center">
                                           <Layers className="w-4 h-4 mr-2 text-indigo-500"/> Active Window
                                       </h4>
-                                      <div className="bg-indigo-50 p-3 rounded-lg border border-indigo-100 text-gray-800 font-medium truncate mb-4 flex items-center">
+                                      <div className="bg-indigo-50 p-3 rounded-lg border border-indigo-100 text-gray-800 font-medium truncate flex items-center">
                                           <div className="w-2 h-2 rounded-full bg-indigo-500 mr-2 animate-pulse"></div>
                                           {studentResourceData.active_window_title || 'Unknown'}
                                       </div>
-                                      
-                                      {/* All Open Windows */}
-                                      {studentResourceData.all_open_windows && Array.isArray(studentResourceData.all_open_windows) && studentResourceData.all_open_windows.length > 0 && (
-                                        <div className="mb-4">
-                                            <h5 className="text-xs font-bold text-gray-500 mb-2 flex items-center justify-between">
-                                                <span>All Open Windows</span>
-                                                <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-[10px]">{studentResourceData.all_open_windows.length}</span>
-                                            </h5>
-                                            <div className="max-h-32 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
-                                                {studentResourceData.all_open_windows.map((win: any, idx: number) => (
-                                                    <div key={idx} className="text-xs text-gray-600 bg-gray-50 px-2 py-1.5 rounded border border-gray-100 truncate hover:bg-gray-100 transition">
-                                                        {typeof win === 'string' ? win : win.title || JSON.stringify(win)}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                      )}
-
-                                      {/* Violation Logs */}
-                                      {studentViolationLogs && studentViolationLogs.length > 0 && (
-                                        <div className="mt-4 pt-4 border-t border-gray-100">
-                                            <h5 className="text-sm font-bold text-red-600 mb-3 flex items-center">
-                                                <ShieldAlert className="w-5 h-5 mr-2"/> Violation Logs ({studentViolationLogs.length})
-                                            </h5>
-                                            <div className="max-h-60 overflow-y-auto space-y-3 pr-1 custom-scrollbar">
-                                                {studentViolationLogs.map((log) => (
-                                                    <div key={log.id} className="bg-red-50 p-3 rounded-xl border border-red-100 shadow-sm relative overflow-hidden group">
-                                                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-red-500"></div>
-                                                        <div className="flex justify-between items-start mb-2 pl-2">
-                                                            <span className="font-bold text-red-700 text-sm flex items-center uppercase tracking-wide">
-                                                                {log.violation_type.replace(/_/g, ' ')}
-                                                            </span>
-                                                            <span className="text-xs text-gray-500 font-mono bg-white px-2 py-1 rounded border border-gray-200">
-                                                                {new Date(log.timestamp).toLocaleTimeString()}
-                                                            </span>
-                                                        </div>
-                                                        <div className="text-gray-800 text-sm mb-3 font-medium break-words leading-relaxed pl-2">
-                                                            {log.resource_name}
-                                                        </div>
-                                                        <div className="flex items-center pl-2">
-                                                            <span className={`px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider shadow-sm ${
-                                                                log.action_taken.toLowerCase().includes('close') || log.action_taken.toLowerCase().includes('terminate') 
-                                                                ? 'bg-red-500 text-white' 
-                                                                : 'bg-orange-500 text-white'
-                                                            }`}>
-                                                                {log.action_taken}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                      )}
                                   </div>
+                                      
+                                  {/* All Open Windows */}
+                                  {studentResourceData.all_open_windows && Array.isArray(studentResourceData.all_open_windows) && studentResourceData.all_open_windows.length > 0 && (
+                                    <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                                        <h5 className="text-sm font-bold text-gray-600 mb-3 flex items-center justify-between">
+                                            <span className="flex items-center"><List className="w-4 h-4 mr-2 text-gray-500"/> All Open Windows</span>
+                                            <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-[10px]">{studentResourceData.all_open_windows.length}</span>
+                                        </h5>
+                                        <div className="max-h-32 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
+                                            {studentResourceData.all_open_windows.map((win: any, idx: number) => (
+                                                <div key={idx} className="text-xs text-gray-600 bg-gray-50 px-2 py-1.5 rounded border border-gray-100 truncate hover:bg-gray-100 transition">
+                                                    {typeof win === 'string' ? win : win.title || JSON.stringify(win)}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                  )}
+
+                                  {/* Violation Logs */}
+                                  {studentViolationLogs && studentViolationLogs.length > 0 && (
+                                    <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                                        <h5 className="text-sm font-bold text-red-600 mb-3 flex items-center">
+                                            <ShieldAlert className="w-5 h-5 mr-2"/> Violation Logs ({studentViolationLogs.length})
+                                        </h5>
+                                        <div className="max-h-60 overflow-y-auto space-y-3 pr-1 custom-scrollbar">
+                                            {studentViolationLogs.map((log) => (
+                                                <div key={log.id} className="bg-red-50 p-3 rounded-xl border border-red-100 shadow-sm relative overflow-hidden group">
+                                                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-red-500"></div>
+                                                    <div className="flex justify-between items-start mb-2 pl-2">
+                                                        <span className="font-bold text-red-700 text-sm flex items-center uppercase tracking-wide">
+                                                            {log.violation_type.replace(/_/g, ' ')}
+                                                        </span>
+                                                        <span className="text-xs text-gray-500 font-mono bg-white px-2 py-1 rounded border border-gray-200">
+                                                            {new Date(log.timestamp).toLocaleTimeString()}
+                                                        </span>
+                                                    </div>
+                                                    <div className="text-gray-800 text-sm mb-3 font-medium break-words leading-relaxed pl-2">
+                                                        {log.resource_name}
+                                                    </div>
+                                                    <div className="flex items-center pl-2">
+                                                        <span className={`px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider shadow-sm ${
+                                                            log.action_taken.toLowerCase().includes('close') || log.action_taken.toLowerCase().includes('terminate') 
+                                                            ? 'bg-red-500 text-white' 
+                                                            : 'bg-orange-500 text-white'
+                                                        }`}>
+                                                            {log.action_taken}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                  )}
 
                                   {/* Resources Grid */}
                                   <div className="grid grid-cols-2 gap-4">
