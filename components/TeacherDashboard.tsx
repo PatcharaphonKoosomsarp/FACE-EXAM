@@ -125,6 +125,30 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   // Monitoring Data State
   const [studentResourceData, setStudentResourceData] = useState<ResourceLog | null>(null);
   const [sessionStudent, setSessionStudent] = useState<any | null>(null);
+  const [realtimeSessions, setRealtimeSessions] = useState<any[]>([]);
+
+  // Effect to fetch all active sessions for the room when exam is selected
+  useEffect(() => {
+      if (!selectedExamId) return;
+      const exam = exams.find(e => e.id === selectedExamId);
+      if (!exam) return;
+
+      const fetchSessions = async () => {
+          const { data } = await supabase
+              .from('exam_student_sessions')
+              .select('*')
+              .eq('layout_id', exam.roomId)
+              .eq('is_active', true);
+          
+          if (data) {
+              setRealtimeSessions(data);
+          }
+      };
+
+      fetchSessions();
+      const interval = setInterval(fetchSessions, 5000);
+      return () => clearInterval(interval);
+  }, [selectedExamId, exams]);
 
   // Effect to fetch monitoring data
   useEffect(() => {
@@ -813,11 +837,31 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                     const assignedIp = room.ipMapping?.[seatKey];
                                     const isConfigured = !!assignedIp;
                                     
-                                    const student = activeStudents.find(s => 
+                                    let student = activeStudents.find(s => 
                                         s.examId === selectedExamId && 
                                         s.row === row && 
                                         s.col === col
                                     );
+
+                                    // Fallback to realtime sessions if not found in activeStudents
+                                    if (!student) {
+                                        const seatNum = (row - 1) * room.cols + col;
+                                        const session = realtimeSessions.find(s => s.seat_number === seatNum);
+                                        if (session) {
+                                            student = {
+                                                id: session.id,
+                                                studentName: session.student_name,
+                                                studentCode: session.student_email, // Fallback
+                                                row: row,
+                                                col: col,
+                                                status: 'ONLINE',
+                                                examId: selectedExamId,
+                                                studentId: 'unknown',
+                                                ipAddress: session.ip_address,
+                                                joinedAt: session.created_at
+                                            } as ExamAttendance;
+                                        }
+                                    }
 
                                     return (
                                     <div 
