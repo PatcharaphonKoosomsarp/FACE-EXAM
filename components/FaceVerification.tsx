@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { User, Exam } from '../types';
 import { ShieldCheck, Loader2, AlertTriangle, RefreshCw, CameraOff, Lock } from 'lucide-react';
 import { supabase } from '../supabaseClient';
-import { getUserIP, getActualSeatFromIP } from '../utils/examSessionUtils';
 
 // Use global faceapi from script tag
 declare const faceapi: any;
@@ -271,112 +270,28 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
         setStatus('SUCCESS');
         
         try {
-            // 1. Get Layout ID (Robust method matching legacy logic)
-            let layoutId: string | null = null;
-
-            // Try getting layout_id from exam_rooms first
-            const { data: examRoom } = await supabase
-                .from('exam_rooms')
-                .select('layout_id, room_name')
-                .eq('id', exam.roomId)
+            // 1. Get Layout ID
+            const { data: layout } = await supabase
+                .from('room_seat_layouts')
+                .select('id')
+                .eq('room_id', exam.roomId)
                 .maybeSingle();
-
-            if (examRoom?.layout_id) {
-                layoutId = examRoom.layout_id;
-            } else if (examRoom?.room_name) {
-                // Fallback: try finding layout by room_name
-                const { data: layoutByName } = await supabase
-                    .from('room_seat_layouts')
-                    .select('id')
-                    .eq('room_name', examRoom.room_name)
-                    .maybeSingle();
-                if (layoutByName) layoutId = layoutByName.id;
-            }
-
-            // Fallback: try finding layout by room_id directly
-            if (!layoutId) {
-                const { data: layoutByRoomId } = await supabase
-                    .from('room_seat_layouts')
-                    .select('id')
-                    .eq('room_id', exam.roomId)
-                    .maybeSingle();
-                if (layoutByRoomId) layoutId = layoutByRoomId.id;
-            }
             
-            if (!layoutId) {
-                console.warn("No layout found for this room, skipping session record.");
+            if (!layout) {
+                console.warn("No layout found for this room, skipping session record or using default.");
             }
 
-            // 2. Get User IP and Seat
-            let ipAddress: string | null = null;
-            let seatNumber = 0;
-
-            if (layoutId) {
-                // Get IP
-                ipAddress = await getUserIP();
-                console.log("Detected IP:", ipAddress);
-
-                // Get Seat if IP found
-                if (ipAddress) {
-                    const seatResult = await getActualSeatFromIP(layoutId, ipAddress);
-                    if (seatResult.seatNumber) {
-                        seatNumber = seatResult.seatNumber;
-                        console.log("Detected Seat:", seatNumber);
-                    } else {
-                        console.warn("Seat detection failed:", seatResult.details);
-                    }
-                }
-            }
-
-            // 3. Check for existing active session
-            let existingSessionId: number | null = null;
-            
-            if (layoutId) {
-                const { data: existingSessions } = await supabase
-                    .from('exam_student_sessions')
-                    .select('id')
-                    .eq('layout_id', layoutId)
-                    .eq('student_email', user.email)
-                    .eq('is_active', true)
-                    .order('created_at', { ascending: false })
-                    .limit(1);
-                
-                if (existingSessions && existingSessions.length > 0) {
-                    existingSessionId = existingSessions[0].id;
-                }
-            }
-
-            // 4. Insert or Update Session Record
-            if (layoutId) {
-                const sessionData = {
-                    layout_id: layoutId,
+            // 2. Insert Session Record
+            if (layout) {
+                await supabase.from('exam_student_sessions').insert({
+                    layout_id: layout.id,
                     student_email: user.email,
                     student_name: user.name,
-                    seat_number: seatNumber,
-                    ip_address: ipAddress,
+                    seat_number: 0, // Default or fetch from attendance
+                    ip_address: null, // Let backend or trigger handle, or leave null
                     face_descriptor: JSON.stringify(Array.from(descriptor)),
-                    is_active: true,
-                    session_start_time: new Date().toISOString(),
-                    updated_at: new Date().toISOString()
-                };
-
-                if (existingSessionId) {
-                    // Update existing
-                    console.log("Updating existing session:", existingSessionId);
-                    await supabase
-                        .from('exam_student_sessions')
-                        .update(sessionData)
-                        .eq('id', existingSessionId);
-                } else {
-                    // Insert new
-                    console.log("Creating new session");
-                    await supabase
-                        .from('exam_student_sessions')
-                        .insert({
-                            ...sessionData,
-                            created_at: new Date().toISOString()
-                        });
-                }
+                    is_active: true
+                });
             }
 
             setTimeout(() => {
@@ -385,7 +300,6 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
 
         } catch (err) {
             console.error("Error saving session:", err);
-            // Still proceed to exam even if logging fails
             onVerified();
         }
     };
