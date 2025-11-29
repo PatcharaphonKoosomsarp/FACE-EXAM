@@ -153,13 +153,6 @@ const ExamRoomView: React.FC<ExamRoomViewProps> = ({ user, exam, onExit }) => {
 
                             <div className="mt-8 flex gap-4 border-t border-gray-200 pt-6">
                                 <button 
-                                    onClick={onExit}
-                                    className="flex-1 bg-white border border-gray-200 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-50 transition flex items-center justify-center"
-                                >
-                                    <ArrowLeft className="w-5 h-5 mr-2" />
-                                    กลับหน้าหลัก
-                                </button>
-                                <button 
                                     onClick={handleExit}
                                     className="flex-1 bg-red-50 text-red-600 border border-red-100 py-3 rounded-xl font-bold hover:bg-red-100 transition flex items-center justify-center"
                                 >
