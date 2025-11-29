@@ -183,9 +183,9 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         const { data: seatMapping } = await supabase
             .from('room_seat_ip_mappings')
             .select('seat_number')
-            .eq('room_id', room.id)
+            .eq('layout_id', room.id)
             .eq('row_number', row)
-            .eq('col_number', col)
+            .eq('column_number', col)
             .single();
         
         if (seatMapping) {
