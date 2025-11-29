@@ -62,12 +62,27 @@ const ExamRoomView: React.FC<ExamRoomViewProps> = ({ user, exam, onExit }) => {
 
         try {
             if (session) {
-                const { error } = await supabase
+                // 1. Delete Exam Session
+                const { error: sessionError } = await supabase
                     .from('exam_student_sessions')
                     .delete()
                     .eq('id', session.id);
 
-                if (error) throw error;
+                if (sessionError) throw sessionError;
+
+                // 2. Delete QR Authentication Record (Clean up)
+                const { error: qrError } = await supabase
+                    .from('qr_authentication')
+                    .delete()
+                    .eq('user_id', user.id);
+                
+                if (qrError) {
+                    console.error("Error deleting QR auth record:", qrError);
+                    // Alert the user so we know why it failed
+                    alert(`ไม่สามารถลบข้อมูล QR ได้: ${qrError.message || qrError.details || 'Unknown error'}`);
+                } else {
+                    console.log("QR auth record deleted successfully");
+                }
             }
             onExit();
         } catch (err) {
