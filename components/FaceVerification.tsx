@@ -27,7 +27,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
     const [labeledDescriptors, setLabeledDescriptors] = useState<any[]>([]);
     const [faceMatcher, setFaceMatcher] = useState<any | null>(null);
 
-    const handleMobileSuccess = async (mobileIp: string) => {
+    const handleMobileSuccess = useCallback(async (mobileIp: string) => {
         setStatus('VERIFYING_IP');
         try {
             // 1. Get PC IP (The machine running the exam)
@@ -73,7 +73,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
             setErrorMessage(err.message);
             setStatus('FAILED');
         }
-    };
+    }, [exam.id, exam.roomId, user.email, user.name, onVerified]); // Add dependencies
 
     // Check for existing valid authentication on mount
     useEffect(() => {
@@ -102,12 +102,14 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
         };
 
         checkExistingAuth();
-    }, []);
+    }, [handleMobileSuccess, user.id]); // Add handleMobileSuccess to deps
 
     // QR Code Logic
     useEffect(() => {
+        let pollInterval: NodeJS.Timeout;
+
         if (method === 'QR') {
-            const generateQR = async () => {
+            const startProcess = async () => {
                 try {
                     // 1. Get Local IP from Agent (preferred) or WebRTC
                     let ip = await agentService.getLocalIP();
@@ -123,7 +125,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                     setQrUrl(url);
 
                     // 2. Start Polling for Handshake
-                    const pollInterval = setInterval(async () => {
+                    pollInterval = setInterval(async () => {
                         try {
                             // Check qr_authentication table for the LATEST authenticated record
                             const { data } = await supabase
@@ -137,9 +139,8 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                                 .maybeSingle();
 
                             if (data) {
-                                clearInterval(pollInterval);
                                 console.log('Mobile authentication successful:', data);
-                                
+                                clearInterval(pollInterval);
                                 // Proceed to session creation using the IP from the handshake
                                 await handleMobileSuccess(data.ip);
                             }
@@ -148,19 +149,19 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                         }
                     }, 2000);
 
-                    return () => clearInterval(pollInterval);
                 } catch (err) {
                     console.error("Error generating QR:", err);
                     setErrorMessage("ไม่สามารถสร้าง QR Code ได้");
                 }
             };
 
-            const cleanupPromise = generateQR();
-            return () => {
-                // Cleanup logic if needed
-            };
+            startProcess();
         }
-    }, [method, exam.id, user.id, user.email, exam.roomId]);
+
+        return () => {
+            if (pollInterval) clearInterval(pollInterval);
+        };
+    }, [method, exam.id, user.id, handleMobileSuccess]);
 
     const createSession = async (ip: string, seatNumber: number, descriptorStr: string) => {
          // Check for existing active session
@@ -621,7 +622,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
         );
     }
 
-    if (method === 'QR' && status !== 'VERIFYING_IP' && status !== 'SUCCESS') {
+    if (method === 'QR' && status !== 'VERIFYING_IP' && status !== 'SUCCESS' && status !== 'FAILED') {
         return (
             <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
                 <div className="bg-white rounded-2xl p-8 max-w-md w-full text-center animate-in zoom-in-95 duration-200">
