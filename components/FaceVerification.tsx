@@ -507,37 +507,12 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
             }
 
             // 2. If not found by IP, try to calculate from Attendance (Fallback)
-            if (seatNumber === 0) {
-                try {
-                    // Get layout columns to calculate seat index
-                    const { data: layout } = await supabase
-                        .from('room_seat_layouts')
-                        .select('columns')
-                        .eq('id', exam.roomId)
-                        .single();
-                    
-                    if (layout) {
-                        // Get student attendance position
-                        const { data: attendance } = await supabase
-                            .from('exam_attendance')
-                            .select('row_number, col_number')
-                            .eq('exam_id', exam.id)
-                            .eq('student_id', user.id)
-                            .maybeSingle();
-                        
-                        if (attendance) {
-                            seatNumber = ((attendance.row_number - 1) * layout.columns) + attendance.col_number;
-                        }
-                    }
-                } catch (calcError) {
-                    console.warn("Could not calculate seat number:", calcError);
-                }
-            }
+            // REMOVED: exam_attendance table does not exist.
 
             // Check for existing active session
             const { data: existingSession, error: findError } = await supabase
                 .from('exam_student_sessions')
-                .select('id')
+                .select('id, seat_number')
                 .eq('layout_id', exam.roomId)
                 .eq('student_email', user.email)
                 .eq('is_active', true)
@@ -545,6 +520,11 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                 .limit(1);
 
             if (!findError && existingSession && existingSession.length > 0) {
+                // Use existing seat number if we couldn't determine it from IP
+                if (seatNumber === 0 && existingSession[0].seat_number) {
+                    seatNumber = existingSession[0].seat_number;
+                }
+
                 // Update existing session
                 console.log('Updating existing session:', existingSession[0].id);
                 const { error: updateError } = await supabase
