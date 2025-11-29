@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { User, Exam } from '../types';
 import { supabase } from '../supabaseClient';
-import { CheckCircle, User as UserIcon, Armchair, ClipboardList, LogOut, ArrowLeft, Loader2, MapPin, Clock, Calendar, ShieldCheck } from 'lucide-react';
+import { 
+    LogOut, ArrowLeft, Loader2, MapPin, Clock, Calendar, 
+    LayoutGrid, MonitorX, Ban, User as UserIcon, ShieldCheck 
+} from 'lucide-react';
 
 interface ExamRoomViewProps {
     user: User;
@@ -83,109 +86,75 @@ const ExamRoomView: React.FC<ExamRoomViewProps> = ({ user, exam, onExit }) => {
 
     return (
         <div className="min-h-screen bg-gray-50 p-4 md:p-8 flex items-center justify-center">
-            <div className="max-w-4xl w-full">
+            <div className="max-w-6xl w-full bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
                 
-                {/* Success Banner */}
-                <div className="bg-green-500 rounded-t-2xl p-6 text-white flex items-center justify-between shadow-lg relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl"></div>
-                    <div className="relative z-10 flex items-center gap-4">
-                        <div className="bg-white/20 p-3 rounded-full">
-                            <ShieldCheck className="w-8 h-8" />
+                {/* Header - Dark Theme */}
+                <div className="bg-gradient-to-r from-gray-900 to-gray-800 p-8 text-white relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl"></div>
+                    <div className="relative z-10">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                            <div>
+                                <div className="flex items-center gap-3 mb-1">
+                                    <div className="text-orange-400 font-bold tracking-wider text-sm uppercase">Exam Details</div>
+                                </div>
+                                <h1 className="text-3xl font-bold">{exam.subjectCode} - {exam.subjectName}</h1>
+                                <div className="flex flex-wrap items-center gap-4 mt-3 text-gray-300">
+                                    <div className="flex items-center bg-white/10 px-3 py-1 rounded-full text-sm"><Calendar className="w-4 h-4 mr-2"/> {exam.date}</div>
+                                    <div className="flex items-center bg-white/10 px-3 py-1 rounded-full text-sm"><Clock className="w-4 h-4 mr-2"/> {exam.startTime} - {exam.endTime}</div>
+                                    <div className="flex items-center bg-white/10 px-3 py-1 rounded-full text-sm">
+                                        <MapPin className="w-4 h-4 mr-2"/> ห้อง {roomName || 'กำลังโหลด...'}
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="bg-[#E35205] text-white px-6 py-2 rounded-xl text-lg font-bold shadow-lg border-2 border-orange-400/30">
+                                Section {exam.section}
+                            </div>
                         </div>
-                        <div>
-                            <h1 className="text-2xl font-bold">ยืนยันตัวตนสำเร็จ</h1>
-                            <p className="text-green-100 text-sm">คุณได้รับอนุญาตให้เข้าสอบแล้ว</p>
-                        </div>
-                    </div>
-                    <div className="hidden md:block text-right relative z-10">
-                        <div className="text-3xl font-bold opacity-90">{new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}</div>
-                        <div className="text-sm text-green-100">{new Date().toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</div>
                     </div>
                 </div>
 
-                {/* Main Ticket Card */}
-                <div className="bg-white rounded-b-2xl shadow-xl border-x border-b border-gray-100 overflow-hidden">
-                    <div className="flex flex-col md:flex-row">
-                        
-                        {/* Left Column: Student & Seat */}
-                        <div className="w-full md:w-1/3 bg-gray-50 p-8 border-r border-gray-100 flex flex-col items-center text-center">
-                            <div className="w-24 h-24 bg-white rounded-full shadow-md p-1 mb-4">
-                                <img 
-                                    src={user.avatarUrl || `https://ui-avatars.com/api/?name=${user.name}&background=E35205&color=fff`} 
-                                    alt="Profile" 
-                                    className="w-full h-full rounded-full object-cover"
-                                />
-                            </div>
-                            <h2 className="text-lg font-bold text-gray-800 mb-1">{user.name}</h2>
-                            <p className="text-sm text-gray-500 mb-6">{user.email}</p>
-
-                            <div className="w-full bg-white rounded-xl p-6 shadow-sm border border-gray-200 mb-6">
-                                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">หมายเลขที่นั่ง</span>
-                                <div className="text-6xl font-bold text-[#E35205] my-2">
-                                    {session?.seat_number || '-'}
-                                </div>
-                                <div className="flex items-center justify-center gap-2 text-xs text-gray-500 bg-gray-50 py-1 px-2 rounded-lg">
-                                    <div className={`w-2 h-2 rounded-full ${session?.ip_address ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                                    {session?.ip_address || 'No IP'}
-                                </div>
-                            </div>
+                <div className="p-6 md:p-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {/* Left Column: Student & Seat */}
+                    <div className="lg:col-span-2">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-bold text-gray-800 flex items-center">
+                                <span className="bg-orange-100 p-2 rounded-lg mr-3"><LayoutGrid className="w-5 h-5 text-[#E35205]"/></span>
+                                ข้อมูลที่นั่งสอบ
+                            </h3>
                         </div>
-
-                        {/* Right Column: Exam Details */}
-                        <div className="w-full md:w-2/3 p-8">
-                            <div className="flex justify-between items-start mb-6">
-                                <div>
-                                    <span className="bg-orange-100 text-[#E35205] px-3 py-1 rounded-full text-xs font-bold mb-2 inline-block">
-                                        Section {exam.section}
-                                    </span>
-                                    <h2 className="text-2xl font-bold text-gray-800">{exam.subjectCode}</h2>
-                                    <h3 className="text-lg text-gray-600">{exam.subjectName}</h3>
+                        <div className="bg-gray-50 p-6 rounded-2xl border border-gray-200">
+                            <div className="flex flex-col md:flex-row items-center gap-8">
+                                <div className="flex flex-col items-center text-center min-w-[200px]">
+                                    <div className="w-32 h-32 bg-white rounded-full shadow-md p-1 mb-4">
+                                        <img 
+                                            src={user.avatarUrl || `https://ui-avatars.com/api/?name=${user.name}&background=E35205&color=fff`} 
+                                            alt="Profile" 
+                                            className="w-full h-full rounded-full object-cover"
+                                        />
+                                    </div>
+                                    <h2 className="text-xl font-bold text-gray-800">{user.name}</h2>
+                                    <p className="text-gray-500">{user.email}</p>
                                 </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                                <div className="flex items-start gap-3">
-                                    <div className="bg-gray-100 p-2 rounded-lg text-gray-500">
-                                        <Calendar className="w-5 h-5" />
-                                    </div>
-                                    <div>
-                                        <p className="text-xs text-gray-500 font-bold uppercase">วันที่สอบ</p>
-                                        <p className="font-medium text-gray-800">{exam.date}</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-start gap-3">
-                                    <div className="bg-gray-100 p-2 rounded-lg text-gray-500">
-                                        <Clock className="w-5 h-5" />
-                                    </div>
-                                    <div>
-                                        <p className="text-xs text-gray-500 font-bold uppercase">เวลาสอบ</p>
-                                        <p className="font-medium text-gray-800">{exam.startTime} - {exam.endTime}</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-start gap-3">
-                                    <div className="bg-gray-100 p-2 rounded-lg text-gray-500">
-                                        <MapPin className="w-5 h-5" />
-                                    </div>
-                                    <div>
-                                        <p className="text-xs text-gray-500 font-bold uppercase">ห้องสอบ</p>
-                                        <p className="font-medium text-gray-800">{roomName || 'กำลังโหลด...'}</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-start gap-3">
-                                    <div className="bg-gray-100 p-2 rounded-lg text-gray-500">
-                                        <UserIcon className="w-5 h-5" />
-                                    </div>
-                                    <div>
-                                        <p className="text-xs text-gray-500 font-bold uppercase">ผู้คุมสอบ</p>
-                                        <p className="font-medium text-gray-800">{exam.createdByName}</p>
+                                
+                                <div className="flex-1 w-full">
+                                    <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-200 flex flex-col items-center justify-center relative overflow-hidden h-full">
+                                        <div className="absolute top-0 left-0 w-full h-2 bg-[#E35205]"></div>
+                                        <span className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">หมายเลขที่นั่งของคุณ</span>
+                                        <div className="text-8xl font-bold text-[#E35205] mb-4">
+                                            {session?.seat_number || '-'}
+                                        </div>
+                                        <div className="flex items-center gap-2 text-sm text-gray-500 bg-gray-50 py-2 px-4 rounded-lg">
+                                            <div className={`w-2 h-2 rounded-full ${session?.ip_address ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                                            IP: {session?.ip_address || 'Unknown'}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="border-t border-gray-100 pt-6 flex gap-4">
+                            <div className="mt-8 flex gap-4 border-t border-gray-200 pt-6">
                                 <button 
                                     onClick={onExit}
-                                    className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-200 transition flex items-center justify-center"
+                                    className="flex-1 bg-white border border-gray-200 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-50 transition flex items-center justify-center"
                                 >
                                     <ArrowLeft className="w-5 h-5 mr-2" />
                                     กลับหน้าหลัก
@@ -200,11 +169,42 @@ const ExamRoomView: React.FC<ExamRoomViewProps> = ({ user, exam, onExit }) => {
                             </div>
                         </div>
                     </div>
+
+                    {/* Right Column: Unauthorized Resources */}
+                    <div className="space-y-6">
+                        <div className="bg-red-50 rounded-2xl p-6 border border-red-100 h-full">
+                            <div className="flex items-center mb-4">
+                                <span className="bg-red-100 p-2 rounded-lg mr-3"><MonitorX className="w-5 h-5 text-red-600"/></span>
+                                <h3 className="text-lg font-bold text-gray-800">ทรัพยากรที่ไม่อนุญาต</h3>
+                            </div>
+                            
+                            {(exam.blockedResources && exam.blockedResources.length > 0) ? (
+                                <ul className="space-y-3">
+                                    {exam.blockedResources.map(r => (
+                                        <li key={r.id} className="flex items-center bg-white text-gray-800 p-3 rounded-xl border border-red-100 shadow-sm">
+                                            <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center mr-3 shrink-0">
+                                                <Ban className="w-4 h-4 text-red-500" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="font-medium truncate">{r.name}</p>
+                                                <p className="text-xs text-gray-500 uppercase">{r.type}</p>
+                                            </div>
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <div className="text-center py-12 text-gray-400 italic bg-white/50 rounded-xl border border-red-100/50">
+                                    <ShieldCheck className="w-12 h-12 mx-auto mb-2 opacity-20 text-green-500"/>
+                                    ไม่มีการจำกัดทรัพยากร
+                                </div>
+                            )}
+                            
+                            <div className="mt-6 text-xs text-red-400 text-center">
+                                *การเปิดใช้งานโปรแกรมเหล่านี้อาจส่งผลให้ถูกตัดสิทธิ์การสอบ
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                
-                <p className="text-center text-gray-400 text-xs mt-6">
-                    *กรุณาแสดงหน้านี้ต่อผู้คุมสอบหากได้รับการร้องขอ
-                </p>
             </div>
         </div>
     );
