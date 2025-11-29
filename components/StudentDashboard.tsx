@@ -157,19 +157,6 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user, exams, rooms,
                   )}
               </div>
 
-              {!user.isFaceRegistered ? (
-                  <div className="bg-orange-50 border border-orange-200 rounded-xl p-8 text-center">
-                      <Camera className="w-16 h-16 text-[#E35205] mx-auto mb-4" />
-                      <h2 className="text-xl font-bold text-gray-800 mb-2">กรุณาลงทะเบียนใบหน้าก่อน</h2>
-                      <p className="text-gray-600 mb-6 max-w-md mx-auto">คุณต้องลงทะเบียนใบหน้าให้สำเร็จก่อนจึงจะสามารถเข้าดูรายการสอบและเข้าห้องสอบได้</p>
-                      <button 
-                        onClick={() => setViewMode('FACE_REG')}
-                        className="bg-[#E35205] text-white px-8 py-3 rounded-lg font-bold hover:bg-orange-700 transition shadow-lg"
-                      >
-                          ไปที่หน้าลงทะเบียนใบหน้า
-                      </button>
-                  </div>
-              ) : (
                   <div>
                       <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center"><Calendar className="w-5 h-5 mr-2"/> ตารางสอบของคุณ</h2>
                       {exams.length === 0 ? (
@@ -212,7 +199,6 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user, exams, rooms,
                           </div>
                       )}
                   </div>
-              )}
           </div>
       )}
 
