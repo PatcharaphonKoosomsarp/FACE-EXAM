@@ -324,6 +324,30 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
       setCurrentStepIndex(index + 1);
   };
 
+  // Mimic the HTML's fake authentication for QR access
+  const authenticateForQRAccess = async (userId: string) => {
+      try {
+          console.log('Authenticating for QR access with user ID:', userId);
+          const fakeUser = {
+              id: userId,
+              email: `temp_${userId}@qr.access`,
+              user_metadata: { qr_access: true }
+          };
+          
+          // Set temporary auth state (matching HTML logic)
+          // This might be needed if RLS policies check for specific local storage keys or if the client sends this token
+          localStorage.setItem('supabase.auth.token', JSON.stringify({
+              access_token: 'temp_qr_access_token',
+              refresh_token: 'temp_qr_refresh_token',
+              user: fakeUser
+          }));
+          
+          return true;
+      } catch (error) {
+          console.error('Error in QR authentication:', error);
+      }
+  };
+
   const finishRegistration = async () => {
       if (isSubmitting) return;
       setIsSubmitting(true);
@@ -341,6 +365,8 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
             userId = user.id;
           } else {
              console.log("Proceeding with targetUserId (QR Mode):", userId);
+             // Attempt to authenticate for QR access (mimic HTML behavior)
+             await authenticateForQRAccess(userId);
           }
 
           const photoData: any = { user_id: userId };
@@ -365,13 +391,16 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
                   // For QR Mode, prioritize 'user-photos' as it's known to work with the RPC flow
                   if (isQrMode) {
                       console.log("QR Mode: Uploading to user-photos...");
+                      // Remove contentType to match HTML exactly
                       const { error: uploadError } = await supabase.storage
                           .from('user-photos')
-                          .upload(fileName, photo.blob, { upsert: true, contentType: 'image/png' });
+                          .upload(fileName, photo.blob, { upsert: true });
                       
                       if (uploadError) {
                           console.error("QR Mode upload failed:", uploadError);
-                          throw uploadError;
+                          // If upload fails, we can't proceed with this photo
+                          // But we might want to continue with others? No, usually all are needed.
+                          throw new Error(`Upload failed for ${photo.action}: ${uploadError.message}`);
                       }
 
                       const { data: urlData } = supabase.storage
