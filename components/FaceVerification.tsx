@@ -28,6 +28,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
     const [faceMatcher, setFaceMatcher] = useState<any | null>(null);
 
     const handleMobileSuccess = async (mobileIp: string) => {
+        console.log("handleMobileSuccess called with IP:", mobileIp);
         setStatus('VERIFYING_IP');
         try {
             // 1. Get PC IP (The machine running the exam)
@@ -592,7 +593,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
         );
     }
 
-    if (method === 'QR' && status !== 'VERIFYING_IP' && status !== 'SUCCESS') {
+    if (method === 'QR' && status !== 'VERIFYING_IP' && status !== 'SUCCESS' && status !== 'FAILED') {
         return (
             <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
                 <div className="bg-white rounded-2xl p-8 max-w-md w-full text-center animate-in zoom-in-95 duration-200">
