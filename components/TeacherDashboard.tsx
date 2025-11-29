@@ -632,9 +632,9 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                               <MonitorX className="w-6 h-6"/>
                           </div>
                           <div>
-                              <h3 className="font-bold text-lg">
-                                {currentSeatNumber && <div className="text-sm text-gray-300 mb-0.5">No. {currentSeatNumber}</div>}
+                              <h3 className="font-bold text-lg flex items-center gap-2">
                                 Seat {row}-{col}
+                                {currentSeatNumber && <span className="text-orange-400 bg-white/10 px-2 py-0.5 rounded text-sm">No. {currentSeatNumber}</span>}
                               </h3>
                               <p className="text-xs text-gray-400">Resource & Connection Status</p>
                           </div>
