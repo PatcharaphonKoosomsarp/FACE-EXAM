@@ -1,9 +1,8 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { User, Exam } from '../types';
-import { ShieldCheck, Loader2, AlertTriangle, RefreshCw, CameraOff, Lock, QrCode } from 'lucide-react';
+import { ShieldCheck, Loader2, AlertTriangle, RefreshCw, CameraOff, Lock } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import { getPrimaryWiFiIP, verifyIPAccess } from '../utils';
-import QRCodeModal from './QRCodeModal';
 
 // Use global faceapi from script tag
 declare const faceapi: any;
@@ -23,7 +22,6 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
     const [modelsLoaded, setModelsLoaded] = useState(false);
     const [labeledDescriptors, setLabeledDescriptors] = useState<any[]>([]);
     const [faceMatcher, setFaceMatcher] = useState<any | null>(null);
-    const [showQR, setShowQR] = useState(false);
 
     // 1. Load Models
     useEffect(() => {
@@ -371,14 +369,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                         <p className="text-xs text-gray-500 mt-1">วิชา: {exam.subjectName}</p>
                     </div>
                     <div className="flex items-center">
-                        {status !== 'SUCCESS' && (
-                            <button 
-                                onClick={() => setShowQR(true)} 
-                                className="text-blue-600 hover:text-blue-800 mr-4 flex items-center text-sm font-medium bg-blue-50 px-3 py-1.5 rounded-lg transition"
-                            >
-                                <QrCode className="w-4 h-4 mr-1.5" /> QR Code
-                            </button>
-                        )}
+
                         {status !== 'SUCCESS' && (
                             <button onClick={onCancel} className="text-gray-400 hover:text-gray-600 transition">✕</button>
                         )}
@@ -471,11 +462,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                     <span>Status: {status}</span>
                 </div>
 
-                <QRCodeModal 
-                    isOpen={showQR} 
-                    onClose={() => setShowQR(false)} 
-                    url={`${window.location.origin}?action=exam&roomId=${exam.roomId}`} 
-                />
+
             </div>
             <style>{`@keyframes scan { 0% { top: 0; opacity: 0; } 50% { opacity: 1; } 100% { top: 100%; opacity: 0; } }`}</style>
         </div>
