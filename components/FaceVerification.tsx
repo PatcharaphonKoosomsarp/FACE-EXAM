@@ -86,10 +86,20 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
     const handleMobileSuccess = async (mobileIp: string) => {
         setStatus('VERIFYING_IP');
         try {
-            // Verify IP Access
-            const hasAccess = await verifyIPAccess(exam.id, mobileIp);
-            if (!hasAccess) {
-                throw new Error(`IP Address (${mobileIp}) ไม่ได้รับอนุญาตให้เข้าห้องสอบนี้`);
+            // 1. Get PC IP (The machine running the exam)
+            let pcIp = await agentService.getLocalIP();
+            if (!pcIp || pcIp === '127.0.0.1') {
+                pcIp = await getPrimaryWiFiIP();
+            }
+            
+            console.log("Mobile Auth Success. Mobile IP:", mobileIp, "PC IP:", pcIp);
+
+            // 2. Verify PC IP Access (Ensure the PC is in the exam room)
+            if (pcIp) {
+                 const hasAccess = await verifyIPAccess(exam.id, pcIp);
+                 if (!hasAccess) {
+                     throw new Error(`Computer IP (${pcIp}) ไม่ได้รับอนุญาตให้เข้าห้องสอบนี้`);
+                 }
             }
 
             setStatus('SUCCESS');
@@ -101,14 +111,14 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                     .from('room_seat_ip_mappings')
                     .select('seat_number')
                     .eq('layout_id', exam.roomId)
-                    .eq('ip_address', mobileIp)
+                    .eq('ip_address', pcIp || mobileIp) // Use PC IP if available
                     .maybeSingle();
 
                 if (mapping) seatNumber = mapping.seat_number;
             } catch (e) { console.warn(e); }
 
-            // Create/Update Session
-            await createSession(mobileIp, seatNumber, "Mobile Verified");
+            // Create/Update Session with PC IP
+            await createSession(pcIp || mobileIp, seatNumber, "Mobile Verified");
             
             setTimeout(() => {
                 onVerified();
