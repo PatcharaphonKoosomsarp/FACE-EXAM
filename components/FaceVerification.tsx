@@ -54,8 +54,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                                 .select('*')
                                 .eq('user_id', user.id)
                                 .eq('status', 'authenticated')
-                                // Check if not expired (expires_at > now)
-                                .gt('expires_at', new Date().toISOString())
+                                .gt('authenticated_at', new Date(Date.now() - 60000).toISOString()) // Last 1 minute
                                 .maybeSingle();
 
                             if (data) {
@@ -119,14 +118,8 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
             } catch (e) { console.warn(e); }
 
             // Create/Update Session with PC IP
-            const sessionData = await createSession(pcIp || mobileIp, seatNumber, "Mobile Verified");
+            await createSession(pcIp || mobileIp, seatNumber, "Mobile Verified");
             
-            // Notify Agent to start monitoring
-            if (sessionData) {
-                console.log('Notifying agent to start session...');
-                await agentService.startSession(sessionData);
-            }
-
             setTimeout(() => {
                 onVerified();
             }, 1500);
@@ -142,18 +135,16 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
          // Check for existing active session
          const { data: existingSession, error: findError } = await supabase
          .from('exam_student_sessions')
-         .select('*')
+         .select('id')
          .eq('layout_id', exam.roomId)
          .eq('student_email', user.email)
          .eq('is_active', true)
          .order('created_at', { ascending: false })
          .limit(1);
 
-        let currentSession = null;
-
         if (!findError && existingSession && existingSession.length > 0) {
             // Update existing session
-            const { data } = await supabase
+            await supabase
                 .from('exam_student_sessions')
                 .update({
                     student_name: user.name,
@@ -162,13 +153,10 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                     face_descriptor: descriptorStr, // Might be a placeholder for mobile
                     updated_at: new Date().toISOString()
                 })
-                .eq('id', existingSession[0].id)
-                .select()
-                .single();
-            currentSession = data;
+                .eq('id', existingSession[0].id);
         } else {
             // Insert Session Record
-            const { data } = await supabase.from('exam_student_sessions').insert({
+            await supabase.from('exam_student_sessions').insert({
                 layout_id: exam.roomId,
                 student_email: user.email,
                 student_name: user.name,
@@ -179,10 +167,8 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                 session_start_time: new Date().toISOString(),
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
-            }).select().single();
-            currentSession = data;
+            });
         }
-        return currentSession;
     };
 
     // 1. Load Models (Only if WEBCAM is selected)
@@ -504,13 +490,54 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                 }
             }
 
-            // Create/Update Session with PC IP
-            const sessionData = await createSession(ip, seatNumber, JSON.stringify(Array.from(descriptor)));
-            
-            // Notify Agent to start monitoring
-            if (sessionData) {
-                console.log('Notifying agent to start session (Webcam)...');
-                await agentService.startSession(sessionData);
+            // Check for existing active session
+            const { data: existingSession, error: findError } = await supabase
+                .from('exam_student_sessions')
+                .select('id')
+                .eq('layout_id', exam.roomId)
+                .eq('student_email', user.email)
+                .eq('is_active', true)
+                .order('created_at', { ascending: false })
+                .limit(1);
+
+            if (!findError && existingSession && existingSession.length > 0) {
+                // Update existing session
+                console.log('Updating existing session:', existingSession[0].id);
+                const { error: updateError } = await supabase
+                    .from('exam_student_sessions')
+                    .update({
+                        student_name: user.name,
+                        seat_number: seatNumber,
+                        ip_address: ip,
+                        face_descriptor: JSON.stringify(Array.from(descriptor)),
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', existingSession[0].id);
+
+                if (updateError) {
+                    console.error("Supabase update error:", updateError);
+                    throw updateError;
+                }
+            } else {
+                // Insert Session Record
+                console.log('Creating new session record...');
+                const { error: insertError } = await supabase.from('exam_student_sessions').insert({
+                    layout_id: exam.roomId,
+                    student_email: user.email,
+                    student_name: user.name,
+                    seat_number: seatNumber,
+                    ip_address: ip,
+                    face_descriptor: JSON.stringify(Array.from(descriptor)),
+                    is_active: true,
+                    session_start_time: new Date().toISOString(),
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                });
+
+                if (insertError) {
+                    console.error("Supabase insert error:", insertError);
+                    throw insertError;
+                }
             }
 
             setTimeout(() => {

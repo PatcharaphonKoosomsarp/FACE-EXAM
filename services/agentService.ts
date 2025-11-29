@@ -49,19 +49,5 @@ export const agentService = {
       console.error('Failed to get resource usage:', error);
       return null;
     }
-  },
-
-  /**
-   * Notify the agent to start monitoring a session
-   */
-  startSession: async (sessionData: any): Promise<boolean> => {
-    try {
-      // Try to notify local agent directly if available
-      await axios.post(`${AGENT_API_URL}/start-session`, sessionData, { timeout: 2000 });
-      return true;
-    } catch (error) {
-      console.warn('Failed to notify agent directly, relying on DB polling:', error);
-      return false;
-    }
   }
 };
