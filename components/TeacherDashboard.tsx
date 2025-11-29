@@ -599,13 +599,15 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                   <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
                       <div className="w-full md:w-1/3 bg-gray-50 p-6 border-r border-gray-200 overflow-y-auto">
                           <div className="flex flex-col items-center text-center mb-8">
-                                <div className="w-24 h-24 bg-gray-200 rounded-full mb-4 flex items-center justify-center relative overflow-hidden">
-                                    {student && student.studentProfileUrl ? (
-                                        <img src={student.studentProfileUrl} alt={student.studentName} className="w-full h-full object-cover" />
-                                    ) : (
-                                        <UserIcon className="w-12 h-12 text-gray-400"/>
-                                    )}
-                                    <div className={`absolute bottom-0 right-0 w-6 h-6 rounded-full border-4 border-white ${student ? 'bg-green-500' : assignedIp ? 'bg-orange-500' : 'bg-gray-400'}`}></div>
+                                <div className="relative mb-4">
+                                    <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
+                                        {student && student.studentProfileUrl ? (
+                                            <img src={student.studentProfileUrl} alt={student.studentName} className="w-full h-full object-cover" />
+                                        ) : (
+                                            <UserIcon className="w-12 h-12 text-gray-400"/>
+                                        )}
+                                    </div>
+                                    <div className={`absolute bottom-0 right-0 w-7 h-7 rounded-full border-4 border-white shadow-sm ${student ? 'bg-green-500' : assignedIp ? 'bg-orange-500' : 'bg-gray-400'}`}></div>
                                 </div>
                                 {student ? (
                                     <>
