@@ -186,6 +186,11 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
          .order('created_at', { ascending: false })
          .limit(1);
 
+        // Prepare profile URL with User ID hash for "Kick" functionality
+        const profileUrl = user.avatarUrl 
+            ? `${user.avatarUrl}#${user.id}`
+            : `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random#${user.id}`;
+
         if (!findError && existingSession && existingSession.length > 0) {
             // Update existing session
             await supabase
@@ -195,7 +200,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                     seat_number: seatNumber,
                     ip_address: ip,
                     face_descriptor: descriptorStr, 
-                    student_profile_url: user.avatarUrl,
+                    student_profile_url: profileUrl,
                     updated_at: new Date().toISOString()
                 })
                 .eq('id', existingSession[0].id);
@@ -208,7 +213,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                 seat_number: seatNumber,
                 ip_address: ip,
                 face_descriptor: descriptorStr,
-                student_profile_url: user.avatarUrl,
+                student_profile_url: profileUrl,
                 is_active: true,
                 session_start_time: new Date().toISOString(),
                 created_at: new Date().toISOString(),
@@ -521,6 +526,11 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                 .order('created_at', { ascending: false })
                 .limit(1);
 
+            // Prepare profile URL with User ID hash for "Kick" functionality
+            const profileUrl = user.avatarUrl 
+                ? `${user.avatarUrl}#${user.id}`
+                : `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random#${user.id}`;
+
             if (!findError && existingSession && existingSession.length > 0) {
                 // Use existing seat number if we couldn't determine it from IP
                 if (seatNumber === 0 && existingSession[0].seat_number) {
@@ -536,7 +546,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                         seat_number: seatNumber,
                         ip_address: ip,
                         face_descriptor: JSON.stringify(Array.from(descriptor)),
-                        student_profile_url: user.avatarUrl,
+                        student_profile_url: profileUrl,
                         updated_at: new Date().toISOString()
                     })
                     .eq('id', existingSession[0].id);
@@ -555,7 +565,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                     seat_number: seatNumber,
                     ip_address: ip,
                     face_descriptor: JSON.stringify(Array.from(descriptor)),
-                    student_profile_url: user.avatarUrl,
+                    student_profile_url: profileUrl,
                     is_active: true,
                     session_start_time: new Date().toISOString(),
                     created_at: new Date().toISOString(),

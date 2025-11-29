@@ -170,11 +170,21 @@ const App: React.FC = () => {
           alert('Error kicking student: ' + error.message);
       } else {
           // 2. Delete from qr_authentication if UUID is available
-          if (student && student.studentUuid) {
+          let userIdToDelete = student?.studentUuid;
+
+          // Fallback: Try to extract User ID from Profile URL hash (e.g. url#USER_ID)
+          if (!userIdToDelete && student?.studentProfileUrl) {
+              const parts = student.studentProfileUrl.split('#');
+              if (parts.length > 1) {
+                  userIdToDelete = parts[1];
+              }
+          }
+
+          if (userIdToDelete) {
               const { error: qrError } = await supabase
                   .from('qr_authentication')
                   .delete()
-                  .eq('user_id', student.studentUuid);
+                  .eq('user_id', userIdToDelete);
               
               if (qrError) console.error("Error deleting QR auth:", qrError);
           }
