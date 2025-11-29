@@ -205,7 +205,9 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
                     .withFaceLandmarks()
                     .withFaceDescriptors();
 
-                const dims = faceapi.matchDimensions(videoRef.current!, videoRef.current!, true);
+                if (!videoRef.current) return;
+
+                const dims = faceapi.matchDimensions(videoRef.current, videoRef.current, true);
                 const resizedDetections = faceapi.resizeResults(detections, dims);
 
                 if (resizedDetections.length > 0) {
