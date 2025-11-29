@@ -26,6 +26,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
     const [modelsLoaded, setModelsLoaded] = useState(false);
     const [labeledDescriptors, setLabeledDescriptors] = useState<any[]>([]);
     const [faceMatcher, setFaceMatcher] = useState<any | null>(null);
+    const [detectedSeat, setDetectedSeat] = useState<number | null>(null);
     const isVerifyingRef = useRef(false);
 
     const handleMobileSuccess = useCallback(async (mobileIp: string) => {
@@ -62,7 +63,10 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                     .eq('ip_address', pcIp || mobileIp) // Use PC IP if available
                     .maybeSingle();
 
-                if (mapping) seatNumber = mapping.seat_number;
+                if (mapping) {
+                    seatNumber = mapping.seat_number;
+                    setDetectedSeat(seatNumber);
+                }
             } catch (e) { console.warn(e); }
 
             // Create/Update Session with PC IP
@@ -516,6 +520,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
 
                 if (mapping) {
                     seatNumber = mapping.seat_number;
+                    setDetectedSeat(seatNumber);
                 }
             } catch (e) {
                 console.warn("Error fetching seat from IP:", e);
@@ -671,7 +676,13 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                                 <ShieldCheck className="w-12 h-12 text-green-500" />
                              </div>
                              <p className="text-white text-2xl font-bold">ยืนยันตัวตนสำเร็จ</p>
-                             <p className="text-green-100 text-sm mt-2">กำลังเข้าสู่ห้องสอบ...</p>
+                             {detectedSeat && (
+                                <div className="mt-4 bg-white/20 backdrop-blur-md px-6 py-3 rounded-2xl border border-white/30 text-center animate-in slide-in-from-bottom-4 duration-500">
+                                    <p className="text-green-50 text-xs uppercase tracking-wider font-bold mb-1">Your Seat</p>
+                                    <p className="text-white text-4xl font-bold">No. {detectedSeat}</p>
+                                </div>
+                             )}
+                             <p className="text-green-100 text-sm mt-6">กำลังเข้าสู่ห้องสอบ...</p>
                         </div>
                     )}
 
