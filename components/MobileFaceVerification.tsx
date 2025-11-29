@@ -251,6 +251,10 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
             // 1. Delete existing records (Clean slate, like in the HTML reference)
             await supabase.from('qr_authentication').delete().eq('user_id', userId);
 
+            // Calculate expiration time (2 minutes from now)
+            const expiresAt = new Date();
+            expiresAt.setMinutes(expiresAt.getMinutes() + 2);
+
             // 2. Insert new record
             const { error } = await supabase
                 .from('qr_authentication')
@@ -258,7 +262,8 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
                     user_id: userId,
                     status: 'authenticated',
                     ip: safeIp,
-                    authenticated_at: new Date().toISOString()
+                    authenticated_at: new Date().toISOString(),
+                    expires_at: expiresAt.toISOString()
                 });
 
             if (error) throw error;
