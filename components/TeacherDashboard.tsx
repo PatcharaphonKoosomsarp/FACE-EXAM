@@ -647,11 +647,18 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
   const handleSuggestResources = async () => {
     // Helper to generate preset items with unique IDs
-    const getPresets = () => PRESET_BLOCKED_APPS.flatMap(cat => cat.items).map((app, idx) => ({
-        id: Date.now().toString() + '-preset-' + idx,
-        name: app.name,
-        type: app.type
-    })) as ResourceConstraint[];
+    const getPresets = () => {
+        const allItems: any[] = [];
+        PRESET_BLOCKED_APPS.forEach(cat => {
+            allItems.push(...cat.items);
+        });
+        
+        return allItems.map((app, idx) => ({
+            id: Date.now().toString() + '-preset-' + idx,
+            name: app.name,
+            type: app.type
+        })) as ResourceConstraint[];
+    };
 
     if (!process.env.API_KEY) {
         // ถ้าไม่มี API Key ให้ใช้รายการที่ตั้งค่าไว้ในโค้ด (PRESET_BLOCKED_APPS)
