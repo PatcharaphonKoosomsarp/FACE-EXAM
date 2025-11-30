@@ -4,10 +4,20 @@ import {
   Plus, Calendar, Save, Trash2, Cpu, 
   ChevronRight, Check, LayoutGrid, List, 
   MapPin, Clock, ArrowLeft, MonitorX, AlertCircle, Edit, X, User as UserIcon, Activity, ShieldAlert, Ban, Network, LogOut,
-  HardDrive, Wifi, Layers, Settings
+  HardDrive, Wifi, Layers, Settings, FileText
 } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 import { supabase } from '../supabaseClient';
+import emailjs from '@emailjs/browser';
+
+// --- EMAIL CONFIGURATION (ต้องไปสมัครที่ emailjs.com แล้วเอาค่ามาใส่) ---
+// 1. สมัครสมาชิกที่ https://www.emailjs.com/ (ฟรี)
+// 2. สร้าง Email Service (เลือก Gmail) -> ได้ Service ID
+// 3. สร้าง Email Template -> ได้ Template ID
+// 4. ไปที่ Account > API Keys -> ได้ Public Key
+const EMAILJS_SERVICE_ID = "service_uv68kc9"; // ใส่ Service ID ที่นี่
+const EMAILJS_TEMPLATE_ID = "template_cdmhkzc"; // ใส่ Template ID ที่นี่
+const EMAILJS_PUBLIC_KEY = "AT1MQbvCVhGeY1LdJ"; // ใส่ Public Key ที่นี่
 
 // --- CONFIGURATION: รายการที่ไม่อนุญาตเริ่มต้น (แก้ไขรายการตรงนี้) ---
 const PRESET_BLOCKED_APPS: { name: string; type: 'WEB_APP' | 'WINDOWS_APP' | 'BROWSER' }[] = [
@@ -157,6 +167,12 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 }) => {
   const [viewMode, setViewMode] = useState<ViewMode>('WIZARD');
   
+  // Email Notification State
+  const dashboardMountTime = React.useRef(new Date());
+  const notifiedViolationIds = React.useRef(new Set<string>());
+  const notifiedThrottleMap = React.useRef(new Map<string, number>());
+  const [notification, setNotification] = useState<{ message: string, type: 'success' | 'error' | 'info' } | null>(null);
+
   // Wizard State
   const [step, setStep] = useState<WizardStep>(1);
   
@@ -200,6 +216,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   const [sessionStudent, setSessionStudent] = useState<any | null>(null);
   const [realtimeSessions, setRealtimeSessions] = useState<any[]>([]);
   const [currentSeatNumber, setCurrentSeatNumber] = useState<string | null>(null);
+  const [recentViolations, setRecentViolations] = useState<any[]>([]);
 
   // Effect to fetch all active sessions for the room when exam is selected
   useEffect(() => {
@@ -223,6 +240,125 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
       const interval = setInterval(fetchSessions, 5000);
       return () => clearInterval(interval);
   }, [selectedExamId, exams]);
+
+  const sendViolationEmail = async (violation: any, studentName: string, examTitle: string) => {
+      const teacherEmail = user.email || 'teacher@example.com';
+      const violationTime = new Date(violation.timestamp).toLocaleString();
+
+      // Prepare email parameters (Must match variables in your EmailJS template)
+      const templateParams = {
+          to_email: teacherEmail,
+          to_name: user.name || 'Teacher',
+          student_name: studentName,
+          exam_title: examTitle,
+          violation_type: violation.violation_type,
+          violation_time: violationTime,
+          message: `Student ${studentName} committed a violation (${violation.violation_type}) in exam "${examTitle}".`
+      };
+
+      console.log(`[EMAIL SYSTEM] Preparing to send email to ${teacherEmail}...`);
+
+      try {
+          // Send real email
+          await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams, EMAILJS_PUBLIC_KEY);
+          console.log("✅ Email sent successfully via EmailJS!");
+          
+          setNotification({
+            message: `📧 Email sent to ${teacherEmail}: ${studentName} violated rule`,
+            type: 'success'
+          });
+      } catch (error) {
+          console.error("❌ Failed to send email:", error);
+          setNotification({
+              message: `❌ Failed to send email: Check console for details`,
+              type: 'error'
+          });
+      }
+
+      // Auto hide notification after 5 seconds
+      setTimeout(() => setNotification(null), 5000);
+  };
+
+  // Effect to fetch recent violations for the whole exam
+  useEffect(() => {
+      if (!selectedExamId) {
+          setRecentViolations([]);
+          return;
+      }
+
+      const fetchViolations = async () => {
+          let sessionsMap: Record<string, any> = {};
+          let sessionIds: string[] = [];
+
+          if (realtimeSessions.length > 0) {
+              sessionIds = realtimeSessions.map(s => s.id);
+              realtimeSessions.forEach(s => sessionsMap[s.id] = s);
+          } else {
+              // Fallback: fetch all sessions for this exam if realtime list is empty
+              const exam = exams.find(e => e.id === selectedExamId);
+              if (exam) {
+                  const { data: sessions } = await supabase
+                      .from('exam_student_sessions')
+                      .select('id, student_name, seat_number')
+                      .eq('layout_id', exam.roomId)
+                      .eq('is_active', true);
+                  
+                  if (sessions && sessions.length > 0) {
+                      sessionIds = sessions.map(s => s.id);
+                      sessions.forEach(s => sessionsMap[s.id] = s);
+                  }
+              }
+          }
+
+          if (sessionIds.length === 0) return;
+
+          const { data } = await supabase
+              .from('violation_logs')
+              .select('*')
+              .in('session_id', sessionIds)
+              .order('timestamp', { ascending: false })
+              .limit(20);
+          
+          if (data) {
+              // Check for new violations to notify
+              data.forEach(violation => {
+                  const violationTime = new Date(violation.timestamp).getTime();
+                  const mountTime = dashboardMountTime.current.getTime();
+                  
+                  if (violationTime > mountTime && !notifiedViolationIds.current.has(violation.id)) {
+                      const session = sessionsMap[violation.session_id];
+                      const studentName = session?.student_name || 'Unknown Student';
+                      const exam = exams.find(e => e.id === selectedExamId);
+                      const examTitle = exam ? `${exam.subjectCode} ${exam.subjectName}` : 'Exam';
+                      
+                      // Throttle Logic: Prevent spamming emails for the same violation type/resource within 1 minute
+                      const throttleKey = `${violation.session_id}_${violation.violation_type}_${violation.resource_name || 'general'}`;
+                      const lastTime = notifiedThrottleMap.current.get(throttleKey) || 0;
+                      const now = Date.now();
+                      
+                      if (now - lastTime > 60000) { // 60 seconds cooldown
+                          sendViolationEmail(violation, studentName, examTitle);
+                          notifiedThrottleMap.current.set(throttleKey, now);
+                      }
+                      
+                      notifiedViolationIds.current.add(violation.id);
+                  }
+              });
+
+              const violationsWithStudent = data.map(log => {
+                  const session = sessionsMap[log.session_id];
+                  return {
+                      ...log,
+                      student_name: session?.student_name || 'Unknown',
+                      seat_number: session?.seat_number || '?'
+                  };
+              });
+              setRecentViolations(violationsWithStudent);
+          }
+      };
+
+      fetchViolations();
+  }, [selectedExamId, realtimeSessions]);
 
   // Effect to fetch monitoring data
   useEffect(() => {
@@ -599,6 +735,68 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
     };
     setBlockedResources([...blockedResources, res]);
     setNewResourceName('');
+  };
+
+  const handleExportReport = async () => {
+      if (!selectedExamId) return;
+      const exam = exams.find(e => e.id === selectedExamId);
+      if (!exam) return;
+
+      try {
+          // 1. Fetch all sessions for this exam
+          const { data: sessions, error: sessionError } = await supabase
+              .from('exam_student_sessions')
+              .select('*')
+              .eq('layout_id', exam.roomId);
+          
+          if (sessionError || !sessions) throw new Error('Failed to fetch sessions');
+
+          // 2. Fetch all violations for these sessions
+          const sessionIds = sessions.map(s => s.id);
+          let violations: any[] = [];
+          if (sessionIds.length > 0) {
+            const { data: vData, error: vError } = await supabase
+                .from('violation_logs')
+                .select('*')
+                .in('session_id', sessionIds);
+            if (!vError && vData) violations = vData;
+          }
+
+          // 3. Prepare CSV Data
+          const headers = ['Student ID', 'Name', 'Seat', 'IP Address', 'Join Time', 'Status', 'Violation Count', 'Violations Details'];
+          const rows = sessions.map(session => {
+              const studentViolations = violations.filter(v => v.session_id === session.id);
+              const violationCount = studentViolations.length;
+              const violationDetails = studentViolations.map(v => `${v.violation_type} (${v.resource_name})`).join('; ');
+              
+              return [
+                  session.student_email || '-', 
+                  session.student_name || 'Unknown',
+                  session.seat_number || '-',
+                  session.ip_address || '-',
+                  session.created_at ? new Date(session.created_at).toLocaleString() : '-',
+                  session.is_active ? 'Online' : 'Offline',
+                  violationCount,
+                  violationDetails
+              ].map(field => `"${String(field).replace(/"/g, '""')}"`).join(','); 
+          });
+
+          const csvContent = "\uFEFF" + [headers.join(','), ...rows].join('\n'); 
+
+          // 4. Download
+          const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.setAttribute('download', `Exam_Report_${exam.subjectCode}_${new Date().toISOString().slice(0,10)}.csv`);
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+
+      } catch (error) {
+          console.error("Export error:", error);
+          alert("เกิดข้อผิดพลาดในการส่งออกรายงาน");
+      }
   };
 
   // --- Render Helpers ---
@@ -1017,8 +1215,16 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                 </div>
                             </div>
                         </div>
-                        <div className="bg-[#E35205] text-white px-6 py-2 rounded-xl text-lg font-bold shadow-lg border-2 border-orange-400/30">
-                            Section {exam.section}
+                        <div className="flex flex-col items-end gap-3">
+                            <div className="bg-[#E35205] text-white px-6 py-2 rounded-xl text-lg font-bold shadow-lg border-2 border-orange-400/30">
+                                Section {exam.section}
+                            </div>
+                            <button 
+                                onClick={handleExportReport}
+                                className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center transition border border-white/10 backdrop-blur-sm"
+                            >
+                                <FileText className="w-4 h-4 mr-2"/> รายงานและสรุปผล
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -1046,12 +1252,12 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                             </button>
                         </div>
                     </div>
-                    <div className="bg-gray-50 p-6 rounded-2xl border border-gray-200 overflow-auto">
-                        <div className="flex flex-col items-center">
-                             <div className="w-full max-w-2xl bg-gray-800 text-white text-center py-2 rounded-lg mb-8 text-sm shadow-md">
+                    <div className="bg-gray-50 p-6 rounded-2xl border border-gray-200 overflow-x-auto">
+                        <div className="min-w-max mx-auto flex flex-col items-center gap-6">
+                             <div className="w-full bg-gray-800 text-white text-center py-2 rounded-lg text-sm shadow-md">
                                  กระดานหน้าห้อง (Front)
                              </div>
-                             <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${room.cols}, minmax(90px, 1fr))` }}>
+                             <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${room.cols}, 110px)` }}>
                                 {Array.from({ length: room.rows * room.cols }).map((_, i) => {
                                     const row = Math.floor(i / room.cols) + 1;
                                     const col = (i % room.cols) + 1;
@@ -1092,31 +1298,35 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                         onClick={() => setViewingSeat(i)}
                                         className={`aspect-square border-2 rounded-xl flex flex-col items-center justify-center shadow-sm transition cursor-pointer relative overflow-hidden group 
                                             ${student 
-                                                ? 'bg-green-50 border-green-500 ring-2 ring-green-200' 
+                                                ? 'bg-green-50 border-green-500' 
                                                 : isConfigured 
                                                     ? 'bg-white border-green-200 hover:border-green-500'
                                                     : 'bg-gray-50 border-gray-100 hover:border-gray-300'}`}
                                     >
-                                        <span className="text-[10px] text-gray-400 mb-1 absolute top-1 left-1">โต๊ะ</span>
-                                        <span className={`font-bold text-lg ${student ? 'text-green-700' : isConfigured ? 'text-gray-800' : 'text-gray-300'}`}>
+                                        <span className="text-[10px] text-gray-400 mb-0.5 absolute top-1.5 left-2">โต๊ะ</span>
+                                        <span className={`font-bold text-xl mb-1 ${student ? 'text-green-700' : isConfigured ? 'text-gray-800' : 'text-gray-300'}`}>
                                             {row}-{col}
                                         </span>
                                         
-                                        {student ? (
-                                            <div className="mt-1 flex flex-col items-center w-full px-1">
-                                                {student.studentProfileUrl ? (
-                                                    <img src={student.studentProfileUrl} alt="Profile" className="w-6 h-6 rounded-full object-cover mb-1 border border-green-500" />
-                                                ) : (
-                                                    <UserIcon className="w-4 h-4 text-green-600 mb-1"/>
-                                                )}
-                                                <span className="text-[10px] text-green-700 font-bold text-center truncate w-full">{student.studentName}</span>
-                                            </div>
-                                        ) : isConfigured && (
-                                            <div className="mt-1 flex flex-col items-center w-full px-1">
-                                                <Network className="w-4 h-4 text-green-500 mb-1"/>
-                                                <span className="text-[10px] text-gray-600 font-medium text-center break-all leading-tight">{assignedIp}</span>
-                                            </div>
-                                        )}
+                                        <div className="h-14 w-full flex flex-col items-center justify-end px-1">
+                                            {student ? (
+                                                <>
+                                                    {student.studentProfileUrl ? (
+                                                        <img src={student.studentProfileUrl} alt="Profile" className="w-6 h-6 rounded-full object-cover mb-0.5 border border-green-500" />
+                                                    ) : (
+                                                        <UserIcon className="w-5 h-5 text-green-600 mb-0.5"/>
+                                                    )}
+                                                    <span className="text-[10px] text-green-700 font-bold text-center line-clamp-2 leading-tight w-full" title={student.studentName}>{student.studentName}</span>
+                                                </>
+                                            ) : isConfigured ? (
+                                                <>
+                                                    <Network className="w-5 h-5 text-green-500 mb-0.5"/>
+                                                    <span className="text-[10px] text-gray-600 font-medium text-center break-all leading-tight w-full line-clamp-1">{assignedIp}</span>
+                                                </>
+                                            ) : (
+                                                <span className="text-xs text-gray-300">- ว่าง -</span>
+                                            )}
+                                        </div>
                                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition"></div>
                                     </div>
                                 )})}
@@ -1161,6 +1371,44 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                             </div>
                         )}
                     </div>
+
+                    {/* Violation Notifications */}
+                    <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+                        <div className="flex items-center mb-4">
+                            <span className="bg-orange-100 p-2 rounded-lg mr-3"><ShieldAlert className="w-5 h-5 text-[#E35205]"/></span>
+                            <h3 className="text-lg font-bold text-gray-800">
+                                การแจ้งเตือนการละเมิด ({recentViolations.length})
+                            </h3>
+                        </div>
+                        <div className="space-y-3 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
+                            {recentViolations.length > 0 ? (
+                                recentViolations.map((log, idx) => (
+                                    <div key={log.id || idx} className="flex items-start p-3 bg-orange-50 rounded-xl border border-orange-100">
+                                        <div className="bg-white p-2 rounded-lg border border-orange-200 mr-3 flex flex-col items-center min-w-[50px]">
+                                            <span className="text-[10px] text-gray-400 font-bold uppercase">Seat</span>
+                                            <span className="text-lg font-bold text-[#E35205]">{log.seat_number}</span>
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex justify-between items-start">
+                                                <p className="text-sm font-bold text-gray-800 line-clamp-2 leading-tight" title={log.student_name}>{log.student_name}</p>
+                                                <span className="text-[10px] text-gray-500 bg-white px-1.5 py-0.5 rounded border border-gray-200 whitespace-nowrap ml-2 shrink-0">
+                                                    {new Date(log.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                                </span>
+                                            </div>
+                                            <p className="text-xs text-red-600 font-medium mt-0.5 flex items-center">
+                                                <Ban className="w-3 h-3 mr-1"/> {log.resource_name}
+                                            </p>
+                                            <p className="text-[10px] text-gray-500 mt-1 truncate uppercase tracking-wide">{log.violation_type.replace(/_/g, ' ')}</p>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="text-center py-8 text-gray-400 italic">
+                                    ยังไม่มีการละเมิดกฎ
+                                </div>
+                            )}
+                        </div>
+                    </div>
                  </div>
              </div>
              
@@ -1174,6 +1422,28 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   // DASHBOARD LANDING
   return (
     <div className="container mx-auto p-4 max-w-6xl">
+      {/* Notification Toast */}
+      {notification && (
+        <div className="fixed top-5 right-5 z-50 animate-in slide-in-from-right fade-in duration-300">
+          <div className={`flex items-center p-4 rounded-xl shadow-2xl border ${
+            notification.type === 'error' ? 'bg-red-50 border-red-200 text-red-800' : 
+            notification.type === 'success' ? 'bg-green-50 border-green-200 text-green-800' : 
+            'bg-blue-50 border-blue-200 text-blue-800'
+          }`}>
+            {notification.type === 'error' ? <AlertCircle className="w-6 h-6 mr-3 text-red-500" /> :
+             notification.type === 'success' ? <Check className="w-6 h-6 mr-3 text-green-500" /> :
+             <FileText className="w-6 h-6 mr-3 text-blue-500" />}
+            <div>
+              <h4 className="font-bold text-sm">{notification.type === 'error' ? 'Error' : notification.type === 'success' ? 'Success' : 'Notification'}</h4>
+              <p className="text-sm">{notification.message}</p>
+            </div>
+            <button onClick={() => setNotification(null)} className="ml-4 p-1 hover:bg-black/5 rounded-full transition">
+              <X className="w-4 h-4 opacity-50" />
+            </button>
+          </div>
+        </div>
+      )}
+
       <header className="mb-8 mt-4">
          <h1 className="text-3xl font-bold text-gray-800 mb-2">จัดการการสอบ (อาจารย์)</h1>
          <p className="text-gray-500">เลือกเมนูที่ต้องการทำรายการ</p>
@@ -1215,7 +1485,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
          <div className="p-8 md:p-12">
             {renderStepIndicator()}
             
-            <div className="max-w-2xl mx-auto mt-8">
+            <div className={`${step === 3 ? 'w-full' : 'max-w-2xl'} mx-auto mt-8`}>
                {/* Step 1: Room */}
                {step === 1 && (
                  <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -1282,6 +1552,25 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                              <LayoutGrid className="w-5 h-5 mr-3"/>
                              ระบบจะสร้างผังที่นั่งขนาด {rows} x {cols} = {rows*cols} ที่นั่ง
                           </div>
+
+                          {rows > 0 && cols > 0 && (
+                              <div className="mt-6 border-2 border-dashed border-gray-200 rounded-xl p-6 bg-gray-50">
+                                  <h4 className="text-sm font-bold text-gray-500 mb-4 text-center">ตัวอย่างแผนผังที่นั่ง</h4>
+                                  <div className="overflow-x-auto pb-2 custom-scrollbar">
+                                      <div className="min-w-max mx-auto grid gap-2 justify-center" style={{ gridTemplateColumns: `repeat(${cols}, 50px)` }}>
+                                          {Array.from({ length: rows * cols }).map((_, i) => {
+                                              const row = Math.floor(i / cols) + 1;
+                                              const col = (i % cols) + 1;
+                                              return (
+                                                  <div key={i} className="aspect-square bg-white border border-gray-300 rounded-lg flex items-center justify-center text-[10px] font-bold text-gray-400 shadow-sm">
+                                                      {row}-{col}
+                                                  </div>
+                                              );
+                                          })}
+                                      </div>
+                                  </div>
+                              </div>
+                          )}
 
                           <div className="flex justify-end pt-4">
                              <button 
@@ -1430,8 +1719,8 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                  <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                     <h2 className="text-2xl font-bold mb-8 text-gray-800 text-center">ขั้นตอนที่ 3: กำหนด IP Address</h2>
                     
-                    <div className="flex flex-col md:flex-row gap-8">
-                        <div className="flex-1 bg-white p-6 rounded-2xl border-2 border-gray-100 shadow-sm">
+                    <div className="flex flex-col lg:flex-row gap-6">
+                        <div className="flex-1 bg-white p-4 rounded-2xl border-2 border-gray-100 shadow-sm min-w-0">
                             <h3 className="font-bold text-lg mb-4 flex items-center">
                                 <MapPin className="w-5 h-5 mr-2 text-[#E35205]"/> เลือกที่นั่งเพื่อกำหนด IP
                             </h3>
@@ -1440,26 +1729,34 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                     const room = rooms.find(r => r.id === selectedRoomId);
                                     if (!room) return <div>ไม่พบข้อมูลห้อง</div>;
                                     return (
-                                        <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${room.cols}, minmax(50px, 1fr))` }}>
-                                            {Array.from({ length: room.rows * room.cols }).map((_, i) => {
-                                                const row = Math.floor(i / room.cols) + 1;
-                                                const col = (i % room.cols) + 1;
-                                                const seatKey = `${row}-${col}`;
-                                                const hasIp = !!room.ipMapping?.[seatKey];
-                                                const isSelected = selectedSeatForIp === seatKey;
+                                        <div className="overflow-x-auto pb-4 custom-scrollbar">
+                                            <div className="min-w-max mx-auto grid gap-2" style={{ gridTemplateColumns: `repeat(${room.cols}, 100px)` }}>
+                                                {Array.from({ length: room.rows * room.cols }).map((_, i) => {
+                                                    const row = Math.floor(i / room.cols) + 1;
+                                                    const col = (i % room.cols) + 1;
+                                                    const seatKey = `${row}-${col}`;
+                                                    const hasIp = !!room.ipMapping?.[seatKey];
+                                                    const isSelected = selectedSeatForIp === seatKey;
 
-                                                return (
-                                                    <div 
-                                                        key={i} 
-                                                        onClick={() => handleSeatClickForIp(row, col)}
-                                                        className={`aspect-square border-2 rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all relative group
-                                                            ${isSelected ? 'border-[#E35205] bg-orange-50 ring-2 ring-orange-200' : hasIp ? 'border-green-300 bg-green-50' : 'border-gray-200 hover:border-gray-300'}`}
-                                                    >
-                                                        <span className="text-xs font-bold text-gray-500">{row}-{col}</span>
-                                                        {hasIp && <Network className="w-4 h-4 text-green-600 mt-1" />}
-                                                    </div>
-                                                );
-                                            })}
+                                                    return (
+                                                        <div 
+                                                            key={i} 
+                                                            onClick={() => handleSeatClickForIp(row, col)}
+                                                            className={`aspect-square border-2 rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all relative group
+                                                                ${isSelected ? 'border-[#E35205] bg-orange-50 ring-2 ring-orange-200' : hasIp ? 'border-green-300 bg-green-50' : 'border-gray-200 hover:border-gray-300'}`}
+                                                        >
+                                                            <span className="text-[10px] text-gray-400 mb-0.5 absolute top-1.5 left-2">โต๊ะ</span>
+                                                            <span className={`font-bold text-xl mb-1 ${isSelected ? 'text-[#E35205]' : 'text-gray-500'}`}>{row}-{col}</span>
+                                                            {hasIp && (
+                                                                <div className="flex flex-col items-center mt-1">
+                                                                    <Network className="w-5 h-5 text-green-600 mb-0.5" />
+                                                                    <span className="text-[10px] text-green-700 font-bold">IP OK</span>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
                                         </div>
                                     );
                                 })()
@@ -1468,7 +1765,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                             )}
                         </div>
 
-                        <div className="w-full md:w-80">
+                        <div className="w-full lg:w-80 shrink-0">
                             <div className="bg-gray-50 p-6 rounded-2xl border border-gray-200 h-full sticky top-4">
                                 <h3 className="font-bold text-lg mb-4 text-gray-800">รายละเอียด IP</h3>
                                 {selectedSeatForIp ? (
