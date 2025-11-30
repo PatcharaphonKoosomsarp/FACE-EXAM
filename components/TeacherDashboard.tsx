@@ -1338,7 +1338,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                             ) : isConfigured ? (
                                                 <>
                                                     <Network className="w-5 h-5 text-green-500 mb-0.5"/>
-                                                    <span className="text-xs text-gray-800 font-bold text-center break-all leading-tight w-full">{assignedIp}</span>
+                                                    <span className="text-[11px] text-gray-800 font-bold text-center whitespace-nowrap w-full">{assignedIp}</span>
                                                 </>
                                             ) : (
                                                 <span className="text-xs text-gray-300">- ว่าง -</span>
@@ -1502,7 +1502,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
          <div className="p-8 md:p-12">
             {renderStepIndicator()}
             
-            <div className={`${step === 3 ? 'w-full' : 'max-w-2xl'} mx-auto mt-8`}>
+            <div className={`${step === 3 || step === 4 ? 'w-full max-w-5xl' : 'max-w-2xl'} mx-auto mt-8`}>
                {/* Step 1: Room */}
                {step === 1 && (
                  <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -1875,60 +1875,97 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                         </div>
                     </div>
 
-                    <div className="bg-white border-2 border-gray-100 p-6 rounded-2xl mb-6">
-                        <div className="flex justify-between items-center mb-6">
-                            <label className="font-bold text-gray-800 text-lg">รายการที่ไม่อนุญาตให้ใช้งาน</label>
-                            <button 
-                                type="button"
-                                onClick={handleSuggestResources}
-                                disabled={isSuggesting}
-                                className="text-xs bg-indigo-600 text-white px-4 py-2 rounded-full hover:bg-indigo-700 flex items-center shadow-lg shadow-indigo-200 transition-all transform hover:-translate-y-0.5"
-                            >
-                                <Cpu className="w-4 h-4 mr-2" />
-                                {isSuggesting ? 'AI กำลังประมวลผล...' : 'ใช้ AI แนะนำ'}
-                            </button>
-                        </div>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        {/* Left Column: Manual Input & Current List */}
+                        <div className="bg-white border-2 border-gray-100 p-6 rounded-2xl mb-6 h-full">
+                            <div className="flex justify-between items-center mb-6">
+                                <label className="font-bold text-gray-800 text-lg">รายการที่ไม่อนุญาตให้ใช้งาน</label>
+                                <button 
+                                    type="button"
+                                    onClick={handleSuggestResources}
+                                    disabled={isSuggesting}
+                                    className="text-xs bg-indigo-600 text-white px-4 py-2 rounded-full hover:bg-indigo-700 flex items-center shadow-lg shadow-indigo-200 transition-all transform hover:-translate-y-0.5"
+                                >
+                                    <Cpu className="w-4 h-4 mr-2" />
+                                    {isSuggesting ? 'AI กำลังประมวลผล...' : 'ใช้ AI แนะนำ'}
+                                </button>
+                            </div>
 
-                        <div className="flex gap-3 mb-6">
-                            <input 
-                                type="text" 
-                                placeholder="ชื่อโปรแกรม/เว็บ (เช่น Facebook)" 
-                                value={newResourceName}
-                                onChange={e => setNewResourceName(e.target.value)}
-                                className="flex-1 border-2 border-gray-200 p-3 rounded-xl focus:border-[#E35205] outline-none"
-                            />
-                            <select 
-                                value={newResourceType}
-                                onChange={e => setNewResourceType(e.target.value as any)}
-                                className="border-2 border-gray-200 p-3 rounded-xl bg-white outline-none"
-                            >
-                                <option value="WEB_APP">Web App</option>
-                                <option value="WINDOWS_APP">Windows App</option>
-                                <option value="BROWSER">Web Browser</option>
-                            </select>
-                            <button type="button" onClick={handleAddResource} className="bg-gray-900 text-white p-3 rounded-xl hover:bg-black transition shadow-lg">
-                                <Plus className="w-6 h-6" />
-                            </button>
-                        </div>
+                            <div className="flex gap-3 mb-6">
+                                <input 
+                                    type="text" 
+                                    placeholder="ชื่อโปรแกรม/เว็บ (เช่น Facebook)" 
+                                    value={newResourceName}
+                                    onChange={e => setNewResourceName(e.target.value)}
+                                    className="flex-1 border-2 border-gray-200 p-3 rounded-xl focus:border-[#E35205] outline-none"
+                                />
+                                <select 
+                                    value={newResourceType}
+                                    onChange={e => setNewResourceType(e.target.value as any)}
+                                    className="border-2 border-gray-200 p-3 rounded-xl bg-white outline-none"
+                                >
+                                    <option value="WEB_APP">Web App</option>
+                                    <option value="WINDOWS_APP">Windows App</option>
+                                    <option value="BROWSER">Web Browser</option>
+                                </select>
+                                <button type="button" onClick={handleAddResource} className="bg-gray-900 text-white p-3 rounded-xl hover:bg-black transition shadow-lg">
+                                    <Plus className="w-6 h-6" />
+                                </button>
+                            </div>
 
-                        <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
-                            {blockedResources.map(r => (
-                                <div key={r.id} className="flex justify-between items-center bg-red-50 px-5 py-4 rounded-xl text-red-800 border border-red-100 group hover:border-red-200 transition">
-                                    <div className="flex items-center">
-                                        <div className="w-2 h-2 rounded-full bg-red-500 mr-4"></div>
-                                        <span className="font-bold mr-3">{r.name}</span>
-                                        <span className="text-xs bg-white/60 px-2 py-1 rounded text-red-600 font-medium">{r.type}</span>
+                            <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                                {blockedResources.map(r => (
+                                    <div key={r.id} className="flex justify-between items-center bg-red-50 px-5 py-4 rounded-xl text-red-800 border border-red-100 group hover:border-red-200 transition">
+                                        <div className="flex items-center">
+                                            <div className="w-2 h-2 rounded-full bg-red-500 mr-4"></div>
+                                            <span className="font-bold mr-3">{r.name}</span>
+                                            <span className="text-xs bg-white/60 px-2 py-1 rounded text-red-600 font-medium">{r.type}</span>
+                                        </div>
+                                        <button type="button" onClick={() => setBlockedResources(blockedResources.filter(x => x.id !== r.id))}>
+                                            <Trash2 className="w-5 h-5 text-red-400 hover:text-red-700 transition" />
+                                        </button>
                                     </div>
-                                    <button type="button" onClick={() => setBlockedResources(blockedResources.filter(x => x.id !== r.id))}>
-                                        <Trash2 className="w-5 h-5 text-red-400 hover:text-red-700 transition" />
-                                    </button>
-                                </div>
-                            ))}
-                            {blockedResources.length === 0 && (
-                                <div className="text-center py-10 text-gray-400 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
-                                    ยังไม่มีรายการที่ไม่อนุญาต
-                                </div>
-                            )}
+                                ))}
+                                {blockedResources.length === 0 && (
+                                    <div className="text-center py-10 text-gray-400 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+                                        ยังไม่มีรายการที่ไม่อนุญาต
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Right Column: Presets */}
+                        <div className="bg-gray-50 border-2 border-gray-100 p-6 rounded-2xl h-full">
+                            <h3 className="font-bold text-gray-800 text-lg mb-4 flex items-center">
+                                <List className="w-5 h-5 mr-2 text-[#E35205]"/> รายการแนะนำ (คลิกเพื่อเพิ่ม)
+                            </h3>
+                            <div className="flex flex-wrap gap-2 max-h-[500px] overflow-y-auto custom-scrollbar content-start">
+                                {PRESET_BLOCKED_APPS.map((app, idx) => {
+                                    const isAdded = blockedResources.some(r => r.name === app.name);
+                                    return (
+                                        <button
+                                            key={idx}
+                                            onClick={() => {
+                                                if (isAdded) return;
+                                                const res: ResourceConstraint = {
+                                                    id: Date.now().toString() + Math.random(),
+                                                    name: app.name,
+                                                    type: app.type
+                                                };
+                                                setBlockedResources([...blockedResources, res]);
+                                            }}
+                                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all border flex items-center gap-2 ${
+                                                isAdded
+                                                ? 'bg-green-100 text-green-700 border-green-200 cursor-default'
+                                                : 'bg-white text-gray-700 border-gray-200 hover:border-[#E35205] hover:text-[#E35205] hover:shadow-sm'
+                                            }`}
+                                        >
+                                            {isAdded && <Check className="w-3 h-3"/>}
+                                            {app.name}
+                                        </button>
+                                    );
+                                })}
+                            </div>
                         </div>
                     </div>
 
