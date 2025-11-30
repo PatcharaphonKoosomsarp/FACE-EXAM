@@ -20,63 +20,85 @@ const EMAILJS_TEMPLATE_ID = "template_cdmhkzc"; // ใส่ Template ID ที�
 const EMAILJS_PUBLIC_KEY = "AT1MQbvCVhGeY1LdJ"; // ใส่ Public Key ที่นี่
 
 // --- CONFIGURATION: รายการที่ไม่อนุญาตเริ่มต้น (แก้ไขรายการตรงนี้) ---
-const PRESET_BLOCKED_APPS: { name: string; type: 'WEB_APP' | 'WINDOWS_APP' | 'BROWSER' }[] = [
-    // --- 1. Generative AI & Assistants ---
-    { name: "ChatGPT", type: "WEB_APP" },
-    { name: "Gemini", type: "WEB_APP" },
-    { name: "Claude", type: "WEB_APP" },
-    { name: "Perplexity", type: "WEB_APP" },
-    { name: "Copilot", type: "WEB_APP" },
-    { name: "Quillbot", type: "WEB_APP" },
-    { name: "Blackbox AI", type: "WEB_APP" },
-
-    // --- 2. Remote Desktop & Screen Sharing ---
-    { name: "TeamViewer", type: "WINDOWS_APP" },
-    { name: "AnyDesk", type: "WINDOWS_APP" },
-    { name: "Chrome Remote Desktop", type: "WEB_APP" },
-    { name: "Zoom", type: "WINDOWS_APP" },
-    { name: "Microsoft Teams", type: "WINDOWS_APP" },
-    { name: "Skype", type: "WINDOWS_APP" },
-
-    // --- 3. Communication & Social Media ---
-    { name: "Discord", type: "WINDOWS_APP" },
-    { name: "Line", type: "WINDOWS_APP" },
-    { name: "Facebook", type: "WEB_APP" },
-    { name: "Messenger", type: "WEB_APP" },
-    { name: "WhatsApp", type: "WEB_APP" },
-    { name: "Telegram", type: "WINDOWS_APP" },
-    { name: "Twitter", type: "WEB_APP" },
-    { name: "Instagram", type: "WEB_APP" },
-    
-    // --- 4. Search Engines & Entertainment ---
-    { name: "YouTube", type: "WEB_APP" },
-    { name: "Google Search", type: "WEB_APP" },
-    { name: "Pantip", type: "WEB_APP" },
-    { name: "Reddit", type: "WEB_APP" },
-
-    // --- 5. Developer Tools ---
-    { name: "StackOverflow", type: "WEB_APP" },
-    { name: "GitHub", type: "WEB_APP" },
-    { name: "GitLab", type: "WEB_APP" },
-    { name: "Replit", type: "WEB_APP" },
-    { name: "VS Code", type: "WINDOWS_APP" },
-
-    // --- 6. Cloud Storage ---
-    { name: "Google Drive", type: "WEB_APP" },
-    { name: "OneDrive", type: "WEB_APP" },
-    { name: "Dropbox", type: "WEB_APP" },
-    { name: "Canva", type: "WEB_APP" },
-
-    // --- 7. Utilities & Office Tools (เพิ่มใหม่: เครื่องมือคำนวณและเอกสาร) ---
-    { name: "Calculator", type: "WINDOWS_APP" }, // เครื่องคิดเลข Windows
-    { name: "Microsoft Excel", type: "WINDOWS_APP" }, // โปรแกรม Excel
-    { name: "Microsoft Word", type: "WINDOWS_APP" }, // โปรแกรม Word (ใช้จดโพย)
-    { name: "Microsoft PowerPoint", type: "WINDOWS_APP" }, // เผื่อกรณีจดใส่สไลด์
-    { name: "Google Sheets", type: "WEB_APP" }, // Excel แบบออนไลน์
-    { name: "Google Docs", type: "WEB_APP" }, // Word แบบออนไลน์
-    { name: "Notepad", type: "WINDOWS_APP" }, // โปรแกรมจดบันทึกพื้นฐาน
-    { name: "Sticky Notes", type: "WINDOWS_APP" } // กระดาษโน้ตแปะหน้าจอ
-];
+const PRESET_BLOCKED_APPS = [
+    {
+        category: "Generative AI & Assistants",
+        items: [
+            { name: "ChatGPT", type: "WEB_APP" },
+            { name: "Gemini", type: "WEB_APP" },
+            { name: "Claude", type: "WEB_APP" },
+            { name: "Perplexity", type: "WEB_APP" },
+            { name: "Copilot", type: "WEB_APP" },
+            { name: "Quillbot", type: "WEB_APP" },
+            { name: "Blackbox AI", type: "WEB_APP" },
+        ]
+    },
+    {
+        category: "Remote Desktop & Screen Sharing",
+        items: [
+            { name: "TeamViewer", type: "WINDOWS_APP" },
+            { name: "AnyDesk", type: "WINDOWS_APP" },
+            { name: "Chrome Remote Desktop", type: "WEB_APP" },
+            { name: "Zoom", type: "WINDOWS_APP" },
+            { name: "Microsoft Teams", type: "WINDOWS_APP" },
+            { name: "Skype", type: "WINDOWS_APP" },
+        ]
+    },
+    {
+        category: "Communication & Social Media",
+        items: [
+            { name: "Discord", type: "WINDOWS_APP" },
+            { name: "Line", type: "WINDOWS_APP" },
+            { name: "Facebook", type: "WEB_APP" },
+            { name: "Messenger", type: "WEB_APP" },
+            { name: "WhatsApp", type: "WEB_APP" },
+            { name: "Telegram", type: "WINDOWS_APP" },
+            { name: "Twitter", type: "WEB_APP" },
+            { name: "Instagram", type: "WEB_APP" },
+        ]
+    },
+    {
+        category: "Search Engines & Entertainment",
+        items: [
+            { name: "YouTube", type: "WEB_APP" },
+            { name: "Google Search", type: "WEB_APP" },
+            { name: "Pantip", type: "WEB_APP" },
+            { name: "Reddit", type: "WEB_APP" },
+        ]
+    },
+    {
+        category: "Developer Tools",
+        items: [
+            { name: "StackOverflow", type: "WEB_APP" },
+            { name: "GitHub", type: "WEB_APP" },
+            { name: "GitLab", type: "WEB_APP" },
+            { name: "Replit", type: "WEB_APP" },
+            { name: "VS Code", type: "WINDOWS_APP" },
+        ]
+    },
+    {
+        category: "Cloud Storage",
+        items: [
+            { name: "Google Drive", type: "WEB_APP" },
+            { name: "OneDrive", type: "WEB_APP" },
+            { name: "Dropbox", type: "WEB_APP" },
+            { name: "Canva", type: "WEB_APP" },
+        ]
+    },
+    {
+        category: "Utilities & Office Tools",
+        items: [
+            { name: "Calculator", type: "WINDOWS_APP" }, // เครื่องคิดเลข Windows
+            { name: "Microsoft Excel", type: "WINDOWS_APP" }, // โปรแกรม Excel
+            { name: "Microsoft Word", type: "WINDOWS_APP" }, // โปรแกรม Word (ใช้จดโพย)
+            { name: "Microsoft PowerPoint", type: "WINDOWS_APP" }, // เผื่อกรณีจดใส่สไลด์
+            { name: "Google Sheets", type: "WEB_APP" }, // Excel แบบออนไลน์
+            { name: "Google Docs", type: "WEB_APP" }, // Word แบบออนไลน์
+            { name: "Notepad", type: "WINDOWS_APP" }, // โปรแกรมจดบันทึกพื้นฐาน
+            { name: "Sticky Notes", type: "WINDOWS_APP" } // กระดาษโน้ตแปะหน้าจอ
+        ]
+    }
+] as const;
 
 const EXAM_SLOTS = [
     { name: "รอบเช้า", time: "09:00 - 12:00", start: "09:00", end: "12:00" },
@@ -625,7 +647,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
   const handleSuggestResources = async () => {
     // Helper to generate preset items with unique IDs
-    const getPresets = () => PRESET_BLOCKED_APPS.map((app, idx) => ({
+    const getPresets = () => PRESET_BLOCKED_APPS.flatMap(cat => cat.items).map((app, idx) => ({
         id: Date.now().toString() + '-preset-' + idx,
         name: app.name,
         type: app.type
@@ -1939,32 +1961,41 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                             <h3 className="font-bold text-gray-800 text-lg mb-4 flex items-center">
                                 <List className="w-5 h-5 mr-2 text-[#E35205]"/> รายการแนะนำ (คลิกเพื่อเพิ่ม)
                             </h3>
-                            <div className="flex flex-wrap gap-2 max-h-[500px] overflow-y-auto custom-scrollbar content-start">
-                                {PRESET_BLOCKED_APPS.map((app, idx) => {
-                                    const isAdded = blockedResources.some(r => r.name === app.name);
-                                    return (
-                                        <button
-                                            key={idx}
-                                            onClick={() => {
-                                                if (isAdded) return;
-                                                const res: ResourceConstraint = {
-                                                    id: Date.now().toString() + Math.random(),
-                                                    name: app.name,
-                                                    type: app.type
-                                                };
-                                                setBlockedResources([...blockedResources, res]);
-                                            }}
-                                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all border flex items-center gap-2 ${
-                                                isAdded
-                                                ? 'bg-green-100 text-green-700 border-green-200 cursor-default'
-                                                : 'bg-white text-gray-700 border-gray-200 hover:border-[#E35205] hover:text-[#E35205] hover:shadow-sm'
-                                            }`}
-                                        >
-                                            {isAdded && <Check className="w-3 h-3"/>}
-                                            {app.name}
-                                        </button>
-                                    );
-                                })}
+                            <div className="max-h-[500px] overflow-y-auto custom-scrollbar space-y-6">
+                                {PRESET_BLOCKED_APPS.map((category, catIdx) => (
+                                    <div key={catIdx}>
+                                        <h4 className="text-sm font-bold text-gray-500 uppercase mb-2 border-b border-gray-200 pb-1">
+                                            {category.category}
+                                        </h4>
+                                        <div className="flex flex-wrap gap-2">
+                                            {category.items.map((app, idx) => {
+                                                const isAdded = blockedResources.some(r => r.name === app.name);
+                                                return (
+                                                    <button
+                                                        key={idx}
+                                                        onClick={() => {
+                                                            if (isAdded) return;
+                                                            const res: ResourceConstraint = {
+                                                                id: Date.now().toString() + Math.random(),
+                                                                name: app.name,
+                                                                type: app.type
+                                                            };
+                                                            setBlockedResources([...blockedResources, res]);
+                                                        }}
+                                                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-all border flex items-center gap-2 ${
+                                                            isAdded
+                                                            ? 'bg-green-100 text-green-700 border-green-200 cursor-default'
+                                                            : 'bg-white text-gray-700 border-gray-200 hover:border-[#E35205] hover:text-[#E35205] hover:shadow-sm'
+                                                        }`}
+                                                    >
+                                                        {isAdded && <Check className="w-3 h-3"/>}
+                                                        {app.name}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     </div>
