@@ -593,11 +593,11 @@ const App: React.FC = () => {
             </div>
             <div className="flex items-center gap-4">
                 <div className="flex items-center gap-3">
-                    <img src={user.avatarUrl} alt="Avatar" className="w-12 h-12 rounded-full bg-gray-200" />
+                    <img src={user.avatarUrl} alt="Avatar" className="w-10 h-10 rounded-full bg-gray-200" />
                     <div className="hidden md:block text-left leading-tight">
-                        <div className="text-lg font-bold text-gray-800">{user.name}</div>
-                        <div className="text-sm text-gray-600">{user.email}</div>
-                        <div className="text-xs text-gray-400 font-bold tracking-wider uppercase">{user.role}</div>
+                        <div className="text-base font-bold text-gray-800">{user.name}</div>
+                        <div className="text-xs text-gray-600">{user.email}</div>
+                        <div className="text-[10px] text-gray-400 font-bold tracking-wider uppercase">{user.role}</div>
                     </div>
                 </div>
                 <button 
@@ -605,7 +605,7 @@ const App: React.FC = () => {
                     className="text-gray-400 hover:text-red-500 border-l pl-4 transition-colors"
                     title="ออกจากระบบ"
                 >
-                    <LogOut className="w-7 h-7" />
+                    <LogOut className="w-6 h-6" />
                 </button>
             </div>
         </div>
