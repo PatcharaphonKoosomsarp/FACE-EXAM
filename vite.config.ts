@@ -28,8 +28,8 @@ export default defineConfig(({ mode }) => {
         }
       },
       define: {
-        'process.env.API_KEY': JSON.stringify(env.AIzaSyA12ahNyBNpAXZ00SHjeyaB3fcuoWfAulw),
-        'process.env.GEMINI_API_KEY': JSON.stringify(env.AIzaSyA12ahNyBNpAXZ00SHjeyaB3fcuoWfAulw)
+        'process.env.API_KEY': JSON.stringify(env.VITE_GOOGLE_API_KEY),
+        'process.env.GEMINI_API_KEY': JSON.stringify(env.VITE_GOOGLE_API_KEY)
       },
       resolve: {
         alias: {
