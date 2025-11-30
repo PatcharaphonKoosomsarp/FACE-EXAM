@@ -78,6 +78,11 @@ const PRESET_BLOCKED_APPS: { name: string; type: 'WEB_APP' | 'WINDOWS_APP' | 'BR
     { name: "Sticky Notes", type: "WINDOWS_APP" } // กระดาษโน้ตแปะหน้าจอ
 ];
 
+const EXAM_SLOTS = [
+    { label: "รอบเช้า (09:00 - 12:00)", start: "09:00", end: "12:00" },
+    { label: "รอบบ่าย (13:00 - 16:00)", start: "13:00", end: "16:00" }
+];
+
 // Trigger Vercel Deployment
 interface ResourceLog {
     cpu_usage: number;
@@ -1679,13 +1684,27 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                               <label className="block text-sm font-bold text-gray-700 mb-2">วันที่สอบ</label>
                               <input type="date" value={examDate} onChange={e => setExamDate(e.target.value)} className="w-full border-2 border-gray-200 p-4 rounded-xl focus:border-[#E35205] outline-none transition-all" />
                            </div>
-                           <div>
-                              <label className="block text-sm font-bold text-gray-700 mb-2">เวลาเริ่ม</label>
-                              <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="w-full border-2 border-gray-200 p-4 rounded-xl focus:border-[#E35205] outline-none transition-all" />
-                           </div>
-                           <div>
-                              <label className="block text-sm font-bold text-gray-700 mb-2">เวลาสิ้นสุด</label>
-                              <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className="w-full border-2 border-gray-200 p-4 rounded-xl focus:border-[#E35205] outline-none transition-all" />
+                           <div className="md:col-span-2">
+                              <label className="block text-sm font-bold text-gray-700 mb-2">ช่วงเวลาสอบ</label>
+                              <div className="grid grid-cols-2 gap-4">
+                                {EXAM_SLOTS.map((slot, idx) => (
+                                    <button
+                                        key={idx}
+                                        onClick={() => {
+                                            setStartTime(slot.start);
+                                            setEndTime(slot.end);
+                                        }}
+                                        className={`p-4 rounded-xl border-2 transition-all font-bold text-sm flex items-center justify-center gap-2
+                                            ${startTime === slot.start && endTime === slot.end 
+                                                ? 'border-[#E35205] bg-orange-50 text-[#E35205]' 
+                                                : 'border-gray-200 bg-white text-gray-600 hover:border-orange-200'
+                                            }`}
+                                    >
+                                        <Clock className="w-5 h-5"/>
+                                        <span>{slot.label}</span>
+                                    </button>
+                                ))}
+                              </div>
                            </div>
                        </div>
 
