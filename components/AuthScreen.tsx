@@ -9,23 +9,7 @@ interface AuthScreenProps {
 }
 
 const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
-  const [showAccountChooser, setShowAccountChooser] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
-  const handleLoginSelection = (email: string) => {
-    const role = determineUserRole(email);
-
-    const mockUser: User = {
-      id: 'mock-id-' + Date.now(),
-      email,
-      name: email.split('@')[0],
-      role,
-      isFaceRegistered: false,
-      avatarUrl: `https://ui-avatars.com/api/?name=${email.split('@')[0]}&background=random`
-    };
-
-    onLogin(mockUser);
-  };
 
   const handleGoogleLogin = async () => {
     setIsLoading(true);
@@ -124,59 +108,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
           )}
         </button>
         
-        <button 
-            onClick={() => setShowAccountChooser(true)}
-            className="mt-4 text-xs text-gray-400 hover:text-gray-600 underline"
-        >
-            เข้าใช้งานแบบจำลอง (Simulation Mode)
-        </button>
 
-        {/* Account Chooser Modal */}
-        {showAccountChooser && (
-          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 animate-in fade-in duration-200 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-all scale-100">
-              <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                <span className="font-semibold text-gray-700 text-lg">Choose an account</span>
-                <button 
-                  onClick={() => setShowAccountChooser(false)} 
-                  className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-200 text-gray-500 transition text-lg"
-                >
-                  ✕
-                </button>
-              </div>
-              <div className="p-2 space-y-1">
-                <button 
-                  onClick={() => handleLoginSelection('student@email.kmutnb.ac.th')}
-                  className="w-full flex items-center p-4 hover:bg-blue-50 rounded-xl transition text-left group border border-transparent hover:border-blue-100"
-                >
-                  <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mr-4 font-bold text-xl">
-                    S
-                  </div>
-                  <div>
-                    <div className="font-bold text-lg text-gray-900 group-hover:text-blue-700">Student Account</div>
-                    <div className="text-sm text-gray-500">student@email.kmutnb.ac.th</div>
-                  </div>
-                </button>
-                
-                <button 
-                  onClick={() => handleLoginSelection('teacher@itm.kmutnb.ac.th')}
-                  className="w-full flex items-center p-4 hover:bg-orange-50 rounded-xl transition text-left group border border-transparent hover:border-orange-100"
-                >
-                  <div className="w-12 h-12 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center mr-4 font-bold text-xl">
-                    T
-                  </div>
-                  <div>
-                    <div className="font-bold text-lg text-gray-900 group-hover:text-orange-700">Teacher Account</div>
-                    <div className="text-sm text-gray-500">teacher@itm.kmutnb.ac.th</div>
-                  </div>
-                </button>
-              </div>
-              <div className="p-3 bg-gray-50 text-xs text-center text-gray-400">
-                Simulation Mode
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
