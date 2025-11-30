@@ -1898,7 +1898,50 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        {/* Left Column: Manual Input & Current List */}
+                        {/* Left Column: Presets */}
+                        <div className="bg-gray-50 border-2 border-gray-100 p-6 rounded-2xl h-full">
+                            <h3 className="font-bold text-gray-800 text-lg mb-4 flex items-center">
+                                <List className="w-5 h-5 mr-2 text-[#E35205]"/> รายการแนะนำ (คลิกเพื่อเพิ่ม)
+                            </h3>
+                            <div className="max-h-[500px] overflow-y-auto custom-scrollbar space-y-6">
+                                {PRESET_BLOCKED_APPS.map((category, catIdx) => (
+                                    <div key={catIdx}>
+                                        <h4 className="text-sm font-bold text-gray-500 uppercase mb-2 border-b border-gray-200 pb-1">
+                                            {category.category}
+                                        </h4>
+                                        <div className="flex flex-wrap gap-2">
+                                            {category.items.map((app, idx) => {
+                                                const isAdded = blockedResources.some(r => r.name === app.name);
+                                                return (
+                                                    <button
+                                                        key={idx}
+                                                        onClick={() => {
+                                                            if (isAdded) return;
+                                                            const res: ResourceConstraint = {
+                                                                id: Date.now().toString() + Math.random(),
+                                                                name: app.name,
+                                                                type: app.type
+                                                            };
+                                                            setBlockedResources([...blockedResources, res]);
+                                                        }}
+                                                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-all border flex items-center gap-2 ${
+                                                            isAdded
+                                                            ? 'bg-green-100 text-green-700 border-green-200 cursor-default'
+                                                            : 'bg-white text-gray-700 border-gray-200 hover:border-[#E35205] hover:text-[#E35205] hover:shadow-sm'
+                                                        }`}
+                                                    >
+                                                        {isAdded && <Check className="w-3 h-3"/>}
+                                                        {app.name}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Right Column: Manual Input & Current List */}
                         <div className="bg-white border-2 border-gray-100 p-6 rounded-2xl mb-6 h-full">
                             <div className="flex justify-between items-center mb-6">
                                 <label className="font-bold text-gray-800 text-lg">รายการที่ไม่อนุญาตให้ใช้งาน</label>
@@ -1953,49 +1996,6 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                         ยังไม่มีรายการที่ไม่อนุญาต
                                     </div>
                                 )}
-                            </div>
-                        </div>
-
-                        {/* Right Column: Presets */}
-                        <div className="bg-gray-50 border-2 border-gray-100 p-6 rounded-2xl h-full">
-                            <h3 className="font-bold text-gray-800 text-lg mb-4 flex items-center">
-                                <List className="w-5 h-5 mr-2 text-[#E35205]"/> รายการแนะนำ (คลิกเพื่อเพิ่ม)
-                            </h3>
-                            <div className="max-h-[500px] overflow-y-auto custom-scrollbar space-y-6">
-                                {PRESET_BLOCKED_APPS.map((category, catIdx) => (
-                                    <div key={catIdx}>
-                                        <h4 className="text-sm font-bold text-gray-500 uppercase mb-2 border-b border-gray-200 pb-1">
-                                            {category.category}
-                                        </h4>
-                                        <div className="flex flex-wrap gap-2">
-                                            {category.items.map((app, idx) => {
-                                                const isAdded = blockedResources.some(r => r.name === app.name);
-                                                return (
-                                                    <button
-                                                        key={idx}
-                                                        onClick={() => {
-                                                            if (isAdded) return;
-                                                            const res: ResourceConstraint = {
-                                                                id: Date.now().toString() + Math.random(),
-                                                                name: app.name,
-                                                                type: app.type
-                                                            };
-                                                            setBlockedResources([...blockedResources, res]);
-                                                        }}
-                                                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-all border flex items-center gap-2 ${
-                                                            isAdded
-                                                            ? 'bg-green-100 text-green-700 border-green-200 cursor-default'
-                                                            : 'bg-white text-gray-700 border-gray-200 hover:border-[#E35205] hover:text-[#E35205] hover:shadow-sm'
-                                                        }`}
-                                                    >
-                                                        {isAdded && <Check className="w-3 h-3"/>}
-                                                        {app.name}
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                ))}
                             </div>
                         </div>
                     </div>
