@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { User, UserRole } from '../types';
-import { ScanFace, FileCheck } from 'lucide-react';
+import { ScanFace, FileCheck, Download } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import { determineUserRole } from '../utils';
 
@@ -110,6 +110,16 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
         
 
       </div>
+
+      {/* Download Agent Button */}
+      <a
+        href="/Agent.zip"
+        download="Agent.zip"
+        className="fixed bottom-6 right-6 flex items-center justify-center w-14 h-14 bg-white rounded-full shadow-lg border border-gray-200 text-gray-500 hover:text-[#E35205] hover:border-orange-200 hover:shadow-xl transition-all group z-50"
+        title="Download Agent Files"
+      >
+        <Download className="w-6 h-6" />
+      </a>
     </div>
   );
 };
