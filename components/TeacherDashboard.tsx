@@ -1628,30 +1628,30 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                     <button onClick={() => { setViewMode('WIZARD'); setStep(1); }} className="mt-4 text-[#E35205] font-bold hover:underline">เริ่มสร้างการสอบใหม่</button>
                 </div>
             ) : (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {exams.slice().reverse().map(exam => {
                         const room = rooms.find(r => r.id === exam.roomId);
                         return (
-                            <div key={exam.id} className="group bg-white border border-gray-100 rounded-lg hover:border-[#E35205] hover:ring-4 hover:ring-orange-50 hover:shadow-md transition-all relative overflow-hidden">
-                                <div className="aspect-square flex flex-col overflow-hidden">
-                                    <div className="flex justify-between items-center px-3 pt-3">
-                                        <div className="bg-orange-50 text-[#E35205] font-bold px-2 py-0.5 rounded-lg text-[11px]">Sec {exam.section}</div>
-                                        <div className="flex gap-1">
-                                            <button type="button" onClick={() => handleStartEditExam(exam)} className="p-1 rounded hover:bg-orange-100 hover:text-[#E35205] text-gray-400 transition" title="แก้ไข"><Edit className="w-4 h-4"/></button>
-                                            <button type="button" onClick={() => onDeleteExam(exam.id)} className="p-1 rounded hover:bg-red-100 hover:text-red-500 text-gray-400 transition" title="ลบ"><Trash2 className="w-4 h-4"/></button>
+                            <div key={exam.id} className="group bg-white border border-gray-100 rounded-2xl hover:border-[#E35205] hover:ring-4 hover:ring-orange-50 hover:shadow-xl transition-all relative overflow-hidden">
+                                <div className="flex flex-col h-full">
+                                    <div className="flex justify-between items-start p-5 pb-0">
+                                        <div className="bg-orange-50 text-[#E35205] font-bold px-3 py-1 rounded-lg text-xs">Sec {exam.section}</div>
+                                        <div className="flex gap-2">
+                                            <button type="button" onClick={() => handleStartEditExam(exam)} className="p-2 rounded-lg hover:bg-orange-100 hover:text-[#E35205] text-gray-400 transition" title="แก้ไข"><Edit className="w-5 h-5"/></button>
+                                            <button type="button" onClick={() => onDeleteExam(exam.id)} className="p-2 rounded-lg hover:bg-red-100 hover:text-red-500 text-gray-400 transition" title="ลบ"><Trash2 className="w-5 h-5"/></button>
                                         </div>
                                     </div>
 
-                                    <div className="p-3 flex-1 flex flex-col justify-between cursor-pointer" onClick={() => setSelectedExamId(exam.id)}>
-                                        <div>
-                                            <h3 className="font-bold text-sm text-gray-800 mb-1">{exam.subjectCode}</h3>
-                                            <p className="text-[11px] text-gray-600 line-clamp-2 mb-2 font-medium">{exam.subjectName}</p>
+                                    <div className="p-5 flex-1 flex flex-col justify-between cursor-pointer" onClick={() => setSelectedExamId(exam.id)}>
+                                        <div className="mb-4">
+                                            <h3 className="font-bold text-2xl text-gray-800 mb-2">{exam.subjectCode}</h3>
+                                            <p className="text-base text-gray-600 line-clamp-2 font-medium">{exam.subjectName}</p>
                                         </div>
 
-                                        <div className="space-y-2 text-[11px] text-gray-500 border-t border-gray-100 pt-2">
-                                            <div className="flex items-center"><Calendar className="w-3.5 h-3.5 mr-2 text-gray-400"/> {exam.date}</div>
-                                            <div className="flex items-center"><Clock className="w-3.5 h-3.5 mr-2 text-gray-400"/> {exam.startTime} - {exam.endTime}</div>
-                                            <div className="flex items-center"><MapPin className="w-3.5 h-3.5 mr-2 text-gray-400"/> ห้อง {room?.name}</div>
+                                        <div className="space-y-3 text-sm text-gray-500 border-t border-gray-100 pt-4">
+                                            <div className="flex items-center"><Calendar className="w-4 h-4 mr-3 text-gray-400"/> {exam.date}</div>
+                                            <div className="flex items-center"><Clock className="w-4 h-4 mr-3 text-gray-400"/> {exam.startTime} - {exam.endTime}</div>
+                                            <div className="flex items-center"><MapPin className="w-4 h-4 mr-3 text-gray-400"/> ห้อง {room?.name}</div>
                                         </div>
                                     </div>
                                 </div>
