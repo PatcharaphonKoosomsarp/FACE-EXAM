@@ -79,8 +79,8 @@ const PRESET_BLOCKED_APPS: { name: string; type: 'WEB_APP' | 'WINDOWS_APP' | 'BR
 ];
 
 const EXAM_SLOTS = [
-    { label: "รอบเช้า (09:00 - 12:00)", start: "09:00", end: "12:00" },
-    { label: "รอบบ่าย (13:00 - 16:00)", start: "13:00", end: "16:00" }
+    { name: "รอบเช้า", time: "09:00 - 12:00", start: "09:00", end: "12:00" },
+    { name: "รอบบ่าย", time: "13:00 - 16:00", start: "13:00", end: "16:00" }
 ];
 
 // Trigger Vercel Deployment
@@ -577,6 +577,18 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
     if (!subjectCode || !subjectName || !examDate || !startTime || !endTime) {
       return alert("กรุณากรอกข้อมูลให้ครบถ้วน");
     }
+
+    // Check for overlapping exams
+    const hasOverlap = exams.some(exam => {
+        if (exam.roomId !== selectedRoomId) return false;
+        if (exam.date !== examDate) return false;
+        return (startTime < exam.endTime) && (endTime > exam.startTime);
+    });
+
+    if (hasOverlap) {
+        return alert("ไม่สามารถสร้างตารางสอบได้ เนื่องจากช่วงเวลาดังกล่าวมีการใช้ห้องสอบนี้แล้ว");
+    }
+
     setStep(3);
   };
 
@@ -1326,7 +1338,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                             ) : isConfigured ? (
                                                 <>
                                                     <Network className="w-5 h-5 text-green-500 mb-0.5"/>
-                                                    <span className="text-[10px] text-gray-600 font-medium text-center break-all leading-tight w-full line-clamp-1">{assignedIp}</span>
+                                                    <span className="text-xs text-gray-800 font-bold text-center break-all leading-tight w-full">{assignedIp}</span>
                                                 </>
                                             ) : (
                                                 <span className="text-xs text-gray-300">- ว่าง -</span>
@@ -1694,14 +1706,17 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                             setStartTime(slot.start);
                                             setEndTime(slot.end);
                                         }}
-                                        className={`p-4 rounded-xl border-2 transition-all font-bold text-sm flex items-center justify-center gap-2
+                                        className={`p-4 rounded-xl border-2 transition-all font-bold text-sm flex flex-col items-center justify-center gap-1
                                             ${startTime === slot.start && endTime === slot.end 
                                                 ? 'border-[#E35205] bg-orange-50 text-[#E35205]' 
                                                 : 'border-gray-200 bg-white text-gray-600 hover:border-orange-200'
                                             }`}
                                     >
-                                        <Clock className="w-5 h-5"/>
-                                        <span>{slot.label}</span>
+                                        <div className="flex items-center gap-2">
+                                            <Clock className="w-4 h-4"/>
+                                            <span>{slot.name}</span>
+                                        </div>
+                                        <span className="text-xs font-normal opacity-80">{slot.time}</span>
                                     </button>
                                 ))}
                               </div>
