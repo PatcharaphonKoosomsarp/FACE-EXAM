@@ -378,7 +378,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                 const labeledDescriptor = new faceapi.LabeledFaceDescriptors(user.id, descriptors);
                 setLabeledDescriptors([labeledDescriptor]);
                 // Use threshold 0.6 for FaceMatcher, but we will check distance manually too
-                setFaceMatcher(new faceapi.FaceMatcher([labeledDescriptor], 0.45));
+                setFaceMatcher(new faceapi.FaceMatcher([labeledDescriptor], 0.50));
                 setStatus('SCANNING');
                 startCamera();
 
@@ -462,7 +462,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                     }
 
                     // Threshold 0.60 (Adjusted from 0.35 to be more lenient)
-                    if (bestMatch && bestMatch.distance < 0.45) { 
+                    if (bestMatch && bestMatch.distance < 0.50) { 
                         clearInterval(interval);
                         handleSuccess(resizedDetections[0].descriptor); // Use the descriptor of the detected face
                     }
