@@ -378,7 +378,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                 const labeledDescriptor = new faceapi.LabeledFaceDescriptors(user.id, descriptors);
                 setLabeledDescriptors([labeledDescriptor]);
                 // Use threshold 0.6 for FaceMatcher, but we will check distance manually too
-                setFaceMatcher(new faceapi.FaceMatcher([labeledDescriptor], 0.6));
+                setFaceMatcher(new faceapi.FaceMatcher([labeledDescriptor], 0.45));
                 setStatus('SCANNING');
                 startCamera();
 
