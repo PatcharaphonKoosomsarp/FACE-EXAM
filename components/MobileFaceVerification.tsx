@@ -24,7 +24,6 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
     const [modelsLoaded, setModelsLoaded] = useState(false);
     const [labeledDescriptors, setLabeledDescriptors] = useState<any[]>([]);
     const [faceMatcher, setFaceMatcher] = useState<any | null>(null);
-    const [matchScore, setMatchScore] = useState<{ distance: number, label: string } | null>(null);
     const successHandled = useRef(false);
 
     // 1. Fetch User Photos (Critical) & Exam Info (Optional)
@@ -157,7 +156,7 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
 
                 const labeledDescriptor = new faceapi.LabeledFaceDescriptors(user.id, descriptors);
                 setLabeledDescriptors([labeledDescriptor]);
-                setFaceMatcher(new faceapi.FaceMatcher([labeledDescriptor], 0.55));
+                setFaceMatcher(new faceapi.FaceMatcher([labeledDescriptor], 0.6));
                 setStatus('SCANNING');
                 startCamera();
 
@@ -211,7 +210,7 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
                 const dims = faceapi.matchDimensions(videoRef.current, videoRef.current, true);
                 const resizedDetections = faceapi.resizeResults(detections, dims);
 
-                    if (resizedDetections.length > 0) {
+                if (resizedDetections.length > 0) {
                     let bestMatch: any | null = null;
                     for (const detection of resizedDetections) {
                         if (detection.detection.score > 0.5) {
@@ -224,18 +223,10 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
                         }
                     }
 
-                    if (bestMatch) {
-                        setMatchScore({ distance: bestMatch.distance, label: bestMatch.label });
-                        
-                        if (bestMatch.distance < 0.55) {
-                            clearInterval(interval);
-                            handleSuccess(resizedDetections[0].descriptor);
-                        }
-                    } else {
-                        setMatchScore(null);
+                    if (bestMatch && bestMatch.distance < 0.60) {
+                        clearInterval(interval);
+                        handleSuccess(resizedDetections[0].descriptor);
                     }
-                } else {
-                    setMatchScore(null);
                 }
             } catch (err) {
                 console.error("Detection loop error:", err);
@@ -371,11 +362,6 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
 
                             {/* Status Text (Centered below face box) */}
                             <div className="absolute bottom-20 left-0 right-0 flex flex-col items-center z-20 gap-3">
-                                {matchScore && (
-                                    <div className="bg-black/50 text-white px-4 py-1 rounded-full text-xs backdrop-blur-sm border border-white/10 mb-2">
-                                        Distance: {matchScore.distance.toFixed(4)} ({Math.round((1 - matchScore.distance) * 100)}%)
-                                    </div>
-                                )}
                                 <div className="bg-black/70 text-white px-6 py-2 rounded-full text-lg font-semibold backdrop-blur-sm border border-white/10 whitespace-nowrap shadow-lg animate-in slide-in-from-bottom-4">
                                     {status === 'LOADING_MODELS' || status === 'LOADING_DATA' || status === 'FETCHING_INFO' ? (
                                         <span className="flex items-center">
