@@ -462,7 +462,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                     }
 
                     // Threshold 0.60 (Adjusted from 0.35 to be more lenient)
-                    if (bestMatch && bestMatch.distance < 0.60) { 
+                    if (bestMatch && bestMatch.distance < 0.45) { 
                         clearInterval(interval);
                         handleSuccess(resizedDetections[0].descriptor); // Use the descriptor of the detected face
                     }
