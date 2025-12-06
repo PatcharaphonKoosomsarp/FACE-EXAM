@@ -5,6 +5,7 @@ import { supabase } from '../supabaseClient';
 import { getPrimaryWiFiIP, verifyIPAccess } from '../utils';
 import { QRCodeCanvas } from 'qrcode.react';
 import { agentService } from '../services/agentService';
+import { sessionService } from '../services/sessionService';
 
 // Use global faceapi from script tag
 declare const faceapi: any;
@@ -185,49 +186,11 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
     }, [method, exam.id, user.id]); // Removed handleMobileSuccess from deps
 
     const createSession = async (ip: string, seatNumber: number, descriptorStr: string) => {
-         // Check for existing active session
-         const { data: existingSession, error: findError } = await supabase
-         .from('exam_student_sessions')
-         .select('id')
-         .eq('layout_id', exam.roomId)
-         .eq('student_email', user.email)
-         .eq('is_active', true)
-         .order('created_at', { ascending: false })
-         .limit(1);
-
-        // Prepare profile URL with User ID hash for "Kick" functionality
-        const profileUrl = user.avatarUrl 
-            ? `${user.avatarUrl}#${user.id}`
-            : `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random#${user.id}`;
-
-        if (!findError && existingSession && existingSession.length > 0) {
-            // Update existing session
-            await supabase
-                .from('exam_student_sessions')
-                .update({
-                    student_name: user.name,
-                    seat_number: seatNumber,
-                    ip_address: ip,
-                    face_descriptor: descriptorStr, 
-                    student_profile_url: profileUrl,
-                    updated_at: new Date().toISOString()
-                })
-                .eq('id', existingSession[0].id);
-        } else {
-            // Insert Session Record
-            await supabase.from('exam_student_sessions').insert({
-                layout_id: exam.roomId,
-                student_email: user.email,
-                student_name: user.name,
-                seat_number: seatNumber,
-                ip_address: ip,
-                face_descriptor: descriptorStr,
-                student_profile_url: profileUrl,
-                is_active: true,
-                session_start_time: new Date().toISOString(),
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-            });
+        try {
+            await sessionService.registerSession(exam.roomId, user, seatNumber, ip, descriptorStr);
+        } catch (error) {
+            console.error("Error creating session:", error);
+            throw error;
         }
     };
 
@@ -562,17 +525,17 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <button 
                             onClick={() => setMethod('WEBCAM')}
-                            className="flex flex-col items-center justify-center p-6 border-2 border-gray-200 rounded-xl hover:border-[#E35205] hover:bg-orange-50 transition group"
+                            className="flex flex-col items-center justify-center p-6 border-2 border-gray-200 rounded-xl hover:border-primary hover:bg-orange-50 transition group"
                         >
-                            <Monitor className="w-12 h-12 mb-3 text-gray-400 group-hover:text-[#E35205] transition-colors" />
+                            <Monitor className="w-12 h-12 mb-3 text-gray-400 group-hover:text-primary transition-colors" />
                             <span className="font-semibold text-gray-700">ใช้กล้องเว็บแคม</span>
                             <span className="text-xs text-gray-500 mt-1">บนอุปกรณ์นี้</span>
                         </button>
                         <button 
                             onClick={() => setMethod('QR')}
-                            className="flex flex-col items-center justify-center p-6 border-2 border-gray-200 rounded-xl hover:border-[#E35205] hover:bg-orange-50 transition group"
+                            className="flex flex-col items-center justify-center p-6 border-2 border-gray-200 rounded-xl hover:border-primary hover:bg-orange-50 transition group"
                         >
-                            <Smartphone className="w-12 h-12 mb-3 text-gray-400 group-hover:text-[#E35205] transition-colors" />
+                            <Smartphone className="w-12 h-12 mb-3 text-gray-400 group-hover:text-primary transition-colors" />
                             <span className="font-semibold text-gray-700">สแกน QR Code</span>
                             <span className="text-xs text-gray-500 mt-1">เปิดกล้องผ่านมือถือ</span>
                         </button>
@@ -618,7 +581,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                 <div className="bg-white p-5 border-b flex justify-between items-center">
                     <div>
                         <h3 className="font-bold text-gray-800 text-lg flex items-center">
-                            <ShieldCheck className="w-5 h-5 mr-2 text-[#E35205]" />
+                            <ShieldCheck className="w-5 h-5 mr-2 text-primary" />
                             ยืนยันตัวตน
                         </h3>
                         <p className="text-xs text-gray-500 mt-1">วิชา: {exam.subjectName}</p>
@@ -640,7 +603,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                     {(status === 'LOADING_MODELS' || status === 'LOADING_DATA') && (
                         <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-20">
                             <div className="text-center">
-                                <Loader2 className="w-10 h-10 text-[#E35205] animate-spin mx-auto mb-4" />
+                                <Loader2 className="w-10 h-10 text-primary animate-spin mx-auto mb-4" />
                                 <p className="text-white font-medium">
                                     {status === 'LOADING_MODELS' ? 'กำลังโหลดโมเดล AI...' : 'กำลังเตรียมข้อมูลใบหน้า...'}
                                 </p>
@@ -651,7 +614,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                     {/* Scanning Overlay */}
                     {status === 'SCANNING' && (
                         <div className="absolute inset-0 flex items-center justify-center bg-black/10">
-                            <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-transparent via-[#E35205] to-transparent animate-[scan_2s_linear_infinite]" style={{ animationName: 'scan' }}></div>
+                            <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent animate-[scan_2s_linear_infinite]" style={{ animationName: 'scan' }}></div>
                             <div className="bg-black/40 backdrop-blur-sm px-4 py-2 rounded-full text-white text-sm border border-white/20">
                                 มองตรงไปที่กล้อง
                             </div>

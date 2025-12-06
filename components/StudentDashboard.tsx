@@ -5,6 +5,7 @@ import FaceRegistration from './FaceRegistration';
 import FaceVerification from './FaceVerification';
 import ExamRoomView from './ExamRoomView';
 import { supabase } from '../supabaseClient';
+import { sessionService } from '../services/sessionService';
 
 interface StudentDashboardProps {
   user: User;
@@ -36,12 +37,7 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user, exams, rooms,
   useEffect(() => {
       const restoreSession = async () => {
           // Check if user has an active session in DB
-          const { data: session } = await supabase
-              .from('exam_student_sessions')
-              .select('layout_id')
-              .eq('student_email', user.email)
-              .eq('is_active', true)
-              .maybeSingle();
+          const session = await sessionService.fetchActiveSession(user.email);
           
           if (session) {
               // Find the exam corresponding to this session
@@ -103,7 +99,7 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user, exams, rooms,
             onClick={() => setViewMode('FACE_REG')}
             className="relative p-6 rounded-2xl border-2 border-gray-100 bg-white hover:border-orange-200 hover:shadow-lg transition-all duration-300 flex flex-col items-center justify-center text-center group"
             >
-                <div className="p-4 rounded-full mb-4 bg-gray-50 text-gray-400 group-hover:bg-orange-50 group-hover:text-[#E35205] transition-colors">
+                <div className="p-4 rounded-full mb-4 bg-gray-50 text-gray-400 group-hover:bg-orange-50 group-hover:text-primary transition-colors">
                     <Camera className="w-8 h-8" />
                 </div>
                 <h3 className="font-bold text-xl mb-2 text-gray-600 group-hover:text-gray-800">ลงทะเบียนใบหน้า</h3>
@@ -115,7 +111,7 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user, exams, rooms,
             onClick={() => setViewMode('EXAM_LIST')}
             className="relative p-6 rounded-2xl border-2 border-gray-100 bg-white hover:border-orange-200 hover:shadow-lg transition-all duration-300 flex flex-col items-center justify-center text-center group"
             >
-                <div className="p-4 rounded-full mb-4 bg-gray-50 text-gray-400 group-hover:bg-orange-50 group-hover:text-[#E35205] transition-colors">
+                <div className="p-4 rounded-full mb-4 bg-gray-50 text-gray-400 group-hover:bg-orange-50 group-hover:text-primary transition-colors">
                     <List className="w-8 h-8" />
                 </div>
                 <h3 className="font-bold text-xl mb-2 text-gray-600 group-hover:text-gray-800">รายการตารางสอบ</h3>
@@ -127,7 +123,7 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user, exams, rooms,
       {/* Face Registration View */}
       {viewMode === 'FACE_REG' && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <button onClick={() => { setViewMode('MENU'); setIsReregistering(false); }} className="flex items-center text-gray-500 hover:text-[#E35205] mb-6 font-medium transition-colors">
+              <button onClick={() => { setViewMode('MENU'); setIsReregistering(false); }} className="flex items-center text-gray-500 hover:text-primary mb-6 font-medium transition-colors">
                 <ArrowLeft className="w-5 h-5 mr-1"/> กลับสู่เมนูหลัก
               </button>
               
@@ -141,7 +137,7 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user, exams, rooms,
                       <div className="flex gap-3 justify-center">
                         <button 
                             onClick={() => setViewMode('EXAM_LIST')}
-                            className="bg-[#E35205] text-white px-6 py-2 rounded-lg font-bold hover:bg-orange-700 transition shadow-md"
+                            className="bg-primary text-white px-6 py-2 rounded-lg font-bold hover:bg-orange-700 transition shadow-md"
                         >
                             ไปที่ตารางสอบ
                         </button>
@@ -166,7 +162,7 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user, exams, rooms,
       {viewMode === 'EXAM_LIST' && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="flex justify-between items-center mb-6">
-                  <button onClick={() => setViewMode('MENU')} className="flex items-center text-gray-500 hover:text-[#E35205] font-medium transition-colors">
+                  <button onClick={() => setViewMode('MENU')} className="flex items-center text-gray-500 hover:text-primary font-medium transition-colors">
                     <ArrowLeft className="w-5 h-5 mr-1"/> เมนูหลัก
                   </button>
                   {user.isFaceRegistered && (
@@ -206,7 +202,7 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user, exams, rooms,
                                               <div className="pt-2">
                                                   <button 
                                                     onClick={() => handleEnterExam(exam)}
-                                                    className="w-full bg-[#E35205] text-white py-2 rounded font-medium hover:bg-orange-700 transition"
+                                                    className="w-full bg-primary text-white py-2 rounded font-medium hover:bg-orange-700 transition"
                                                   >
                                                       เข้าห้องสอบ
                                                   </button>

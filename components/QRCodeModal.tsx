@@ -14,7 +14,7 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({ isOpen, onClose, url }) => {
     return (
         <div className="fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
             <div className="bg-white rounded-2xl overflow-hidden shadow-2xl max-w-sm w-full animate-in zoom-in-95 duration-200">
-                <div className="bg-[#E35205] p-5 flex justify-between items-center text-white relative overflow-hidden">
+                <div className="bg-primary p-5 flex justify-between items-center text-white relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
                     
                     <h3 className="font-bold text-lg relative z-10 flex items-center gap-2">

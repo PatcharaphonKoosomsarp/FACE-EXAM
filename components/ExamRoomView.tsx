@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { User, Exam } from '../types';
 import { supabase } from '../supabaseClient';
+import { examService } from '../services/examService';
+import { sessionService } from '../services/sessionService';
 import { 
     LogOut, ArrowLeft, Loader2, MapPin, Clock, Calendar, 
     LayoutGrid, MonitorX, Ban, User as UserIcon, ShieldCheck 
@@ -19,13 +21,8 @@ const ExamRoomView: React.FC<ExamRoomViewProps> = ({ user, exam, onExit }) => {
 
     useEffect(() => {
         const fetchRoomName = async () => {
-            const { data } = await supabase
-                .from('room_seat_layouts')
-                .select('room_name')
-                .eq('id', exam.roomId)
-                .single();
-            
-            if (data) setRoomName(data.room_name);
+            const name = await examService.fetchRoomName(exam.roomId);
+            setRoomName(name);
         };
         fetchRoomName();
     }, [exam.roomId]);
@@ -33,18 +30,11 @@ const ExamRoomView: React.FC<ExamRoomViewProps> = ({ user, exam, onExit }) => {
     useEffect(() => {
         const fetchSession = async () => {
             try {
-                const { data, error } = await supabase
-                    .from('exam_student_sessions')
-                    .select('*')
-                    .eq('layout_id', exam.roomId)
-                    .eq('student_email', user.email)
-                    .eq('is_active', true)
-                    .order('created_at', { ascending: false })
-                    .limit(1)
-                    .maybeSingle();
-
-                if (error) throw error;
-                setSession(data);
+                const data = await sessionService.fetchActiveSession(user.email);
+                // Ensure it matches the current exam room
+                if (data && data.layout_id === exam.roomId) {
+                    setSession(data);
+                }
             } catch (err) {
                 console.error("Error fetching session:", err);
             } finally {
@@ -62,39 +52,20 @@ const ExamRoomView: React.FC<ExamRoomViewProps> = ({ user, exam, onExit }) => {
 
         try {
             if (session) {
-                // 1. Delete Exam Session
-                const { error: sessionError } = await supabase
-                    .from('exam_student_sessions')
-                    .delete()
-                    .eq('id', session.id);
-
-                if (sessionError) throw sessionError;
-
-                // 2. Delete QR Authentication Record (Clean up)
-                const { error: qrError } = await supabase
-                    .from('qr_authentication')
-                    .delete()
-                    .eq('user_id', user.id);
-                
-                if (qrError) {
-                    console.error("Error deleting QR auth record:", qrError);
-                    // Alert the user so we know why it failed
-                    alert(`ไม่สามารถลบข้อมูล QR ได้: ${qrError.message || qrError.details || 'Unknown error'}`);
-                } else {
-                    console.log("QR auth record deleted successfully");
-                }
+                await sessionService.exitSession(session.id, user.id);
+                console.log("QR auth record deleted successfully");
             }
             onExit();
-        } catch (err) {
+        } catch (err: any) {
             console.error("Error exiting exam:", err);
-            alert("เกิดข้อผิดพลาดในการออกจากห้องสอบ");
+            alert(`เกิดข้อผิดพลาดในการออกจากห้องสอบ: ${err.message || 'Unknown error'}`);
         }
     };
 
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <Loader2 className="w-10 h-10 text-[#E35205] animate-spin" />
+                <Loader2 className="w-10 h-10 text-primary animate-spin" />
             </div>
         );
     }
@@ -121,7 +92,7 @@ const ExamRoomView: React.FC<ExamRoomViewProps> = ({ user, exam, onExit }) => {
                                     </div>
                                 </div>
                             </div>
-                            <div className="bg-[#E35205] text-white px-6 py-2 rounded-xl text-lg font-bold shadow-lg border-2 border-orange-400/30">
+                            <div className="bg-primary text-white px-6 py-2 rounded-xl text-lg font-bold shadow-lg border-2 border-orange-400/30">
                                 Section {exam.section}
                             </div>
                         </div>
@@ -133,7 +104,7 @@ const ExamRoomView: React.FC<ExamRoomViewProps> = ({ user, exam, onExit }) => {
                     <div className="lg:col-span-2">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-lg font-bold text-gray-800 flex items-center">
-                                <span className="bg-orange-100 p-2 rounded-lg mr-3"><LayoutGrid className="w-5 h-5 text-[#E35205]"/></span>
+                                <span className="bg-orange-100 p-2 rounded-lg mr-3"><LayoutGrid className="w-5 h-5 text-primary"/></span>
                                 ข้อมูลที่นั่งสอบ
                             </h3>
                         </div>
@@ -153,9 +124,9 @@ const ExamRoomView: React.FC<ExamRoomViewProps> = ({ user, exam, onExit }) => {
                                 
                                 <div className="flex-1 w-full">
                                     <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-200 flex flex-col items-center justify-center relative overflow-hidden h-full">
-                                        <div className="absolute top-0 left-0 w-full h-2 bg-[#E35205]"></div>
+                                        <div className="absolute top-0 left-0 w-full h-2 bg-primary"></div>
                                         <span className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">หมายเลขที่นั่งของคุณ</span>
-                                        <div className="text-8xl font-bold text-[#E35205] mb-4">
+                                        <div className="text-8xl font-bold text-primary mb-4">
                                             {session?.seat_number || '-'}
                                         </div>
                                         <div className="flex items-center gap-2 text-sm text-gray-500 bg-gray-50 py-2 px-4 rounded-lg">

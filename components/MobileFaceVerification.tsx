@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { ShieldCheck, Loader2, AlertTriangle, RefreshCw, CameraOff, Lock, CheckCircle } from 'lucide-react';
 import { supabase } from '../supabaseClient';
+import { authService } from '../services/authService';
 import { getPrimaryWiFiIP, verifyIPAccess } from '../utils';
 
 // Use global faceapi from script tag
@@ -253,30 +254,7 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
             
             console.log("Using IP for authentication:", ip);
             
-            // Update qr_authentication table for PC to pick up
-            // Schema: id, user_id, ip (inet), status, authenticated_at, expires_at
-            // Note: ip must be valid inet type. Use 0.0.0.0 if unknown.
-            const safeIp = (ip && ip.match(/^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/)) ? ip : '0.0.0.0';
-
-            // 1. Delete existing records (Clean slate, like in the HTML reference)
-            await supabase.from('qr_authentication').delete().eq('user_id', userId);
-
-            // Calculate expiration time (2 minutes from now)
-            const expiresAt = new Date();
-            expiresAt.setMinutes(expiresAt.getMinutes() + 2);
-
-            // 2. Insert new record
-            const { error } = await supabase
-                .from('qr_authentication')
-                .insert({
-                    user_id: userId,
-                    status: 'authenticated',
-                    ip: safeIp,
-                    authenticated_at: new Date().toISOString(),
-                    expires_at: expiresAt.toISOString()
-                });
-
-            if (error) throw error;
+            await authService.authenticateMobile(userId, ip);
 
             // Note: We do NOT create the exam session here. 
             // The PC (FaceVerification.tsx) polls this table, sees 'authenticated', 
@@ -296,7 +274,7 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
             {/* Header */}
             <div className="bg-gray-900 p-4 flex items-center justify-between z-10">
                 <div className="flex items-center text-white">
-                    <ShieldCheck className="w-6 h-6 text-[#E35205] mr-2" />
+                    <ShieldCheck className="w-6 h-6 text-primary mr-2" />
                     <span className="font-bold">Mobile Verification</span>
                 </div>
             </div>
@@ -349,14 +327,14 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
                             {/* Face Box Overlay (Oval with dark background outside) */}
                             <div className="absolute w-72 h-96 border-2 border-white/40 rounded-[50%] top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 shadow-[0_0_0_9999px_rgba(0,0,0,0.7)] z-10">
                                 {/* Corner Markers (Optional, but adds tech feel) */}
-                                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1 w-1 h-2 bg-[#E35205]"></div>
-                                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1 w-1 h-2 bg-[#E35205]"></div>
-                                <div className="absolute top-1/2 left-0 transform -translate-x-1 -translate-y-1/2 w-2 h-1 bg-[#E35205]"></div>
-                                <div className="absolute top-1/2 right-0 transform translate-x-1 -translate-y-1/2 w-2 h-1 bg-[#E35205]"></div>
+                                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1 w-1 h-2 bg-primary"></div>
+                                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1 w-1 h-2 bg-primary"></div>
+                                <div className="absolute top-1/2 left-0 transform -translate-x-1 -translate-y-1/2 w-2 h-1 bg-primary"></div>
+                                <div className="absolute top-1/2 right-0 transform translate-x-1 -translate-y-1/2 w-2 h-1 bg-primary"></div>
                                 
                                 {/* Scanning Line Animation */}
                                 {status === 'SCANNING' && (
-                                    <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-transparent via-[#E35205]/80 to-transparent animate-[scan_2s_linear_infinite] opacity-50"></div>
+                                    <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/80 to-transparent animate-[scan_2s_linear_infinite] opacity-50"></div>
                                 )}
                             </div>
 
@@ -365,7 +343,7 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
                                 <div className="bg-black/70 text-white px-6 py-2 rounded-full text-lg font-semibold backdrop-blur-sm border border-white/10 whitespace-nowrap shadow-lg animate-in slide-in-from-bottom-4">
                                     {status === 'LOADING_MODELS' || status === 'LOADING_DATA' || status === 'FETCHING_INFO' ? (
                                         <span className="flex items-center">
-                                            <Loader2 className="w-5 h-5 text-[#E35205] animate-spin mr-2" />
+                                            <Loader2 className="w-5 h-5 text-primary animate-spin mr-2" />
                                             กำลังเตรียมระบบ...
                                         </span>
                                     ) : status === 'VERIFYING_IP' ? (

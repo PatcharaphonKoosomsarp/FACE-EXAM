@@ -6,6 +6,8 @@ import { FaceMesh, Results } from '@mediapipe/face_mesh';
 import { Camera } from '@mediapipe/camera_utils';
 import { createClient } from '@supabase/supabase-js';
 import { supabase } from '../supabaseClient';
+import { authService } from '../services/authService';
+import { storageService } from '../services/storageService';
 
 const stepsData: FaceRegistrationStep[] = [
   { id: '1', instruction: 'หน้าตรง', description: 'มองตรงไปที่กล้อง', isCompleted: false },
@@ -322,29 +324,8 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
 
   // Mimic the HTML's fake authentication for QR access
   const authenticateForQRAccess = async (userId: string) => {
-      try {
-          console.log('Authenticating for QR access with user ID:', userId);
-          const fakeUser = {
-              id: userId,
-              email: `temp_${userId}@qr.access`,
-              user_metadata: { qr_access: true }
-          };
-          
-          // Set temporary auth state using the structure from HTML (Exact match)
-          const sessionData = {
-              access_token: 'temp_qr_access_token',
-              refresh_token: 'temp_qr_refresh_token',
-              user: fakeUser
-          };
-          
-          // Clear any existing session first to ensure clean state
-          localStorage.removeItem('supabase.auth.token');
-          localStorage.setItem('supabase.auth.token', JSON.stringify(sessionData));
-          
-          return true;
-      } catch (error) {
-          console.error('Error in QR authentication:', error);
-      }
+      await authService.authenticateForQRAccess(userId);
+      return true;
   };
 
   const finishRegistration = async () => {
@@ -391,109 +372,16 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
           for (const photo of capturedPhotos) {
               const col = actionMapping[photo.action];
               if (col) {
-                  const fileName = `${userId}/${photo.action}.png`;
                   let publicUrl = '';
-
-                  // For QR Mode, prioritize 'user-photos' as it's known to work with the RPC flow
-                  if (isQrMode) {
-                      console.log(`QR Mode: Uploading ${photo.action} to user-photos...`);
-                      
-                      // Strategy 1: Try with the "Fake Session" (uploadClient)
-                      let uploadError;
-                      let publicUrlResult;
-                      
-                      try {
-                          const { data, error } = await uploadClient.storage
-                              .from('user-photos')
-                              .upload(fileName, photo.blob, { upsert: true });
-                          if (error) throw error;
-                          publicUrlResult = uploadClient.storage.from('user-photos').getPublicUrl(fileName);
-                      } catch (err1: any) {
-                          console.warn("Strategy 1 (Fake Session -> user-photos) failed:", err1.message);
-                          
-                          // Strategy 2: Try Anonymous upload (Global Client, no fake session)
-                          // We need to ensure we are using the global supabase client which might not have the fake session if we didn't mess with its internal storage key
-                          try {
-                              console.log("Strategy 2: Attempting Anonymous upload to user-photos...");
-                              const { data, error } = await supabase.storage
-                                  .from('user-photos')
-                                  .upload(fileName, photo.blob, { upsert: true });
-                              if (error) throw error;
-                              publicUrlResult = supabase.storage.from('user-photos').getPublicUrl(fileName);
-                          } catch (err2: any) {
-                              console.warn("Strategy 2 (Anonymous -> user-photos) failed:", err2.message);
-
-                              // Strategy 3: Try 'liveness-photos' bucket (Fake Session)
-                              try {
-                                  console.log("Strategy 3: Attempting upload to liveness-photos (Fake Session)...");
-                                  const { data, error } = await uploadClient.storage
-                                      .from('liveness-photos')
-                                      .upload(fileName, photo.blob, { upsert: true });
-                                  if (error) throw error;
-                                  publicUrlResult = uploadClient.storage.from('liveness-photos').getPublicUrl(fileName);
-                              } catch (err3: any) {
-                                  console.warn("Strategy 3 (Fake Session -> liveness-photos) failed:", err3.message);
-
-                                  // Strategy 4: Try 'liveness-photos' bucket (Anonymous)
-                                  try {
-                                      console.log("Strategy 4: Attempting Anonymous upload to liveness-photos...");
-                                      const { data, error } = await supabase.storage
-                                          .from('liveness-photos')
-                                          .upload(fileName, photo.blob, { upsert: true });
-                                      if (error) throw error;
-                                      publicUrlResult = supabase.storage.from('liveness-photos').getPublicUrl(fileName);
-                                  } catch (err4: any) {
-                                      console.warn("All upload strategies failed. Falling back to Base64 encoding directly to Database.");
-                                      
-                                      // Strategy 5: Bypass Storage completely and save Base64 to DB
-                                      // This works if the DB columns are TEXT and can hold large strings
-                                      try {
-                                          const base64String = await new Promise<string>((resolve, reject) => {
-                                              const reader = new FileReader();
-                                              reader.onload = () => resolve(reader.result as string);
-                                              reader.onerror = reject;
-                                              reader.readAsDataURL(photo.blob);
-                                          });
-                                          publicUrl = base64String;
-                                          // Skip the publicUrlResult check since we have the data directly
-                                          continue; 
-                                      } catch (base64Err) {
-                                          console.error("Base64 conversion failed:", base64Err);
-                                          throw new Error(`ไม่สามารถบันทึกรูปภาพได้ (Storage & Base64 failed). กรุณาตรวจสอบ Policy ของ Storage Bucket`);
-                                      }
-                                  }
-                              }
-                          }
-                      }
-
-                      if (publicUrlResult) {
-                          publicUrl = publicUrlResult.data.publicUrl;
-                      }
-                  } else {
-                      // Normal mode: Try liveness-photos first
-                      const { error: uploadError } = await supabase.storage
-                          .from('liveness-photos')
-                          .upload(fileName, photo.blob, { upsert: true, contentType: 'image/png' });
-                      
-                      if (uploadError) {
-                          console.warn("Upload to liveness-photos failed, trying user-photos (legacy)...", uploadError);
-                          // Fallback to user-photos if liveness-photos fails (likely due to RLS or bucket config)
-                          const { error: legacyError } = await supabase.storage
-                              .from('user-photos')
-                              .upload(fileName, photo.blob, { upsert: true, contentType: 'image/png' });
-                          
-                          if (legacyError) throw legacyError; // If both fail, throw error
-
-                          const { data: urlData } = supabase.storage
-                              .from('user-photos')
-                              .getPublicUrl(fileName);
-                          publicUrl = urlData.publicUrl;
-                      } else {
-                          const { data: urlData } = supabase.storage
-                              .from('liveness-photos')
-                              .getPublicUrl(fileName);
-                          publicUrl = urlData.publicUrl;
-                      }
+                  try {
+                      publicUrl = await storageService.uploadPhoto(userId, photo.action, photo.blob, isQrMode);
+                  } catch (e) {
+                      console.warn("Storage upload failed, falling back to Base64:", e);
+                      const reader = new FileReader();
+                      publicUrl = await new Promise((resolve) => {
+                          reader.onloadend = () => resolve(reader.result as string);
+                          reader.readAsDataURL(photo.blob);
+                      });
                   }
                   
                   // Add timestamp to URL to prevent caching issues on client side
@@ -731,7 +619,7 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
                     <button 
                         onClick={() => finishRegistration()}
                         disabled={isSubmitting}
-                        className={`px-8 py-2 rounded-full text-white font-bold transition shadow-lg flex items-center ${isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#E35205] hover:bg-orange-600'}`}
+                        className={`px-8 py-2 rounded-full text-white font-bold transition shadow-lg flex items-center ${isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-primary hover:bg-orange-600'}`}
                     >
                         {isSubmitting ? (
                             <>
@@ -759,17 +647,17 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <button 
                 onClick={() => setMethod('WEBCAM')}
-                className="flex flex-col items-center justify-center p-6 border-2 border-gray-200 rounded-xl hover:border-[#E35205] hover:bg-orange-50 transition group"
+                className="flex flex-col items-center justify-center p-6 border-2 border-gray-200 rounded-xl hover:border-primary hover:bg-orange-50 transition group"
             >
-                <Monitor className="w-12 h-12 mb-3 text-gray-400 group-hover:text-[#E35205] transition-colors" />
+                <Monitor className="w-12 h-12 mb-3 text-gray-400 group-hover:text-primary transition-colors" />
                 <span className="font-semibold text-gray-700">ใช้กล้องเว็บแคม</span>
                 <span className="text-xs text-gray-500 mt-1">บนอุปกรณ์นี้</span>
             </button>
             <button 
                 onClick={() => setMethod('QR')}
-                className="flex flex-col items-center justify-center p-6 border-2 border-gray-200 rounded-xl hover:border-[#E35205] hover:bg-orange-50 transition group"
+                className="flex flex-col items-center justify-center p-6 border-2 border-gray-200 rounded-xl hover:border-primary hover:bg-orange-50 transition group"
             >
-                <Smartphone className="w-12 h-12 mb-3 text-gray-400 group-hover:text-[#E35205] transition-colors" />
+                <Smartphone className="w-12 h-12 mb-3 text-gray-400 group-hover:text-primary transition-colors" />
                 <span className="font-semibold text-gray-700">สแกน QR Code</span>
                 <span className="text-xs text-gray-500 mt-1">เปิดกล้องผ่านมือถือ</span>
             </button>
@@ -848,7 +736,7 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
                     </button>
                     <button 
                         onClick={handleRetry} 
-                        className="bg-[#E35205] text-white px-8 py-2 rounded-full font-bold hover:bg-orange-600 transition shadow-lg flex items-center"
+                        className="bg-primary text-white px-8 py-2 rounded-full font-bold hover:bg-orange-600 transition shadow-lg flex items-center"
                     >
                         <RefreshCw className="w-4 h-4 mr-2" /> ลองใหม่อีกครั้ง
                     </button>
@@ -909,10 +797,10 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
                         <p className="text-sm font-light opacity-90 drop-shadow">{steps[currentStepIndex]?.description}</p>
                     </div>
                     {/* Corner Markers */}
-                    <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1 w-1 h-2 bg-[#E35205]"></div>
-                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1 w-1 h-2 bg-[#E35205]"></div>
-                    <div className="absolute top-1/2 left-0 transform -translate-x-1 -translate-y-1/2 w-2 h-1 bg-[#E35205]"></div>
-                    <div className="absolute top-1/2 right-0 transform translate-x-1 -translate-y-1/2 w-2 h-1 bg-[#E35205]"></div>
+                    <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1 w-1 h-2 bg-primary"></div>
+                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1 w-1 h-2 bg-primary"></div>
+                    <div className="absolute top-1/2 left-0 transform -translate-x-1 -translate-y-1/2 w-2 h-1 bg-primary"></div>
+                    <div className="absolute top-1/2 right-0 transform translate-x-1 -translate-y-1/2 w-2 h-1 bg-primary"></div>
                 </div>
               </>
           )}
@@ -921,7 +809,7 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
         {/* Sidebar Instructions */}
         <div className={`w-full md:w-80 bg-gray-50 p-6 overflow-y-auto border-l border-gray-200 transition-all duration-300 ${targetUserId ? 'max-h-[30vh] md:max-h-full' : ''}`}>
             <h3 className="font-bold text-lg mb-6 text-gray-800 flex items-center sticky top-0 bg-gray-50 z-20 py-2">
-                <CameraIcon className="w-5 h-5 mr-2 text-[#E35205]"/>
+                <CameraIcon className="w-5 h-5 mr-2 text-primary"/>
                 ขั้นตอนการลงทะเบียน
             </h3>
             <div className="space-y-4 relative before:absolute before:left-5 before:top-4 before:bottom-4 before:w-0.5 before:bg-gray-200">
@@ -943,12 +831,12 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
                                     <CheckCircle className="w-3 h-3 text-white"/>
                                 </div>
                             ) : (
-                                <div className={`w-4 h-4 rounded-full border-2 bg-white ${index === currentStepIndex ? 'border-[#E35205] scale-125' : 'border-gray-300'}`}></div>
+                                <div className={`w-4 h-4 rounded-full border-2 bg-white ${index === currentStepIndex ? 'border-primary scale-125' : 'border-gray-300'}`}></div>
                             )}
                         </div>
 
                         <div className="ml-2">
-                            <h4 className={`font-bold text-sm ${index === currentStepIndex ? 'text-[#E35205]' : 'text-gray-700'}`}>{step.instruction}</h4>
+                            <h4 className={`font-bold text-sm ${index === currentStepIndex ? 'text-primary' : 'text-gray-700'}`}>{step.instruction}</h4>
                             <p className="text-xs text-gray-500 mt-0.5">{step.description}</p>
                         </div>
                     </div>

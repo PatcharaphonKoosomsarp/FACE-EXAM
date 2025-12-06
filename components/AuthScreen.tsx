@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { User, UserRole } from '../types';
 import { ScanFace, FileCheck, Download } from 'lucide-react';
 import { supabase } from '../supabaseClient';
+import { authService } from '../services/authService';
 import { determineUserRole } from '../utils';
 
 interface AuthScreenProps {
@@ -14,13 +15,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
   const handleGoogleLogin = async () => {
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin,
-        },
-      });
-      if (error) throw error;
+      await authService.signInWithOAuth('google');
     } catch (error) {
       console.error('Error logging in:', error);
       alert('เกิดข้อผิดพลาดในการล็อกอิน');
@@ -53,13 +48,13 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4 font-sans">
       <div className="bg-white p-8 md:p-10 rounded-[2rem] shadow-xl w-full max-w-lg border border-gray-100 flex flex-col items-center relative overflow-hidden">
         {/* Decorative background element */}
-        <div className="absolute top-0 left-0 w-full h-3 bg-gradient-to-r from-[#E35205] to-orange-400"></div>
+        <div className="absolute top-0 left-0 w-full h-3 bg-gradient-to-r from-primary to-orange-400"></div>
 
         <div className="text-center mb-8 mt-4">
           {/* Combined Logo Container */}
           <div className="relative bg-orange-50 p-6 rounded-full w-32 h-32 flex items-center justify-center mx-auto mb-6 shadow-sm ring-8 ring-orange-50/50 group hover:scale-105 transition-transform duration-500">
             {/* Primary Icon: Scan Face */}
-            <ScanFace className="w-16 h-16 text-[#E35205] stroke-[1.5]" />
+            <ScanFace className="w-16 h-16 text-primary stroke-[1.5]" />
             
             {/* Secondary Badge: Exam/Check */}
             <div className="absolute bottom-0 right-0 bg-white rounded-full p-2 shadow-lg border-2 border-orange-100 flex items-center justify-center">
@@ -115,7 +110,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
       <a
         href="/Agent.zip"
         download="Agent.zip"
-        className="fixed bottom-6 right-6 flex items-center justify-center w-14 h-14 bg-white rounded-full shadow-lg border border-gray-200 text-gray-500 hover:text-[#E35205] hover:border-orange-200 hover:shadow-xl transition-all group z-50"
+        className="fixed bottom-6 right-6 flex items-center justify-center w-14 h-14 bg-white rounded-full shadow-lg border border-gray-200 text-gray-500 hover:text-primary hover:border-orange-200 hover:shadow-xl transition-all group z-50"
         title="Download Agent Files"
       >
         <Download className="w-6 h-6" />

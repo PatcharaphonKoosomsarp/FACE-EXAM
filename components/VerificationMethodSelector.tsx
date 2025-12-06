@@ -15,17 +15,17 @@ const VerificationMethodSelector: React.FC<VerificationMethodSelectorProps> = ({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <button 
                         onClick={onSelectWebcam}
-                        className="flex flex-col items-center justify-center p-6 border-2 border-gray-200 rounded-xl hover:border-[#E35205] hover:bg-orange-50 transition group bg-white"
+                        className="flex flex-col items-center justify-center p-6 border-2 border-gray-200 rounded-xl hover:border-primary hover:bg-orange-50 transition group bg-white"
                     >
-                        <Monitor className="w-12 h-12 mb-3 text-gray-400 group-hover:text-[#E35205] transition-colors" />
+                        <Monitor className="w-12 h-12 mb-3 text-gray-400 group-hover:text-primary transition-colors" />
                         <span className="font-semibold text-gray-700">ใช้กล้องเว็บแคม</span>
                         <span className="text-xs text-gray-500 mt-1">บนอุปกรณ์นี้</span>
                     </button>
                     <button 
                         onClick={onSelectQRCode}
-                        className="flex flex-col items-center justify-center p-6 border-2 border-gray-200 rounded-xl hover:border-[#E35205] hover:bg-orange-50 transition group bg-white"
+                        className="flex flex-col items-center justify-center p-6 border-2 border-gray-200 rounded-xl hover:border-primary hover:bg-orange-50 transition group bg-white"
                     >
-                        <Smartphone className="w-12 h-12 mb-3 text-gray-400 group-hover:text-[#E35205] transition-colors" />
+                        <Smartphone className="w-12 h-12 mb-3 text-gray-400 group-hover:text-primary transition-colors" />
                         <span className="font-semibold text-gray-700">สแกน QR Code</span>
                         <span className="text-xs text-gray-500 mt-1">เปิดกล้องผ่านมือถือ</span>
                     </button>

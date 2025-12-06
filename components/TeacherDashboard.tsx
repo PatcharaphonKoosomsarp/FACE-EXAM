@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 import { supabase } from '../supabaseClient';
+import { sessionService } from '../services/sessionService';
 import emailjs from '@emailjs/browser';
 
 // --- EMAIL CONFIGURATION (ต้องไปสมัครที่ emailjs.com แล้วเอาค่ามาใส่) ---
@@ -252,11 +253,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
       if (!exam) return;
 
       const fetchSessions = async () => {
-          const { data } = await supabase
-              .from('exam_student_sessions')
-              .select('*')
-              .eq('layout_id', exam.roomId)
-              .eq('is_active', true);
+          const data = await sessionService.fetchSessionsByRoomId(exam.roomId);
           
           if (data) {
               setRealtimeSessions(data);
@@ -448,24 +445,14 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             const session = sessions[0];
             setSessionStudent(session);
             
-            const { data } = await supabase
-                .from('resource_logs')
-                .select('*')
-                .eq('session_id', session.id)
-                .order('timestamp', { ascending: false })
-                .limit(1)
-                .single();
+            const data = await sessionService.fetchResourceLogs(session.id);
             
             if (data) {
                 setStudentResourceData(data);
             }
 
             // Fetch violations
-            const { data: violations } = await supabase
-                .from('violation_logs')
-                .select('*')
-                .eq('session_id', session.id)
-                .order('timestamp', { ascending: false });
+            const violations = await sessionService.fetchViolationLogs(session.id);
             
             if (violations) {
                 setStudentViolationLogs(violations);
@@ -790,22 +777,15 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
       try {
           // 1. Fetch all sessions for this exam
-          const { data: sessions, error: sessionError } = await supabase
-              .from('exam_student_sessions')
-              .select('*')
-              .eq('layout_id', exam.roomId);
+          const sessions = await sessionService.fetchAllSessionsByRoomId(exam.roomId);
           
-          if (sessionError || !sessions) throw new Error('Failed to fetch sessions');
+          if (!sessions) throw new Error('Failed to fetch sessions');
 
           // 2. Fetch all violations for these sessions
           const sessionIds = sessions.map(s => s.id);
           let violations: any[] = [];
           if (sessionIds.length > 0) {
-            const { data: vData, error: vError } = await supabase
-                .from('violation_logs')
-                .select('*')
-                .in('session_id', sessionIds);
-            if (!vError && vData) violations = vData;
+            violations = await sessionService.fetchViolationsBySessionIds(sessionIds);
           }
 
           // 3. Prepare CSV Data
@@ -856,13 +836,13 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
           onClick={() => setStep(1)}
           className={`flex flex-col items-center relative z-10 w-24 md:w-32 ${editingExamId ? 'cursor-pointer hover:opacity-80' : 'cursor-default'}`}
         >
-          <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center border-2 font-bold transition-colors duration-300 ${step >= 1 ? 'border-[#E35205] bg-[#E35205] text-white shadow-lg shadow-orange-200' : 'border-gray-300 bg-white text-gray-400'}`}>
+          <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center border-2 font-bold transition-colors duration-300 ${step >= 1 ? 'border-primary bg-primary text-white shadow-lg shadow-orange-200' : 'border-gray-300 bg-white text-gray-400'}`}>
               {step > 1 ? <Check className="w-5 h-5"/> : <span>1</span>}
           </div>
-          <span className={`mt-2 text-xs md:text-sm font-semibold transition-colors duration-300 ${step >= 1 ? 'text-[#E35205]' : 'text-gray-400'}`}>กำหนดห้องสอบ</span>
+          <span className={`mt-2 text-xs md:text-sm font-semibold transition-colors duration-300 ${step >= 1 ? 'text-primary' : 'text-gray-400'}`}>กำหนดห้องสอบ</span>
        </button>
 
-       <div className={`flex-1 h-1 mx-1 rounded-full transition-colors duration-300 ${step >= 2 ? 'bg-[#E35205]' : 'bg-gray-200'}`}></div>
+       <div className={`flex-1 h-1 mx-1 rounded-full transition-colors duration-300 ${step >= 2 ? 'bg-primary' : 'bg-gray-200'}`}></div>
 
        {/* Step 2 */}
        <button 
@@ -871,13 +851,13 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
           onClick={() => setStep(2)}
           className={`flex flex-col items-center relative z-10 w-24 md:w-32 ${editingExamId ? 'cursor-pointer hover:opacity-80' : 'cursor-default'}`}
         >
-          <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center border-2 font-bold transition-colors duration-300 ${step >= 2 ? 'border-[#E35205] bg-[#E35205] text-white shadow-lg shadow-orange-200' : 'border-gray-300 bg-white text-gray-400'}`}>
+          <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center border-2 font-bold transition-colors duration-300 ${step >= 2 ? 'border-primary bg-primary text-white shadow-lg shadow-orange-200' : 'border-gray-300 bg-white text-gray-400'}`}>
               {step > 2 ? <Check className="w-5 h-5"/> : <span>2</span>}
           </div>
-          <span className={`mt-2 text-xs md:text-sm font-semibold transition-colors duration-300 ${step >= 2 ? 'text-[#E35205]' : 'text-gray-400'}`}>กำหนดตารางสอบ</span>
+          <span className={`mt-2 text-xs md:text-sm font-semibold transition-colors duration-300 ${step >= 2 ? 'text-primary' : 'text-gray-400'}`}>กำหนดตารางสอบ</span>
        </button>
 
-       <div className={`flex-1 h-1 mx-1 rounded-full transition-colors duration-300 ${step >= 3 ? 'bg-[#E35205]' : 'bg-gray-200'}`}></div>
+       <div className={`flex-1 h-1 mx-1 rounded-full transition-colors duration-300 ${step >= 3 ? 'bg-primary' : 'bg-gray-200'}`}></div>
 
        {/* Step 3 */}
        <button 
@@ -886,13 +866,13 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
           onClick={() => setStep(3)}
           className={`flex flex-col items-center relative z-10 w-24 md:w-32 ${editingExamId ? 'cursor-pointer hover:opacity-80' : 'cursor-default'}`}
         >
-          <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center border-2 font-bold transition-colors duration-300 ${step >= 3 ? 'border-[#E35205] bg-[#E35205] text-white shadow-lg shadow-orange-200' : 'border-gray-300 bg-white text-gray-400'}`}>
+          <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center border-2 font-bold transition-colors duration-300 ${step >= 3 ? 'border-primary bg-primary text-white shadow-lg shadow-orange-200' : 'border-gray-300 bg-white text-gray-400'}`}>
               {step > 3 ? <Check className="w-5 h-5"/> : <span>3</span>}
           </div>
-          <span className={`mt-2 text-xs md:text-sm font-semibold transition-colors duration-300 ${step >= 3 ? 'text-[#E35205]' : 'text-gray-400'}`}>กำหนด IP Address</span>
+          <span className={`mt-2 text-xs md:text-sm font-semibold transition-colors duration-300 ${step >= 3 ? 'text-primary' : 'text-gray-400'}`}>กำหนด IP Address</span>
        </button>
 
-       <div className={`flex-1 h-1 mx-1 rounded-full transition-colors duration-300 ${step >= 4 ? 'bg-[#E35205]' : 'bg-gray-200'}`}></div>
+       <div className={`flex-1 h-1 mx-1 rounded-full transition-colors duration-300 ${step >= 4 ? 'bg-primary' : 'bg-gray-200'}`}></div>
 
        {/* Step 4 */}
        <button 
@@ -901,10 +881,10 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
           onClick={() => setStep(4)}
           className={`flex flex-col items-center relative z-10 w-24 md:w-32 ${editingExamId ? 'cursor-pointer hover:opacity-80' : 'cursor-default'}`}
         >
-          <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center border-2 font-bold transition-colors duration-300 ${step >= 4 ? 'border-[#E35205] bg-[#E35205] text-white shadow-lg shadow-orange-200' : 'border-gray-300 bg-white text-gray-400'}`}>
+          <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center border-2 font-bold transition-colors duration-300 ${step >= 4 ? 'border-primary bg-primary text-white shadow-lg shadow-orange-200' : 'border-gray-300 bg-white text-gray-400'}`}>
               <span>4</span>
           </div>
-          <span className={`mt-2 text-xs md:text-sm font-semibold transition-colors duration-300 ${step >= 4 ? 'text-[#E35205]' : 'text-gray-400'}`}>กำหนดทรัพยากรที่ไม่อนุญาต</span>
+          <span className={`mt-2 text-xs md:text-sm font-semibold transition-colors duration-300 ${step >= 4 ? 'text-primary' : 'text-gray-400'}`}>กำหนดทรัพยากรที่ไม่อนุญาต</span>
        </button>
     </div>
   );
@@ -1231,7 +1211,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
      return (
        <div className="container mx-auto p-4 max-w-6xl animate-in fade-in duration-300">
-          <button onClick={() => setSelectedExamId(null)} className="flex items-center text-gray-500 hover:text-[#E35205] mb-6 font-medium transition-colors">
+          <button onClick={() => setSelectedExamId(null)} className="flex items-center text-gray-500 hover:text-primary mb-6 font-medium transition-colors">
              <ArrowLeft className="w-5 h-5 mr-1"/> กลับสู่รายการตารางสอบ
           </button>
 
@@ -1262,7 +1242,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                             </div>
                         </div>
                         <div className="flex flex-col items-end gap-3">
-                            <div className="bg-[#E35205] text-white px-6 py-2 rounded-xl text-lg font-bold shadow-lg border-2 border-orange-400/30">
+                            <div className="bg-primary text-white px-6 py-2 rounded-xl text-lg font-bold shadow-lg border-2 border-orange-400/30">
                                 Section {exam.section}
                             </div>
                             <button 
@@ -1280,7 +1260,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                  <div className="lg:col-span-2">
                     <div className="flex justify-between items-center mb-4">
                         <h3 className="text-lg font-bold text-gray-800 flex items-center">
-                            <span className="bg-orange-100 p-2 rounded-lg mr-3"><LayoutGrid className="w-5 h-5 text-[#E35205]"/></span>
+                            <span className="bg-orange-100 p-2 rounded-lg mr-3"><LayoutGrid className="w-5 h-5 text-primary"/></span>
                             แผนผังห้องสอบ ({room.rows} x {room.cols})
                         </h3>
                         <div className="flex gap-2">
@@ -1292,7 +1272,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                             </button>
                             <button 
                                 onClick={() => handleStartEditExam(exam, 1)}
-                                className="text-[#E35205] text-sm hover:bg-orange-50 px-3 py-1.5 rounded-full flex items-center font-medium transition"
+                                className="text-primary text-sm hover:bg-orange-50 px-3 py-1.5 rounded-full flex items-center font-medium transition"
                             >
                                 <Edit className="w-4 h-4 mr-1"/> เปลี่ยน/แก้ไขห้อง
                             </button>
@@ -1421,7 +1401,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                     {/* Violation Notifications */}
                     <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
                         <div className="flex items-center mb-4">
-                            <span className="bg-orange-100 p-2 rounded-lg mr-3"><ShieldAlert className="w-5 h-5 text-[#E35205]"/></span>
+                            <span className="bg-orange-100 p-2 rounded-lg mr-3"><ShieldAlert className="w-5 h-5 text-primary"/></span>
                             <h3 className="text-lg font-bold text-gray-800">
                                 การแจ้งเตือนการละเมิด ({recentViolations.length})
                             </h3>
@@ -1432,7 +1412,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                     <div key={log.id || idx} className="flex items-start p-3 bg-orange-50 rounded-xl border border-orange-100">
                                         <div className="bg-white p-2 rounded-lg border border-orange-200 mr-3 flex flex-col items-center min-w-[50px]">
                                             <span className="text-[10px] text-gray-400 font-bold uppercase">Seat</span>
-                                            <span className="text-lg font-bold text-[#E35205]">{log.seat_number}</span>
+                                            <span className="text-lg font-bold text-primary">{log.seat_number}</span>
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex justify-between items-start">
@@ -1503,26 +1483,26 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                setViewMode('WIZARD'); 
                setStep(1); 
            }}
-           className={`relative p-6 rounded-2xl border-2 transition-all duration-300 flex flex-col items-center justify-center text-center group ${viewMode === 'WIZARD' ? 'border-[#E35205] bg-white ring-4 ring-orange-50 shadow-xl scale-[1.02]' : 'border-gray-100 bg-white hover:border-orange-200 hover:shadow-lg'}`}
+           className={`relative p-6 rounded-2xl border-2 transition-all duration-300 flex flex-col items-center justify-center text-center group ${viewMode === 'WIZARD' ? 'border-primary bg-white ring-4 ring-orange-50 shadow-xl scale-[1.02]' : 'border-gray-100 bg-white hover:border-orange-200 hover:shadow-lg'}`}
          >
-            <div className={`p-4 rounded-full mb-4 transition-colors ${viewMode === 'WIZARD' ? 'bg-[#E35205] text-white' : 'bg-gray-50 text-gray-400 group-hover:bg-orange-50 group-hover:text-[#E35205]'}`}>
+            <div className={`p-4 rounded-full mb-4 transition-colors ${viewMode === 'WIZARD' ? 'bg-primary text-white' : 'bg-gray-50 text-gray-400 group-hover:bg-orange-50 group-hover:text-primary'}`}>
                 <Plus className="w-8 h-8" />
             </div>
             <h3 className={`font-bold text-xl mb-2 ${viewMode === 'WIZARD' ? 'text-gray-800' : 'text-gray-600'}`}>จัดการสอบ</h3>
             <p className="text-sm text-gray-500 max-w-xs">กำหนดห้องสอบ, กำหนดตารางสอบ, กำหนด IP Address เเละ กำหนดทรัพยากรที่ไม่อนุญาต</p>
-            {viewMode === 'WIZARD' && <div className="absolute top-4 right-4 text-[#E35205]"><Check className="w-6 h-6"/></div>}
+            {viewMode === 'WIZARD' && <div className="absolute top-4 right-4 text-primary"><Check className="w-6 h-6"/></div>}
          </button>
 
          <button 
            onClick={() => setViewMode('LIST')}
-           className={`relative p-6 rounded-2xl border-2 transition-all duration-300 flex flex-col items-center justify-center text-center group ${viewMode === 'LIST' ? 'border-[#E35205] bg-white ring-4 ring-orange-50 shadow-xl scale-[1.02]' : 'border-gray-100 bg-white hover:border-orange-200 hover:shadow-lg'}`}
+           className={`relative p-6 rounded-2xl border-2 transition-all duration-300 flex flex-col items-center justify-center text-center group ${viewMode === 'LIST' ? 'border-primary bg-white ring-4 ring-orange-50 shadow-xl scale-[1.02]' : 'border-gray-100 bg-white hover:border-orange-200 hover:shadow-lg'}`}
          >
-             <div className={`p-4 rounded-full mb-4 transition-colors ${viewMode === 'LIST' ? 'bg-[#E35205] text-white' : 'bg-gray-50 text-gray-400 group-hover:bg-orange-50 group-hover:text-[#E35205]'}`}>
+             <div className={`p-4 rounded-full mb-4 transition-colors ${viewMode === 'LIST' ? 'bg-primary text-white' : 'bg-gray-50 text-gray-400 group-hover:bg-orange-50 group-hover:text-primary'}`}>
                 <List className="w-8 h-8" />
             </div>
             <h3 className={`font-bold text-xl mb-2 ${viewMode === 'LIST' ? 'text-gray-800' : 'text-gray-600'}`}>รายการตารางสอบ</h3>
             <p className="text-sm text-gray-500 max-w-xs">รายการตารางสอบทั้งหมด และตรวจสอบแผนผังที่นั่ง</p>
-            {viewMode === 'LIST' && <div className="absolute top-4 right-4 text-[#E35205]"><Check className="w-6 h-6"/></div>}
+            {viewMode === 'LIST' && <div className="absolute top-4 right-4 text-primary"><Check className="w-6 h-6"/></div>}
          </button>
       </div>
 
@@ -1557,14 +1537,14 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                     {isCreatingRoom ? (
                       <div className="space-y-6">
                           {editingRoomId && (
-                             <div className="bg-orange-50 p-4 rounded-lg text-[#E35205] text-sm flex justify-between items-center border border-orange-100">
+                             <div className="bg-orange-50 p-4 rounded-lg text-primary text-sm flex justify-between items-center border border-orange-100">
                                 <span className="font-semibold">กำลังแก้ไขห้องสอบ: {rooms.find(r => r.id === editingRoomId)?.name}</span>
                                 <button onClick={handleCancelEditRoom} className="text-gray-500 hover:text-gray-700 underline text-xs">ยกเลิก</button>
                              </div>
                           )}
                           <div>
                             <label className="block text-sm font-bold text-gray-700 mb-2">ชื่อห้องสอบ (เช่น B415)</label>
-                            <input type="text" value={roomName} onChange={e => setRoomName(e.target.value)} className="w-full border-2 border-gray-200 p-4 rounded-xl focus:border-[#E35205] focus:ring-4 focus:ring-orange-100 outline-none transition-all" placeholder="ระบุชื่อห้อง..." autoFocus />
+                            <input type="text" value={roomName} onChange={e => setRoomName(e.target.value)} className="w-full border-2 border-gray-200 p-4 rounded-xl focus:border-primary focus:ring-4 focus:ring-orange-100 outline-none transition-all" placeholder="ระบุชื่อห้อง..." autoFocus />
                           </div>
                           <div className="grid grid-cols-2 gap-6">
                             <div>
@@ -1577,7 +1557,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                         const val = e.target.value.replace(/[^0-9]/g, '');
                                         setRows(Number(val));
                                     }} 
-                                    className="w-full border-2 border-gray-200 p-4 rounded-xl focus:border-[#E35205] outline-none" 
+                                    className="w-full border-2 border-gray-200 p-4 rounded-xl focus:border-primary outline-none" 
                                 />
                             </div>
                             <div>
@@ -1590,7 +1570,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                         const val = e.target.value.replace(/[^0-9]/g, '');
                                         setCols(Number(val));
                                     }} 
-                                    className="w-full border-2 border-gray-200 p-4 rounded-xl focus:border-[#E35205] outline-none" 
+                                    className="w-full border-2 border-gray-200 p-4 rounded-xl focus:border-primary outline-none" 
                                 />
                             </div>
                           </div>
@@ -1636,15 +1616,15 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                 {rooms.map(room => (
                                   <div 
                                     key={room.id}
-                                    className={`flex items-center border-2 rounded-xl transition-all ${selectedRoomId === room.id ? 'border-[#E35205] bg-orange-50' : 'border-gray-100 bg-white'}`}
+                                    className={`flex items-center border-2 rounded-xl transition-all ${selectedRoomId === room.id ? 'border-primary bg-orange-50' : 'border-gray-100 bg-white'}`}
                                   >
                                       {/* Clickable Area for Selection */}
                                       <div 
                                         className="flex-1 p-4 cursor-pointer flex items-center"
                                         onClick={() => setSelectedRoomId(room.id)}
                                       >
-                                          <div className={`w-4 h-4 rounded-full border-2 mr-4 flex items-center justify-center ${selectedRoomId === room.id ? 'border-[#E35205]' : 'border-gray-300'}`}>
-                                              {selectedRoomId === room.id && <div className="w-2 h-2 rounded-full bg-[#E35205]"></div>}
+                                          <div className={`w-4 h-4 rounded-full border-2 mr-4 flex items-center justify-center ${selectedRoomId === room.id ? 'border-primary' : 'border-gray-300'}`}>
+                                              {selectedRoomId === room.id && <div className="w-2 h-2 rounded-full bg-primary"></div>}
                                           </div>
                                           <div>
                                              <span className="font-bold text-gray-700 block">{room.name}</span>
@@ -1657,7 +1637,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                           <button 
                                             type="button"
                                             onClick={() => handleStartEditRoom(room)} 
-                                            className="p-2 rounded-lg hover:bg-orange-100 hover:text-[#E35205] text-gray-400 transition"
+                                            className="p-2 rounded-lg hover:bg-orange-100 hover:text-primary text-gray-400 transition"
                                             title="แก้ไขห้องสอบ"
                                           >
                                               <Edit className="w-4 h-4" />
@@ -1683,7 +1663,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                     )}
 
                     <div className="mt-10 flex justify-end">
-                       <button onClick={handleStep1Next} className={`${editingExamId ? 'bg-green-600 hover:bg-green-700 shadow-green-200' : 'bg-[#E35205] hover:bg-orange-600 shadow-orange-200'} text-white px-10 py-4 rounded-full font-bold transition flex items-center shadow-xl transform hover:-translate-y-1`}>
+                       <button onClick={handleStep1Next} className={`${editingExamId ? 'bg-green-600 hover:bg-green-700 shadow-green-200' : 'bg-primary hover:bg-orange-600 shadow-orange-200'} text-white px-10 py-4 rounded-full font-bold transition flex items-center shadow-xl transform hover:-translate-y-1`}>
                           {editingExamId ? (
                               <>
                                 <Save className="w-5 h-5 mr-2" /> บันทึกการแก้ไข
@@ -1707,23 +1687,23 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div>
                               <label className="block text-sm font-bold text-gray-700 mb-2">รหัสวิชา</label>
-                              <input type="text" value={subjectCode} onChange={e => setSubjectCode(e.target.value)} className="w-full border-2 border-gray-200 p-4 rounded-xl focus:border-[#E35205] outline-none transition-all" placeholder="เช่น 06016317" />
+                              <input type="text" value={subjectCode} onChange={e => setSubjectCode(e.target.value)} className="w-full border-2 border-gray-200 p-4 rounded-xl focus:border-primary outline-none transition-all" placeholder="เช่น 06016317" />
                           </div>
                           <div>
                               <label className="block text-sm font-bold text-gray-700 mb-2">ตอนเรียน (Section)</label>
-                              <input type="text" value={section} onChange={e => setSection(e.target.value)} className="w-full border-2 border-gray-200 p-4 rounded-xl focus:border-[#E35205] outline-none transition-all" placeholder="เช่น 1" />
+                              <input type="text" value={section} onChange={e => setSection(e.target.value)} className="w-full border-2 border-gray-200 p-4 rounded-xl focus:border-primary outline-none transition-all" placeholder="เช่น 1" />
                           </div>
                        </div>
                        
                        <div>
                           <label className="block text-sm font-bold text-gray-700 mb-2">ชื่อวิชา</label>
-                          <input type="text" value={subjectName} onChange={e => setSubjectName(e.target.value)} className="w-full border-2 border-gray-200 p-4 rounded-xl focus:border-[#E35205] outline-none transition-all" placeholder="เช่น Advanced Web Programming" />
+                          <input type="text" value={subjectName} onChange={e => setSubjectName(e.target.value)} className="w-full border-2 border-gray-200 p-4 rounded-xl focus:border-primary outline-none transition-all" placeholder="เช่น Advanced Web Programming" />
                        </div>
 
                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                            <div>
                               <label className="block text-sm font-bold text-gray-700 mb-2">วันที่สอบ</label>
-                              <input type="date" value={examDate} onChange={e => setExamDate(e.target.value)} className="w-full border-2 border-gray-200 p-4 rounded-xl focus:border-[#E35205] outline-none transition-all" />
+                              <input type="date" value={examDate} onChange={e => setExamDate(e.target.value)} className="w-full border-2 border-gray-200 p-4 rounded-xl focus:border-primary outline-none transition-all" />
                            </div>
                            <div className="md:col-span-2">
                               <label className="block text-sm font-bold text-gray-700 mb-2">ช่วงเวลาสอบ</label>
@@ -1737,7 +1717,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                         }}
                                         className={`p-4 rounded-xl border-2 transition-all font-bold text-sm flex flex-col items-center justify-center gap-1
                                             ${startTime === slot.start && endTime === slot.end 
-                                                ? 'border-[#E35205] bg-orange-50 text-[#E35205]' 
+                                                ? 'border-primary bg-orange-50 text-primary' 
                                                 : 'border-gray-200 bg-white text-gray-600 hover:border-orange-200'
                                             }`}
                                     >
@@ -1762,7 +1742,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                        <button onClick={() => setStep(1)} className="text-gray-500 font-bold px-8 py-4 hover:bg-gray-50 rounded-full transition">
                           ย้อนกลับ
                        </button>
-                       <button onClick={handleStep2Next} className={`${editingExamId ? 'bg-green-600 hover:bg-green-700 shadow-green-200' : 'bg-[#E35205] hover:bg-orange-600 shadow-orange-200'} text-white px-10 py-4 rounded-full font-bold transition flex items-center shadow-xl transform hover:-translate-y-1`}>
+                       <button onClick={handleStep2Next} className={`${editingExamId ? 'bg-green-600 hover:bg-green-700 shadow-green-200' : 'bg-primary hover:bg-orange-600 shadow-orange-200'} text-white px-10 py-4 rounded-full font-bold transition flex items-center shadow-xl transform hover:-translate-y-1`}>
                           {editingExamId ? (
                               <>
                                 <Save className="w-5 h-5 mr-2" /> บันทึกการแก้ไข
@@ -1785,7 +1765,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                     <div className="flex flex-col lg:flex-row gap-6">
                         <div className="flex-1 bg-white p-4 rounded-2xl border-2 border-gray-100 shadow-sm min-w-0">
                             <h3 className="font-bold text-lg mb-4 flex items-center">
-                                <MapPin className="w-5 h-5 mr-2 text-[#E35205]"/> เลือกที่นั่งเพื่อกำหนด IP
+                                <MapPin className="w-5 h-5 mr-2 text-primary"/> เลือกที่นั่งเพื่อกำหนด IP
                             </h3>
                             {selectedRoomId ? (
                                 (() => {
@@ -1806,10 +1786,10 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                                             key={i} 
                                                             onClick={() => handleSeatClickForIp(row, col)}
                                                             className={`aspect-square border-2 rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all relative group
-                                                                ${isSelected ? 'border-[#E35205] bg-orange-50 ring-2 ring-orange-200' : hasIp ? 'border-green-300 bg-green-50' : 'border-gray-200 hover:border-gray-300'}`}
+                                                                ${isSelected ? 'border-primary bg-orange-50 ring-2 ring-orange-200' : hasIp ? 'border-green-300 bg-green-50' : 'border-gray-200 hover:border-gray-300'}`}
                                                         >
                                                             <span className="text-[10px] text-gray-400 mb-0.5 absolute top-1.5 left-2">โต๊ะ</span>
-                                                            <span className={`font-bold text-xl mb-1 ${isSelected ? 'text-[#E35205]' : 'text-gray-500'}`}>{row}-{col}</span>
+                                                            <span className={`font-bold text-xl mb-1 ${isSelected ? 'text-primary' : 'text-gray-500'}`}>{row}-{col}</span>
                                                             {hasIp && (
                                                                 <div className="flex flex-col items-center mt-1">
                                                                     <Network className="w-5 h-5 text-green-600 mb-0.5" />
@@ -1835,7 +1815,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                     <div className="space-y-4">
                                         <div className="bg-white p-4 rounded-xl border border-gray-200">
                                             <label className="block text-xs font-bold text-gray-500 uppercase mb-1">ที่นั่ง (Seat)</label>
-                                            <div className="text-2xl font-bold text-[#E35205]">{selectedSeatForIp}</div>
+                                            <div className="text-2xl font-bold text-primary">{selectedSeatForIp}</div>
                                         </div>
                                         
                                         <div>
@@ -1844,7 +1824,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                                 type="text" 
                                                 value={ipInput} 
                                                 onChange={e => setIpInput(e.target.value)} 
-                                                className="w-full border-2 border-gray-200 p-3 rounded-xl focus:border-[#E35205] outline-none font-mono" 
+                                                className="w-full border-2 border-gray-200 p-3 rounded-xl focus:border-primary outline-none font-mono" 
                                                 placeholder="e.g. 192.168.1.10" 
                                                 autoFocus
                                             />
@@ -1853,7 +1833,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
                                         <button 
                                             onClick={handleSaveIp}
-                                            className="w-full bg-[#E35205] text-white py-3 rounded-xl font-bold hover:bg-orange-600 transition shadow-lg"
+                                            className="w-full bg-primary text-white py-3 rounded-xl font-bold hover:bg-orange-600 transition shadow-lg"
                                         >
                                             บันทึก / อัปเดต
                                         </button>
@@ -1872,7 +1852,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                        <button onClick={() => setStep(2)} className="text-gray-500 font-bold px-8 py-4 hover:bg-gray-50 rounded-full transition">
                           ย้อนกลับ
                        </button>
-                       <button onClick={handleStep3Next} className={`${editingExamId ? 'bg-green-600 hover:bg-green-700 shadow-green-200' : 'bg-[#E35205] hover:bg-orange-600 shadow-orange-200'} text-white px-10 py-4 rounded-full font-bold transition flex items-center shadow-xl transform hover:-translate-y-1`}>
+                       <button onClick={handleStep3Next} className={`${editingExamId ? 'bg-green-600 hover:bg-green-700 shadow-green-200' : 'bg-primary hover:bg-orange-600 shadow-orange-200'} text-white px-10 py-4 rounded-full font-bold transition flex items-center shadow-xl transform hover:-translate-y-1`}>
                           {editingExamId ? (
                               <>
                                 <Save className="w-5 h-5 mr-2" /> บันทึกการแก้ไข
@@ -1908,7 +1888,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                         {/* Left Column: Presets */}
                         <div className="bg-gray-50 border-2 border-gray-100 p-6 rounded-2xl h-full">
                             <h3 className="font-bold text-gray-800 text-lg mb-4 flex items-center">
-                                <List className="w-5 h-5 mr-2 text-[#E35205]"/> รายการแนะนำ (คลิกเพื่อเพิ่ม)
+                                <List className="w-5 h-5 mr-2 text-primary"/> รายการแนะนำ (คลิกเพื่อเพิ่ม)
                             </h3>
                             <div className="max-h-[500px] overflow-y-auto custom-scrollbar space-y-6">
                                 {PRESET_BLOCKED_APPS.map((category, catIdx) => (
@@ -1934,7 +1914,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                                         className={`px-3 py-2 rounded-lg text-sm font-medium transition-all border flex items-center gap-2 ${
                                                             isAdded
                                                             ? 'bg-green-100 text-green-700 border-green-200 cursor-default'
-                                                            : 'bg-white text-gray-700 border-gray-200 hover:border-[#E35205] hover:text-[#E35205] hover:shadow-sm'
+                                                            : 'bg-white text-gray-700 border-gray-200 hover:border-primary hover:text-primary hover:shadow-sm'
                                                         }`}
                                                     >
                                                         {isAdded && <Check className="w-3 h-3"/>}
@@ -1969,7 +1949,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                     placeholder="ชื่อโปรแกรม/เว็บ (เช่น Facebook)" 
                                     value={newResourceName}
                                     onChange={e => setNewResourceName(e.target.value)}
-                                    className="flex-1 border-2 border-gray-200 p-3 rounded-xl focus:border-[#E35205] outline-none"
+                                    className="flex-1 border-2 border-gray-200 p-3 rounded-xl focus:border-primary outline-none"
                                 />
                                 <select 
                                     value={newResourceType}
@@ -2024,26 +2004,26 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
       {viewMode === 'LIST' && (
          <div className="p-8 md:p-12 animate-in fade-in duration-500">
             <h2 className="text-2xl font-bold mb-8 text-gray-800 flex items-center">
-               <List className="w-8 h-8 mr-3 text-[#E35205]"/> ตารางสอบทั้งหมด ({exams.length})
+               <List className="w-8 h-8 mr-3 text-primary"/> ตารางสอบทั้งหมด ({exams.length})
             </h2>
             
             {exams.length === 0 ? (
                 <div className="text-center py-20 text-gray-400 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
                     <Calendar className="w-20 h-20 mx-auto mb-6 opacity-20"/>
                     <p className="text-lg mb-2">ยังไม่มีการสร้างตารางสอบ</p>
-                    <button onClick={() => { setViewMode('WIZARD'); setStep(1); }} className="mt-4 text-[#E35205] font-bold hover:underline">เริ่มสร้างการสอบใหม่</button>
+                    <button onClick={() => { setViewMode('WIZARD'); setStep(1); }} className="mt-4 text-primary font-bold hover:underline">เริ่มสร้างการสอบใหม่</button>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {exams.slice().reverse().map(exam => {
                         const room = rooms.find(r => r.id === exam.roomId);
                         return (
-                            <div key={exam.id} className="group bg-white border border-gray-100 rounded-2xl hover:border-[#E35205] hover:ring-4 hover:ring-orange-50 hover:shadow-xl transition-all relative overflow-hidden">
+                            <div key={exam.id} className="group bg-white border border-gray-100 rounded-2xl hover:border-primary hover:ring-4 hover:ring-orange-50 hover:shadow-xl transition-all relative overflow-hidden">
                                 <div className="flex flex-col h-full">
                                     <div className="flex justify-between items-start p-5 pb-0">
-                                        <div className="bg-orange-50 text-[#E35205] font-bold px-3 py-1 rounded-lg text-xs">Sec {exam.section}</div>
+                                        <div className="bg-orange-50 text-primary font-bold px-3 py-1 rounded-lg text-xs">Sec {exam.section}</div>
                                         <div className="flex gap-2">
-                                            <button type="button" onClick={() => handleStartEditExam(exam)} className="p-2 rounded-lg hover:bg-orange-100 hover:text-[#E35205] text-gray-400 transition" title="แก้ไข"><Edit className="w-5 h-5"/></button>
+                                            <button type="button" onClick={() => handleStartEditExam(exam)} className="p-2 rounded-lg hover:bg-orange-100 hover:text-primary text-gray-400 transition" title="แก้ไข"><Edit className="w-5 h-5"/></button>
                                             <button type="button" onClick={() => onDeleteExam(exam.id)} className="p-2 rounded-lg hover:bg-red-100 hover:text-red-500 text-gray-400 transition" title="ลบ"><Trash2 className="w-5 h-5"/></button>
                                         </div>
                                     </div>
