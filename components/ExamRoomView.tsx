@@ -126,7 +126,10 @@ const ExamRoomView: React.FC<ExamRoomViewProps> = ({ user, exam, onExit }) => {
                                     <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-200 flex flex-col items-center justify-center relative overflow-hidden h-full">
                                         <div className="absolute top-0 left-0 w-full h-2 bg-primary"></div>
                                         <span className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">หมายเลขที่นั่งของคุณ</span>
-                                        <div className="text-8xl font-bold text-primary mb-4">
+                                        <div className={`font-bold text-primary mb-4 transition-all leading-none ${
+                                            String(session?.seat_number || '').length > 2 ? 'text-6xl' : 
+                                            String(session?.seat_number || '').length > 1 ? 'text-7xl' : 'text-8xl'
+                                        }`}>
                                             {session?.seat_number || '-'}
                                         </div>
                                         <div className="flex items-center gap-2 text-sm text-gray-500 bg-gray-50 py-2 px-4 rounded-lg">
