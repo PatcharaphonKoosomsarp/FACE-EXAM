@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { User, UserRole } from '../types';
-import { ScanFace, FileCheck, Download } from 'lucide-react';
+import { ScanFace, FileCheck, Download, BookOpen } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import { authService } from '../services/authService';
 import { determineUserRole } from '../utils';
@@ -106,15 +106,49 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
 
       </div>
 
-      {/* Download Agent Button */}
-      <a
-        href="/Agent.zip"
-        download="Agent.zip"
-        className="fixed bottom-6 right-6 flex items-center justify-center w-14 h-14 bg-white rounded-full shadow-lg border border-gray-200 text-gray-500 hover:text-primary hover:border-orange-200 hover:shadow-xl transition-all group z-50"
-        title="Download Agent Files"
-      >
-        <Download className="w-6 h-6" />
-      </a>
+      {/* Action Buttons */}
+      <div className="fixed bottom-6 right-6 flex items-center gap-3 z-50">
+        {/* Teacher Manual */}
+        <a
+          href="/TeacherManual.pdf"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center w-12 h-12 bg-white rounded-full shadow-lg border border-gray-200 text-gray-500 hover:text-primary hover:border-orange-200 hover:shadow-xl transition-all group relative"
+          title="คู่มือการใช้งาน (อาจารย์)"
+        >
+          <BookOpen className="w-5 h-5" />
+          <span className="absolute bottom-full mb-2 right-0 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+            คู่มืออาจารย์
+          </span>
+        </a>
+
+        {/* Student Manual */}
+        <a
+          href="/StudentManual.pdf"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center w-12 h-12 bg-white rounded-full shadow-lg border border-gray-200 text-gray-500 hover:text-primary hover:border-orange-200 hover:shadow-xl transition-all group relative"
+          title="คู่มือการใช้งาน (นักศึกษา)"
+        >
+          <BookOpen className="w-5 h-5" />
+          <span className="absolute bottom-full mb-2 right-0 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+            คู่มือนักศึกษา
+          </span>
+        </a>
+
+        {/* Download Agent Button */}
+        <a
+          href="/Agent.zip"
+          download="Agent.zip"
+          className="flex items-center justify-center w-14 h-14 bg-white rounded-full shadow-lg border border-gray-200 text-gray-500 hover:text-primary hover:border-orange-200 hover:shadow-xl transition-all group relative"
+          title="Download Agent Files"
+        >
+          <Download className="w-6 h-6" />
+          <span className="absolute bottom-full mb-2 right-0 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+            ดาวน์โหลด Agent
+          </span>
+        </a>
+      </div>
     </div>
   );
 };
