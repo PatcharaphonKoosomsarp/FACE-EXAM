@@ -1321,6 +1321,15 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                     const seatKey = `${row}-${col}`;
                                     const assignedIp = room.ipMapping?.[seatKey];
                                     const isConfigured = !!assignedIp;
+                                    const seatNum = (row - 1) * room.cols + col;
+
+                                    // Check for active violation (within last 1 minute)
+                                    const hasActiveViolation = recentViolations.some(v => {
+                                        if (v.seat_number !== seatNum) return false;
+                                        const violationTime = new Date(v.timestamp).getTime();
+                                        const now = Date.now();
+                                        return (now - violationTime) < 60000; // 1 minute
+                                    });
                                     
                                     let student = activeStudents.find(s => 
                                         s.examId === selectedExamId && 
@@ -1330,7 +1339,6 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
                                     // Fallback to realtime sessions if not found in activeStudents
                                     if (!student) {
-                                        const seatNum = (row - 1) * room.cols + col;
                                         const session = realtimeSessions.find(s => s.seat_number === seatNum);
                                         if (session) {
                                             student = {
@@ -1354,14 +1362,16 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                         key={i} 
                                         onClick={() => setViewingSeat(i)}
                                         className={`aspect-square border-2 rounded-xl flex flex-col items-center justify-center shadow-sm transition cursor-pointer relative overflow-hidden group 
-                                            ${student 
-                                                ? 'bg-green-50 border-green-500' 
-                                                : isConfigured 
-                                                    ? 'bg-white border-green-200 hover:border-green-500'
-                                                    : 'bg-gray-50 border-gray-100 hover:border-gray-300'}`}
+                                            ${hasActiveViolation
+                                                ? 'bg-red-100 border-red-500 animate-pulse'
+                                                : student 
+                                                    ? 'bg-green-50 border-green-500' 
+                                                    : isConfigured 
+                                                        ? 'bg-white border-green-200 hover:border-green-500'
+                                                        : 'bg-gray-50 border-gray-100 hover:border-gray-300'}`}
                                     >
                                         <span className="text-[10px] text-gray-400 mb-0.5 absolute top-1.5 left-2">โต๊ะ</span>
-                                        <span className={`font-bold text-xl mb-1 ${student ? 'text-green-700' : isConfigured ? 'text-gray-800' : 'text-gray-300'}`}>
+                                        <span className={`font-bold text-xl mb-1 ${hasActiveViolation ? 'text-red-700' : student ? 'text-green-700' : isConfigured ? 'text-gray-800' : 'text-gray-300'}`}>
                                             {row}-{col}
                                         </span>
                                         
@@ -1369,11 +1379,11 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                             {student ? (
                                                 <>
                                                     {student.studentProfileUrl ? (
-                                                        <img src={student.studentProfileUrl} alt="Profile" className="w-6 h-6 rounded-full object-cover mb-0.5 border border-green-500" />
+                                                        <img src={student.studentProfileUrl} alt="Profile" className={`w-6 h-6 rounded-full object-cover mb-0.5 border ${hasActiveViolation ? 'border-red-500' : 'border-green-500'}`} />
                                                     ) : (
-                                                        <UserIcon className="w-5 h-5 text-green-600 mb-0.5"/>
+                                                        <UserIcon className={`w-5 h-5 ${hasActiveViolation ? 'text-red-600' : 'text-green-600'} mb-0.5`}/>
                                                     )}
-                                                    <span className="text-[10px] text-green-700 font-bold text-center line-clamp-2 leading-tight w-full" title={student.studentName}>{student.studentName}</span>
+                                                    <span className={`text-[10px] ${hasActiveViolation ? 'text-red-700' : 'text-green-700'} font-bold text-center line-clamp-2 leading-tight w-full`} title={student.studentName}>{student.studentName}</span>
                                                 </>
                                             ) : isConfigured ? (
                                                 <>
