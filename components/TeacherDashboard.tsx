@@ -962,6 +962,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
       // Fallback to session data if prop student is missing but we found a session
       if (!student && sessionStudent) {
+          const isOnline = onlineSessionIds.has(sessionStudent.id);
           student = {
               id: sessionStudent.id,
               studentName: sessionStudent.student_name,
@@ -972,10 +973,16 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
               studentId: 'unknown',
               row: row,
               col: col,
-              status: 'ONLINE',
+              status: isOnline ? 'ONLINE' : 'OFFLINE',
               joinedAt: new Date().toISOString()
           } as ExamAttendance;
+      } else if (student) {
+          // If student exists in activeStudents, double check online status
+          const isOnline = onlineSessionIds.has(student.id);
+          student = { ...student, status: isOnline ? 'ONLINE' : 'OFFLINE' };
       }
+
+      const isOffline = student && student.status === 'OFFLINE';
 
       return (
           <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
@@ -1004,20 +1011,26 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                 <div className="relative mb-4">
                                     <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
                                         {student && student.studentProfileUrl ? (
-                                            <img src={student.studentProfileUrl} alt={student.studentName} className="w-full h-full object-cover" />
+                                            <img src={student.studentProfileUrl} alt={student.studentName} className={`w-full h-full object-cover ${isOffline ? 'grayscale' : ''}`} />
                                         ) : (
                                             <UserIcon className="w-12 h-12 text-gray-400"/>
                                         )}
                                     </div>
-                                    <div className={`absolute bottom-0 right-0 w-6 h-6 rounded-full border-4 border-white shadow-sm ${student ? 'bg-green-500' : assignedIp ? 'bg-orange-500' : 'bg-gray-400'}`}></div>
+                                    <div className={`absolute bottom-0 right-0 w-6 h-6 rounded-full border-4 border-white shadow-sm ${isOffline ? 'bg-red-500' : student ? 'bg-green-500' : assignedIp ? 'bg-orange-500' : 'bg-gray-400'}`}></div>
                                 </div>
                                 {student ? (
                                     <>
                                         <h2 className="text-xl font-bold text-gray-800">{student.studentName}</h2>
                                         <p className="text-sm text-gray-500">{student.studentCode}</p>
-                                        <div className="mt-2 px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700 flex items-center gap-1.5">
-                                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div> ONLINE
-                                        </div>
+                                        {isOffline ? (
+                                            <div className="mt-2 px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700 flex items-center gap-1.5">
+                                                <div className="w-2 h-2 bg-red-500 rounded-full"></div> OFFLINE
+                                            </div>
+                                        ) : (
+                                            <div className="mt-2 px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700 flex items-center gap-1.5">
+                                                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div> ONLINE
+                                            </div>
+                                        )}
                                         <button 
                                             onClick={() => {
                                                 if(window.confirm('ต้องการลบนักศึกษาออกจากที่นั่งนี้ใช่หรือไม่?')) {
