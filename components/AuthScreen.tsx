@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { User, UserRole } from '../types';
-import { ScanFace, FileCheck, Download, BookOpen } from 'lucide-react';
+import { ScanFace, FileCheck, Download, BookOpen, X, UserCheck, GraduationCap } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import { authService } from '../services/authService';
 import { determineUserRole } from '../utils';
@@ -11,6 +11,7 @@ interface AuthScreenProps {
 
 const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [showManualModal, setShowManualModal] = useState(false);
 
   const handleGoogleLogin = async () => {
     setIsLoading(true);
@@ -108,33 +109,17 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
 
       {/* Action Buttons */}
       <div className="fixed bottom-6 right-6 flex items-center gap-3 z-50">
-        {/* Teacher Manual */}
-        <a
-          href="/TeacherManual.pdf"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center justify-center w-12 h-12 bg-white rounded-full shadow-lg border border-gray-200 text-gray-500 hover:text-primary hover:border-orange-200 hover:shadow-xl transition-all group relative"
-          title="คู่มือการใช้งาน (อาจารย์)"
+        {/* Manual Button */}
+        <button
+          onClick={() => setShowManualModal(true)}
+          className="flex items-center justify-center w-14 h-14 bg-white rounded-full shadow-lg border border-gray-200 text-gray-500 hover:text-primary hover:border-orange-200 hover:shadow-xl transition-all group relative"
+          title="คู่มือการใช้งาน"
         >
-          <BookOpen className="w-5 h-5" />
+          <BookOpen className="w-6 h-6" />
           <span className="absolute bottom-full mb-2 right-0 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-            คู่มืออาจารย์
+            คู่มือการใช้งาน
           </span>
-        </a>
-
-        {/* Student Manual */}
-        <a
-          href="/StudentManual.pdf"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center justify-center w-12 h-12 bg-white rounded-full shadow-lg border border-gray-200 text-gray-500 hover:text-primary hover:border-orange-200 hover:shadow-xl transition-all group relative"
-          title="คู่มือการใช้งาน (นักศึกษา)"
-        >
-          <BookOpen className="w-5 h-5" />
-          <span className="absolute bottom-full mb-2 right-0 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-            คู่มือนักศึกษา
-          </span>
-        </a>
+        </button>
 
         {/* Download Agent Button */}
         <a
@@ -149,6 +134,58 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
           </span>
         </a>
       </div>
+
+      {/* Manual Modal */}
+      {showManualModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden animate-fade-in-up">
+            {/* Header */}
+            <div className="bg-primary p-4 flex justify-between items-center">
+              <h2 className="text-white text-xl font-bold flex items-center gap-2">
+                <BookOpen className="w-6 h-6" /> คู่มือการใช้งาน (User Manuals)
+              </h2>
+              <button onClick={() => setShowManualModal(false)} className="text-white/80 hover:text-white transition-colors">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 grid md:grid-cols-2 gap-6">
+              {/* Teacher Section */}
+              <div className="bg-orange-50 rounded-xl p-5 border border-orange-100 hover:shadow-md transition-shadow flex flex-col">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="bg-primary/10 p-2 rounded-lg">
+                    <UserCheck className="w-6 h-6 text-primary" />
+                  </div>
+                  <h3 className="font-bold text-lg text-gray-800">สำหรับอาจารย์</h3>
+                </div>
+                <p className="text-sm text-gray-600 mb-4 leading-relaxed flex-grow">
+                  คู่มือสำหรับอาจารย์ผู้คุมสอบ เพื่อการจัดการห้องสอบ การตรวจสอบสถานะนักศึกษาแบบเรียลไทม์ การจัดการการแจ้งเตือนการทุจริต และการดูรายงานผลการสอบ
+                </p>
+                <a href="/TeacherManual.pdf" target="_blank" rel="noopener noreferrer" className="block w-full py-2 text-center bg-white border border-primary text-primary rounded-lg hover:bg-primary hover:text-white transition-colors font-medium text-sm">
+                  เปิดคู่มืออาจารย์
+                </a>
+              </div>
+
+              {/* Student Section */}
+              <div className="bg-blue-50 rounded-xl p-5 border border-blue-100 hover:shadow-md transition-shadow flex flex-col">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="bg-blue-500/10 p-2 rounded-lg">
+                    <GraduationCap className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <h3 className="font-bold text-lg text-gray-800">สำหรับนักศึกษา</h3>
+                </div>
+                <p className="text-sm text-gray-600 mb-4 leading-relaxed flex-grow">
+                  คู่มือสำหรับนักศึกษา เพื่อการเตรียมความพร้อมก่อนสอบ การลงทะเบียนใบหน้า การติดตั้งและใช้งาน Agent และข้อปฏิบัติในระหว่างการสอบเพื่อป้องกันการทำผิดกฎ
+                </p>
+                <a href="/StudentManual.pdf" target="_blank" rel="noopener noreferrer" className="block w-full py-2 text-center bg-white border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-colors font-medium text-sm">
+                  เปิดคู่มือนักศึกษา
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
