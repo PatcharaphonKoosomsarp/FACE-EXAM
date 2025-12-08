@@ -118,9 +118,10 @@ def save_violation_log(violation_type, resource_name, action_taken, details):
         return
 
     try:
+        # ใช้ datetime.now().astimezone().isoformat() เพื่อส่ง Timezone Offset ไปด้วย
         data = {
             "session_id": current_session_id,
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now().astimezone().isoformat(),
             "violation_type": violation_type,
             "resource_name": resource_name,
             "action_taken": action_taken,
@@ -672,8 +673,10 @@ def monitor_loop():
                 continue
             
             # เตรียมข้อมูลสำหรับบันทึก
+            # ใช้ datetime.now().astimezone().isoformat() เพื่อส่ง Timezone Offset ไปด้วย
+            # Supabase จะแปลงเป็น UTC ให้อัตโนมัติ และ Frontend จะแปลงกลับเป็น Local Time ได้ถูกต้อง
             data_to_log = {
-                "timestamp": datetime.now().isoformat(),
+                "timestamp": datetime.now().astimezone().isoformat(),
                 "cpu_usage": float(resources.get("cpu_usage", 0.0)),
                 "cpu_frequency": float(resources.get("cpu_frequency", 0.0)),
                 "cpu_model": resources.get("cpu_model", "Unknown"),
