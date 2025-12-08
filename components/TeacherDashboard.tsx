@@ -1143,15 +1143,27 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                               <div className="bg-purple-50 p-2 rounded text-center">
                                                   <div className="text-xs text-purple-400 uppercase font-bold">Download</div>
                                                   <div className="flex items-baseline justify-center gap-1 text-xl font-bold text-purple-700 whitespace-nowrap">
-                                                      <span>{studentResourceData.network_download_mb?.toFixed(2) || 0}</span>
-                                                      <span className="text-xs">MB</span>
+                                                      <span>
+                                                        {(studentResourceData.network_download_mb || 0) >= 1000 
+                                                            ? ((studentResourceData.network_download_mb || 0) / 1024).toFixed(2) 
+                                                            : (studentResourceData.network_download_mb || 0).toFixed(2)}
+                                                      </span>
+                                                      <span className="text-xs">
+                                                        {(studentResourceData.network_download_mb || 0) >= 1000 ? 'GB' : 'MB'}
+                                                      </span>
                                                   </div>
                                               </div>
                                               <div className="bg-blue-50 p-2 rounded text-center">
                                                   <div className="text-xs text-blue-400 uppercase font-bold">Upload</div>
                                                   <div className="flex items-baseline justify-center gap-1 text-xl font-bold text-blue-700 whitespace-nowrap">
-                                                      <span>{studentResourceData.network_upload_mb?.toFixed(2) || 0}</span>
-                                                      <span className="text-xs">MB</span>
+                                                      <span>
+                                                        {(studentResourceData.network_upload_mb || 0) >= 1000 
+                                                            ? ((studentResourceData.network_upload_mb || 0) / 1024).toFixed(2) 
+                                                            : (studentResourceData.network_upload_mb || 0).toFixed(2)}
+                                                      </span>
+                                                      <span className="text-xs">
+                                                        {(studentResourceData.network_upload_mb || 0) >= 1000 ? 'GB' : 'MB'}
+                                                      </span>
                                                   </div>
                                               </div>
                                           </div>
