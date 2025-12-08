@@ -113,10 +113,10 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
         {/* Manual Button */}
         <button
           onClick={() => setIsManualOpen(true)}
-          className="flex items-center justify-center w-12 h-12 bg-white rounded-full shadow-lg border border-gray-200 text-gray-500 hover:text-primary hover:border-orange-200 hover:shadow-xl transition-all group relative"
+          className="flex items-center justify-center w-14 h-14 bg-white rounded-full shadow-lg border border-gray-200 text-gray-500 hover:text-primary hover:border-orange-200 hover:shadow-xl transition-all group relative"
           title="คู่มือการใช้งาน"
         >
-          <BookOpen className="w-5 h-5" />
+          <BookOpen className="w-6 h-6" />
           <span className="absolute bottom-full mb-2 right-0 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
             คู่มือการใช้งาน
           </span>
