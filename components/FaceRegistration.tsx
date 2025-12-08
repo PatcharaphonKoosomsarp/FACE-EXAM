@@ -372,17 +372,9 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
           for (const photo of capturedPhotos) {
               const col = actionMapping[photo.action];
               if (col) {
-                  let publicUrl = '';
-                  try {
-                      publicUrl = await storageService.uploadPhoto(userId, photo.action, photo.blob, isQrMode);
-                  } catch (e) {
-                      console.warn("Storage upload failed, falling back to Base64:", e);
-                      const reader = new FileReader();
-                      publicUrl = await new Promise((resolve) => {
-                          reader.onloadend = () => resolve(reader.result as string);
-                          reader.readAsDataURL(photo.blob);
-                      });
-                  }
+                  // Upload directly. If it fails, the main catch block will handle it.
+                  // We DO NOT want to fall back to Base64 anymore.
+                  const publicUrl = await storageService.uploadPhoto(userId, photo.action, photo.blob, isQrMode);
                   
                   // Add timestamp to URL to prevent caching issues on client side
                   photoData[col] = `${publicUrl}?t=${Date.now()}`;
