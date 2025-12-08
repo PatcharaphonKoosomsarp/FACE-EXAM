@@ -248,7 +248,6 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   const [currentSeatNumber, setCurrentSeatNumber] = useState<string | null>(null);
   const [recentViolations, setRecentViolations] = useState<any[]>([]);
   const [currentTime, setCurrentTime] = useState(Date.now());
-  const [onlineSessionIds, setOnlineSessionIds] = useState<Set<string>>(new Set());
 
   // Effect to update current time every second (for violation alerts)
   useEffect(() => {
@@ -269,18 +268,6 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
           
           if (data) {
               setRealtimeSessions(data);
-
-              // Check online status (Active in last 30 seconds)
-              const thirtySecondsAgo = new Date(Date.now() - 30000).toISOString();
-              const { data: activeLogs } = await supabase
-                  .from('resource_logs')
-                  .select('session_id')
-                  .gt('timestamp', thirtySecondsAgo);
-                  
-              if (activeLogs) {
-                  const onlineIds = new Set(activeLogs.map(l => l.session_id));
-                  setOnlineSessionIds(onlineIds);
-              }
           }
       };
 
@@ -1403,8 +1390,6 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                         }
                                     }
 
-                                    const isOnline = student && onlineSessionIds.has(student.id);
-
                                     return (
                                     <div 
                                         key={i} 
@@ -1413,13 +1398,13 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                             ${hasActiveViolation
                                                 ? 'bg-red-100 border-red-500 animate-pulse'
                                                 : student 
-                                                    ? (isOnline ? 'bg-green-50 border-green-500' : 'bg-red-50 border-red-300')
+                                                    ? 'bg-green-50 border-green-500' 
                                                     : isConfigured 
                                                         ? 'bg-white border-green-200 hover:border-green-500'
                                                         : 'bg-gray-50 border-gray-100 hover:border-gray-300'}`}
                                     >
                                         <span className="text-[10px] text-gray-400 mb-0.5 absolute top-1.5 left-2">โต๊ะ</span>
-                                        <span className={`font-bold text-xl mb-1 ${hasActiveViolation ? 'text-red-700' : student ? (isOnline ? 'text-green-700' : 'text-red-700') : isConfigured ? 'text-gray-800' : 'text-gray-300'}`}>
+                                        <span className={`font-bold text-xl mb-1 ${hasActiveViolation ? 'text-red-700' : student ? 'text-green-700' : isConfigured ? 'text-gray-800' : 'text-gray-300'}`}>
                                             {row}-{col}
                                         </span>
                                         
@@ -1427,11 +1412,11 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                             {student ? (
                                                 <>
                                                     {student.studentProfileUrl ? (
-                                                        <img src={student.studentProfileUrl} alt="Profile" className={`w-6 h-6 rounded-full object-cover mb-0.5 border ${hasActiveViolation ? 'border-red-500' : (isOnline ? 'border-green-500' : 'border-red-300')}`} />
+                                                        <img src={student.studentProfileUrl} alt="Profile" className={`w-6 h-6 rounded-full object-cover mb-0.5 border ${hasActiveViolation ? 'border-red-500' : 'border-green-500'}`} />
                                                     ) : (
-                                                        <UserIcon className={`w-5 h-5 ${hasActiveViolation ? 'text-red-600' : (isOnline ? 'text-green-600' : 'text-red-400')} mb-0.5`}/>
+                                                        <UserIcon className={`w-5 h-5 ${hasActiveViolation ? 'text-red-600' : 'text-green-600'} mb-0.5`}/>
                                                     )}
-                                                    <span className={`text-[10px] ${hasActiveViolation ? 'text-red-700' : (isOnline ? 'text-green-700' : 'text-red-700')} font-bold text-center line-clamp-2 leading-tight w-full`} title={student.studentName}>{student.studentName}</span>
+                                                    <span className={`text-[10px] ${hasActiveViolation ? 'text-red-700' : 'text-green-700'} font-bold text-center line-clamp-2 leading-tight w-full`} title={student.studentName}>{student.studentName}</span>
                                                 </>
                                             ) : isConfigured ? (
                                                 <>
