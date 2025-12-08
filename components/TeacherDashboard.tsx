@@ -237,9 +237,6 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   // List View State
   const [selectedExamId, setSelectedExamId] = useState<string | null>(null);
   const [viewingSeat, setViewingSeat] = useState<number | null>(null); 
-  
-  // Time State for UI updates
-  const [currentTime, setCurrentTime] = useState(Date.now());
 
   // Monitoring Data State
   const [studentResourceData, setStudentResourceData] = useState<ResourceLog | null>(null);
@@ -248,14 +245,6 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   const [realtimeSessions, setRealtimeSessions] = useState<any[]>([]);
   const [currentSeatNumber, setCurrentSeatNumber] = useState<string | null>(null);
   const [recentViolations, setRecentViolations] = useState<any[]>([]);
-
-  // Effect to update current time every second
-  useEffect(() => {
-    const interval = setInterval(() => {
-        setCurrentTime(Date.now());
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
 
   // Effect to fetch all active sessions for the room when exam is selected
   useEffect(() => {
@@ -1338,10 +1327,8 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                     const hasActiveViolation = recentViolations.some(v => {
                                         if (v.seat_number !== seatNum) return false;
                                         const violationTime = new Date(v.timestamp).getTime();
-                                        const diff = currentTime - violationTime;
-                                        // Show red if violation happened within last 60 seconds.
-                                        // Also handle slight future timestamps (clock skew) up to 30 seconds to avoid "stuck" red state for too long.
-                                        return diff > -30000 && diff < 60000; 
+                                        const now = Date.now();
+                                        return (now - violationTime) < 60000; // 1 minute
                                     });
                                     
                                     let student = activeStudents.find(s => 
