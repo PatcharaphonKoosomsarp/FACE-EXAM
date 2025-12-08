@@ -368,24 +368,32 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
               'close': 'move_close'
           };
 
+          const actionLabels: Record<string, string> = {
+            'faceForward': 'หน้าตรง',
+            'eyeClosed': 'หลับตา',
+            'eyeOpen': 'ลืมตา',
+            'left': 'หันซ้าย',
+            'right': 'หันขวา',
+            'up': 'เงยหน้า',
+            'down': 'ก้มหน้า',
+            'close': 'ใกล้กล้อง'
+          };
+
           // Upload each photo
           for (const photo of capturedPhotos) {
               const col = actionMapping[photo.action];
               if (col) {
                   let publicUrl = '';
                   try {
+                      // Force upload to storage, do not fallback to base64 easily
                       publicUrl = await storageService.uploadPhoto(userId, photo.action, photo.blob, isQrMode);
+                      
+                      // Add timestamp to URL to prevent caching issues on client side
+                      photoData[col] = `${publicUrl}?t=${Date.now()}`;
                   } catch (e) {
-                      console.warn("Storage upload failed, falling back to Base64:", e);
-                      const reader = new FileReader();
-                      publicUrl = await new Promise((resolve) => {
-                          reader.onloadend = () => resolve(reader.result as string);
-                          reader.readAsDataURL(photo.blob);
-                      });
+                      console.error(`Storage upload failed for ${photo.action}:`, e);
+                      throw new Error(`ไม่สามารถอัปโหลดรูปภาพ ${actionLabels[photo.action] || photo.action} ได้ กรุณาลองใหม่อีกครั้ง`);
                   }
-                  
-                  // Add timestamp to URL to prevent caching issues on client side
-                  photoData[col] = `${publicUrl}?t=${Date.now()}`;
               }
           }
 
