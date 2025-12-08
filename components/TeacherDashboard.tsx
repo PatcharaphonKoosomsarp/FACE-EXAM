@@ -1027,7 +1027,13 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                             <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs">{studentResourceData.all_open_windows.length}</span>
                                         </h5>
                                         <div className="max-h-48 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
-                                            {studentResourceData.all_open_windows.map((win: any, idx: number) => (
+                                            {[...studentResourceData.all_open_windows]
+                                                .sort((a: any, b: any) => {
+                                                    const nameA = typeof a === 'string' ? a : a.title || '';
+                                                    const nameB = typeof b === 'string' ? b : b.title || '';
+                                                    return nameA.localeCompare(nameB);
+                                                })
+                                                .map((win: any, idx: number) => (
                                                 <div key={idx} className="text-sm text-gray-600 bg-gray-50 px-2 py-1.5 rounded border border-gray-100 truncate hover:bg-gray-100 transition">
                                                     {typeof win === 'string' ? win : win.title || JSON.stringify(win)}
                                                 </div>
@@ -1156,10 +1162,23 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                   <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
                                       <h4 className="text-base font-bold text-gray-800 mb-3 flex justify-between items-center">
                                           <span>Running Processes (Top 20)</span>
-                                          <span className="text-sm font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded">Sorted by Memory</span>
+                                          <span className="text-sm font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded">Top 20 (A-Z)</span>
                                       </h4>
+                                      
+                                      {/* Header Row */}
+                                      <div className="flex justify-between items-center text-xs font-semibold text-gray-500 px-2 mb-2 border-b border-gray-100 pb-2">
+                                          <div className="flex items-center gap-2">
+                                              <span className="w-12 text-right">PID</span>
+                                              <span>Process Name</span>
+                                          </div>
+                                          <span>Memory</span>
+                                      </div>
+
                                       <div className="space-y-1 max-h-96 overflow-y-auto pr-1">
-                                          {Array.isArray(studentResourceData.exe_processes) && studentResourceData.exe_processes.slice(0, 20).map((proc: any, idx: number) => (
+                                          {Array.isArray(studentResourceData.exe_processes) && studentResourceData.exe_processes
+                                            .slice(0, 20)
+                                            .sort((a: any, b: any) => (a.name || '').localeCompare(b.name || ''))
+                                            .map((proc: any, idx: number) => (
                                               <div key={idx} className="flex justify-between items-center text-sm p-2 bg-gray-50 rounded hover:bg-gray-100 transition">
                                                   <div className="flex items-center gap-2 overflow-hidden">
                                                       <span className="font-mono text-gray-400 w-12 text-right">{proc.pid}</span>
