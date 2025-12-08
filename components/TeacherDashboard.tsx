@@ -199,6 +199,8 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   const dashboardMountTime = React.useRef(new Date());
   const notifiedViolationIds = React.useRef(new Set<string>());
   const notifiedThrottleMap = React.useRef(new Map<string, number>());
+  const violationReceivedTimes = React.useRef(new Map<string, number>()); // Track when we first saw a violation
+  const isFirstFetch = React.useRef(true); // Track first fetch to avoid flashing old violations
   const [notification, setNotification] = useState<{ message: string, type: 'success' | 'error' | 'info' } | null>(null);
 
   // Wizard State
@@ -353,6 +355,27 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
               .limit(20);
           
           if (data) {
+              // Update received times for visual alerts
+              const now = Date.now();
+              data.forEach(v => {
+                  if (!violationReceivedTimes.current.has(v.id)) {
+                      const vTime = new Date(v.timestamp).getTime();
+                      // If it's the first fetch, only show if it's very recent (e.g. < 1 min ago)
+                      // Otherwise, if it's a new violation from polling, show it now.
+                      if (isFirstFetch.current) {
+                          if (Math.abs(now - vTime) < 60000) {
+                              violationReceivedTimes.current.set(v.id, now);
+                          } else {
+                              violationReceivedTimes.current.set(v.id, 0); // Too old, don't flash
+                          }
+                      } else {
+                          // New violation detected during polling -> Flash it now
+                          violationReceivedTimes.current.set(v.id, now);
+                      }
+                  }
+              });
+              isFirstFetch.current = false;
+
               // Check for new violations to notify
               data.forEach(violation => {
                   const violationTime = new Date(violation.timestamp).getTime();
@@ -383,7 +406,8 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                   return {
                       ...log,
                       student_name: session?.student_name || 'Unknown',
-                      seat_number: session?.seat_number || '?'
+                      seat_number: session?.seat_number || '?',
+                      clientTimestamp: violationReceivedTimes.current.get(log.id) || 0
                   };
               });
               setRecentViolations(violationsWithStudent);
@@ -1335,8 +1359,9 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                     // Check for active violation (within last 1 minute)
                                     const hasActiveViolation = recentViolations.some(v => {
                                         if (v.seat_number !== seatNum) return false;
-                                        const violationTime = new Date(v.timestamp).getTime();
-                                        return (currentTime - violationTime) < 60000; // 1 minute
+                                        const triggerTime = v.clientTimestamp;
+                                        if (!triggerTime) return false;
+                                        return (currentTime - triggerTime) < 60000; // 1 minute from detection
                                     });
                                     
                                     let student = activeStudents.find(s => 
