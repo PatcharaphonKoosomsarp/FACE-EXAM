@@ -245,6 +245,15 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   const [realtimeSessions, setRealtimeSessions] = useState<any[]>([]);
   const [currentSeatNumber, setCurrentSeatNumber] = useState<string | null>(null);
   const [recentViolations, setRecentViolations] = useState<any[]>([]);
+  const [currentTime, setCurrentTime] = useState(Date.now());
+
+  // Effect to update current time every second (for violation alerts)
+  useEffect(() => {
+      const interval = setInterval(() => {
+          setCurrentTime(Date.now());
+      }, 1000);
+      return () => clearInterval(interval);
+  }, []);
 
   // Effect to fetch all active sessions for the room when exam is selected
   useEffect(() => {
@@ -1327,8 +1336,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                     const hasActiveViolation = recentViolations.some(v => {
                                         if (v.seat_number !== seatNum) return false;
                                         const violationTime = new Date(v.timestamp).getTime();
-                                        const now = Date.now();
-                                        return (now - violationTime) < 60000; // 1 minute
+                                        return (currentTime - violationTime) < 60000; // 1 minute
                                     });
                                     
                                     let student = activeStudents.find(s => 
