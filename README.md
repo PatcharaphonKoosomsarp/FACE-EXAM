@@ -9,16 +9,21 @@ FACE-EXAM เป็นระบบที่ออกแบบมาเพื่�
 ## 🚀 ฟีเจอร์หลัก (Key Features)
 
 ### 👨‍🏫 สำหรับอาจารย์ (Teacher)
-- **Dashboard**: หน้าจอควบคุมหลักสำหรับดูสถานะการสอบแบบ Real-time
+- **Dashboard**: หน้าจอควบคุมหลักสำหรับดูสถานะการสอบแบบ Real-time พร้อม UI ที่จัดเรียงข้อมูลให้อ่านง่าย (Sorting & Formatting)
 - **Room Management**: สร้างและจัดการผังที่นั่งสอบ (Layout) และกำหนด IP Address ให้กับแต่ละที่นั่ง
 - **Exam Management**: สร้างตารางสอบ กำหนดวิชา วันเวลา และ **รายการทรัพยากรที่ไม่อนุญาต (Blocked Resources)**
 - **AI Suggestions**: ใช้ AI (Google Gemini) ช่วยแนะนำโปรแกรมหรือเว็บไซต์ที่ควรบล็อกตามชื่อวิชาสอบ
-- **Real-time Monitoring**: ดูสถานะของนักศึกษาแต่ละคน (Online/Offline, Active Window, CPU/RAM Usage)
-- **Violation Alerts**: แจ้งเตือนทันทีเมื่อมีการทุจริต (เช่น เปิดโปรแกรมต้องห้าม) ผ่านหน้า Dashboard และ **Email Notification**
+- **Real-time Monitoring**: 
+  - ดูสถานะของนักศึกษาแต่ละคน (Online/Offline) ด้วยระบบ **Heartbeat Detection**
+  - ตรวจสอบ Active Window, CPU/RAM Usage และ Network Traffic (MB/GB)
+- **Violation Alerts**: 
+  - แจ้งเตือนทันทีเมื่อมีการทุจริต (เช่น เปิดโปรแกรมต้องห้าม)
+  - **Visual Indicators**: ที่นั่งจะเปลี่ยนเป็นสีแดงกระพริบ (Pulsing Red) เป็นเวลา 1 นาที
+  - **Email Notification**: ส่งอีเมลแจ้งเตือนอาจารย์อัตโนมัติ
 - **Report Export**: ส่งออกรายงานผลการสอบและประวัติการใช้งานเป็นไฟล์ CSV
 
 ### 👨‍🎓 สำหรับนักศึกษา (Student)
-- **Face Registration**: ลงทะเบียนใบหน้าก่อนเข้าใช้งานระบบ
+- **Face Registration**: ลงทะเบียนใบหน้าก่อนเข้าใช้งานระบบ (รองรับทั้ง PC และ Mobile)
 - **Face Verification**: ยืนยันตัวตนด้วยใบหน้าก่อนเข้าห้องสอบ
 - **Exam Interface**: หน้าจอแสดงสถานะการเชื่อมต่อและข้อกำหนดการสอบ
 - **Client Agent**: โปรแกรมเบื้องหลังที่คอยตรวจสอบการทำงานของเครื่องและส่งข้อมูลไปยัง Server
@@ -36,6 +41,7 @@ FACE-EXAM เป็นระบบที่ออกแบบมาเพื่�
 - **Platform**: [Supabase](https://supabase.com/)
 - **Database**: PostgreSQL
 - **Authentication**: Supabase Auth (Google OAuth)
+- **Storage**: Supabase Storage (สำหรับเก็บรูปภาพใบหน้า)
 - **Realtime**: Supabase Realtime (สำหรับการอัปเดตสถานะแบบสดๆ)
 
 ### Client Agent (Monitoring System)
@@ -48,6 +54,7 @@ FACE-EXAM เป็นระบบที่ออกแบบมาเพื่�
 - **Capabilities**:
   - ตรวจสอบและปิดโปรแกรม/หน้าต่างที่อยู่ใน Blacklist อัตโนมัติ
   - ส่งข้อมูล Hardware Info และ Screenshot logs (Text-based)
+  - **Timezone-aware Logging**: ส่งข้อมูลเวลาที่ถูกต้องตาม Timezone ของเครื่องผู้ใช้
 
 ### External Services
 - **AI**: Google Gemini API (สำหรับแนะนำ Blocked Resources)
@@ -70,15 +77,21 @@ Agent ฝั่ง Client ใช้เทคนิคการตรวจสอ
   - *Smart Domain*: แยกชื่อโดเมนจาก URL (เช่น "www.youtube.com" -> ตรวจจับ "youtube")
 - **Process Termination**: เมื่อตรวจพบ Process ที่อยู่ใน Blacklist ระบบจะใช้ `psutil` สั่ง Kill Process นั้นทันที
 
-### 3. Client-Browser Bridge Architecture
+### 3. Offline Detection (Heartbeat Mechanism)
+ระบบตรวจสอบสถานะการเชื่อมต่อของนักศึกษาผ่าน Log การใช้งาน:
+- **Heartbeat**: Agent จะส่งข้อมูล Resource Log ทุกๆ 3-5 วินาที
+- **Detection**: Dashboard จะตรวจสอบว่ามี Log เข้ามาในช่วง 30 วินาทีล่าสุดหรือไม่
+- **Status Update**: หากไม่มี Log เข้ามาเกิน 30 วินาที ระบบจะเปลี่ยนสถานะเป็น **OFFLINE** (สีแดงจาง + รูปขาวดำ) ทันที เพื่อให้อาจารย์ทราบว่าเครื่องนักศึกษามีปัญหาหรือปิดโปรแกรม Agent
+
+### 4. Client-Browser Bridge Architecture
 เนื่องจาก Web Browser มีระบบ Sandbox ทำให้ไม่สามารถเข้าถึงข้อมูล System (CPU, RAM, Processes) ได้โดยตรง
 - **Solution**: สร้าง **Local API Server** ด้วย Python (Flask) รันที่ `localhost:5001`
 - **Workflow**: React Frontend ยิง Request ไปที่ `localhost:5001/api/resource-usage` -> Python Agent ดึงข้อมูลจาก OS -> ส่ง JSON กลับมาให้ Frontend แสดงผล
 
-### 4. Notification Throttling
-เพื่อป้องกันการส่งอีเมลแจ้งเตือนรัวๆ (Spamming) เมื่อนักศึกษาเปิดโปรแกรมค้างไว้
-- **Logic**: ระบบมีการทำ **Throttle** โดยจะส่งอีเมลแจ้งเตือนเพียง 1 ครั้ง ต่อ 1 ประเภทการละเมิด ต่อ 1 นาที (Cooldown 60s)
-- **Implementation**: ใช้ `useRef` เก็บ Timestamp ล่าสุดของการแจ้งเตือนแต่ละประเภทไว้ใน Memory
+### 5. Notification Throttling & Visual Alerts
+เพื่อป้องกันการรบกวนอาจารย์และให้ข้อมูลที่ชัดเจน:
+- **Visual Alert**: เมื่อพบการทุจริต ที่นั่งจะแสดงสีแดงกระพริบเป็นเวลา 1 นาที (Client-side Timer)
+- **Email Throttling**: ระบบจะส่งอีเมลแจ้งเตือนเพียง 1 ครั้ง ต่อ 1 ประเภทการละเมิด ต่อ 1 นาที (Cooldown 60s)
 
 ## 📂 รายละเอียดไฟล์และหน้าที่การทำงาน (File Descriptions)
 
@@ -92,13 +105,13 @@ Agent ฝั่ง Client ใช้เทคนิคการตรวจสอ
 ### 🧩 Components (ส่วนติดต่อผู้ใช้)
 - **`components/AuthScreen.tsx`**: หน้าจอ Login รองรับการเข้าสู่ระบบด้วย Google OAuth, การเลือก Role (Teacher/Student), และมีปุ่มดาวน์โหลด **Agent.zip** สำหรับนักศึกษา
 - **`components/TeacherDashboard.tsx`**: หัวใจหลักของฝั่งอาจารย์ ประกอบด้วย:
-  - *Monitoring View*: ดูสถานะเครื่องนักศึกษาแบบ Real-time
+  - *Monitoring View*: ดูสถานะเครื่องนักศึกษาแบบ Real-time (Online/Offline/Violation)
   - *Exam Management*: สร้าง/แก้ไขตารางสอบและกำหนด Blocked List
-  - *Email Notification*: Logic การส่งอีเมลแจ้งเตือนเมื่อพบการทุจริต (พร้อมระบบ Throttling)
+  - *Email Notification*: Logic การส่งอีเมลแจ้งเตือนเมื่อพบการทุจริต
 - **`components/StudentDashboard.tsx`**: หน้าจอหลักของนักศึกษา แสดงข้อมูลการสอบปัจจุบัน สถานะการเชื่อมต่อกับ Agent และสถานะการยืนยันตัวตน
 - **`components/FaceRegistration.tsx`**: คอมโพเนนต์สำหรับลงทะเบียนใบหน้า ถ่ายภาพ 3 มุม (หน้าตรง, หันซ้าย, หันขวา) และสร้าง Face Descriptor เก็บลงฐานข้อมูล
 - **`components/FaceVerification.tsx`**: ระบบยืนยันตัวตนก่อนเข้าสอบ เปรียบเทียบใบหน้าจากกล้องกับข้อมูลในฐานข้อมูลแบบ Real-time
-- **`components/ExamRoomView.tsx`**: แสดงผังที่นั่งสอบแบบ Grid (Visual Layout) โดยดึงข้อมูลจาก `seat_layouts` และแสดงสถานะ (ว่าง/ไม่ว่าง/ทุจริต) ด้วยสีต่างๆ
+- **`components/ExamRoomView.tsx`**: แสดงผังที่นั่งสอบแบบ Grid (Visual Layout) โดยดึงข้อมูลจาก `seat_layouts` และแสดงสถานะ (ว่าง/ไม่ว่าง/ทุจริต/Offline) ด้วยสีต่างๆ
 - **`components/QRCodeModal.tsx`**: (Optional) สำหรับแสดง QR Code เพื่อให้ Mobile Device สแกน (ในกรณีที่รองรับ Mobile Verification)
 
 ### 🔌 Services (การเชื่อมต่อข้อมูล)
@@ -112,7 +125,7 @@ Agent ฝั่ง Client ใช้เทคนิคการตรวจสอ
   - **Flask Server**: เปิด Port 5001 เพื่อรับ Request จาก React Frontend
   - **Resource Monitor**: ใช้ `psutil` อ่านค่า CPU/RAM และ `pygetwindow` อ่านชื่อหน้าต่าง
   - **Enforcer**: ตรวจสอบ Blacklist และสั่ง `process.kill()` เมื่อพบโปรแกรมต้องห้าม
-  - **Logger**: บันทึกเหตุการณ์และส่งข้อมูลตรงไปยัง Supabase
+  - **Logger**: บันทึกเหตุการณ์และส่งข้อมูลตรงไปยัง Supabase พร้อม Timezone ที่ถูกต้อง
 
 ### 📦 Public Assets
 - **`public/models/`**: โฟลเดอร์เก็บไฟล์โมเดล AI (.json, .bin) ของ **face-api.js** (SSD Mobilenet, Face Landmark, Face Recognition) ที่ต้องโหลดผ่าน URL
@@ -172,9 +185,9 @@ Agent ฝั่ง Client ใช้เทคนิคการตรวจสอ
 1. ในวันสอบ ให้เปิดหน้า **Dashboard**
 2. เลือกวิชาที่กำลังสอบจาก Dropdown
 3. ระบบจะแสดงสถานะของนักศึกษาทุกคนในรูปแบบ Grid หรือ List:
-   - 🟢 **Online**: นักศึกษาเข้าสู่ระบบและ Agent ทำงานปกติ
-   - 🔴 **Offline**: นักศึกษาหลุดการเชื่อมต่อ
-   - ⚠️ **Violation**: พบการทุจริต (กรอบสีแดงกระพริบ)
+   - 🟢 **Online**: นักศึกษาเข้าสู่ระบบและ Agent ทำงานปกติ (Heartbeat OK)
+   - 🔴 **Offline**: นักศึกษาหลุดการเชื่อมต่อ (No Heartbeat > 30s)
+   - ⚠️ **Violation**: พบการทุจริต (กรอบสีแดงกระพริบ 1 นาที)
 4. หากมีการทุจริต (เช่น เปิดโปรแกรมต้องห้าม):
    - ระบบจะแจ้งเตือนบนหน้าจอทันที
    - ระบบจะส่ง **Email** แจ้งเตือนอาจารย์พร้อมรายละเอียด (ชื่อ นศ., โปรแกรมที่เปิด, เวลาที่เกิดเหตุ)
