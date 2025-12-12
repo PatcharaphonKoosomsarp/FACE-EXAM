@@ -249,12 +249,17 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-gray-100">
         {/* Simple Top Bar */}
         <div className="bg-white shadow-sm border-b px-6 py-3 flex justify-between items-center sticky top-0 z-40">
-            <div className="font-bold text-primary text-sm md:text-lg flex items-center">
-                <span className="bg-primary text-white p-1 rounded mr-2 text-xs flex-shrink-0">KMUTNB</span>
-                <span className="truncate max-w-[200px] md:max-w-none" title="FACIAL RECOGNITION AND RESOURCE MONITORING SYSTEM FOR LAB EXAMS">
-                  FACIAL RECOGNITION AND RESOURCE MONITORING SYSTEM FOR LAB EXAMS
-                </span>
-            </div>
+                <div
+                        className="font-bold text-primary text-sm md:text-lg flex items-center cursor-pointer"
+                        role="button"
+                        title="กลับสู่หน้าหลัก"
+                        onClick={() => { window.location.href = '/'; }}
+                >
+                                <span className="bg-primary text-white p-1 rounded mr-2 text-xs flex-shrink-0">KMUTNB</span>
+                                <span className="truncate max-w-[200px] md:max-w-none" title="FACIAL RECOGNITION AND RESOURCE MONITORING SYSTEM FOR LAB EXAMS">
+                                    FACIAL RECOGNITION AND RESOURCE MONITORING SYSTEM FOR LAB EXAMS
+                                </span>
+                        </div>
             <div className="flex items-center gap-4">
                 <div className="flex items-center gap-3">
                     <img src={user.avatarUrl} alt="Avatar" className="w-10 h-10 rounded-full bg-gray-200" />
