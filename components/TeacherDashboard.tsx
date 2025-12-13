@@ -1128,7 +1128,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                                             {log.violation_type.replace(/_/g, ' ')}
                                                         </span>
                                                         <span className="text-sm text-gray-500 font-mono bg-white px-2 py-1 rounded border border-gray-200">
-                                                            {new Date(log.timestamp).toLocaleTimeString()}
+                                                            {new Date(log.timestamp.replace(/Z$|[+-]\d{2}:?\d{2}$/, '')).toLocaleTimeString()}
                                                         </span>
                                                     </div>
                                                     <div className="text-gray-800 text-base mb-3 font-medium break-words leading-relaxed pl-2">
@@ -1277,7 +1277,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                   </div>
                                   
                                   <div className="text-right text-sm text-gray-400">
-                                      Last updated: {new Date(studentResourceData.timestamp).toLocaleTimeString()}
+                                      Last updated: {new Date(studentResourceData.timestamp.replace(/Z$|[+-]\d{2}:?\d{2}$/, '')).toLocaleTimeString()}
                                   </div>
                               </div>
                           ) : (
@@ -1538,7 +1538,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                             <div className="flex justify-between items-start">
                                                 <p className="text-sm font-bold text-gray-800 line-clamp-2 leading-tight" title={log.student_name}>{log.student_name}</p>
                                                 <span className="text-[10px] text-gray-500 bg-white px-1.5 py-0.5 rounded border border-gray-200 whitespace-nowrap ml-2 shrink-0">
-                                                    {new Date(log.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                                    {new Date(log.timestamp.replace(/Z$|[+-]\d{2}:?\d{2}$/, '')).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                                                 </span>
                                             </div>
                                             <p className="text-xs text-red-600 font-medium mt-0.5 flex items-center">
