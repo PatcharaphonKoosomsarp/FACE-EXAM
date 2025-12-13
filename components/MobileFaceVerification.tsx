@@ -157,7 +157,7 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
 
                 const labeledDescriptor = new faceapi.LabeledFaceDescriptors(user.id, descriptors);
                 setLabeledDescriptors([labeledDescriptor]);
-                setFaceMatcher(new faceapi.FaceMatcher([labeledDescriptor], 0.50));
+                setFaceMatcher(new faceapi.FaceMatcher([labeledDescriptor], 0.55));
                 setStatus('SCANNING');
                 startCamera();
 
@@ -214,7 +214,7 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
                 if (resizedDetections.length > 0) {
                     let bestMatch: any | null = null;
                     for (const detection of resizedDetections) {
-                        if (detection.detection.score > 0.50) {
+                        if (detection.detection.score > 0.55) {
                             const match = faceMatcher.findBestMatch(detection.descriptor);
                             if (match.label === user.id) {
                                 if (!bestMatch || match.distance < bestMatch.distance) {
@@ -224,7 +224,7 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
                         }
                     }
 
-                    if (bestMatch && bestMatch.distance < 0.50) {
+                    if (bestMatch && bestMatch.distance < 0.55) {
                         clearInterval(interval);
                         handleSuccess(resizedDetections[0].descriptor);
                     }
