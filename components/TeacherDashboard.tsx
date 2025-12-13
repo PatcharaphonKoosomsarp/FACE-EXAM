@@ -1249,7 +1249,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                           <span className="text-sm font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded">Pie Chart</span>
                                       </h4>
                                       
-                                      <div className="h-64 w-full">
+                                      <div className="h-64 w-full min-w-0">
                                         {(() => {
                                             const processData = (studentResourceData.exe_processes || [])
                                                 .map((p: any) => ({
@@ -1277,7 +1277,8 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                                             outerRadius={80}
                                                             fill="#8884d8"
                                                             dataKey="value"
-                                                            label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
+                                                            nameKey="name"
+                                                            label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
                                                         >
                                                             {processData.map((entry: any, index: number) => (
                                                                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
