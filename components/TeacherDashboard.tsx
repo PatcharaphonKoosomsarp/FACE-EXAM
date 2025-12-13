@@ -1242,59 +1242,56 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                       </div>
                                   </div>
 
-                                  {/* Processes */}
-                                  <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm h-[350px] flex flex-col">
+                                  {/* Processes (Pie Chart) */}
+                                  <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
                                       <h4 className="text-base font-bold text-gray-800 mb-3 flex justify-between items-center">
                                           <span>Top 5 Memory Usage</span>
                                           <span className="text-sm font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded">Pie Chart</span>
                                       </h4>
                                       
-                                      <div className="flex-1 w-full min-h-0">
-                                          {Array.isArray(studentResourceData.exe_processes) && studentResourceData.exe_processes.length > 0 ? (
-                                            <ResponsiveContainer width="100%" height="100%">
-                                                <PieChart>
-                                                    <Pie
-                                                        data={studentResourceData.exe_processes
-                                                            .map((proc: any) => {
-                                                                let memoryMB = 0;
-                                                                if (proc.memory_info?.rss) {
-                                                                    memoryMB = parseFloat((proc.memory_info.rss / 1024 / 1024).toFixed(1));
-                                                                } else if (proc.memory_percent && studentResourceData.ram_total_gb) {
-                                                                    // Fallback: Calculate from percentage
-                                                                    memoryMB = parseFloat(((proc.memory_percent / 100) * studentResourceData.ram_total_gb * 1024).toFixed(1));
-                                                                }
-                                                                
-                                                                return {
-                                                                    name: proc.name,
-                                                                    value: memoryMB,
-                                                                };
-                                                            })
-                                                            .sort((a: any, b: any) => b.value - a.value)
-                                                            .slice(0, 5)
-                                                        }
-                                                        cx="50%"
-                                                        cy="50%"
-                                                        innerRadius={60}
-                                                        outerRadius={80}
-                                                        paddingAngle={5}
-                                                        dataKey="value"
-                                                    >
-                                                        {Array.from({ length: 5 }).map((_, index) => (
-                                                            <Cell key={`cell-${index}`} fill={['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'][index % 5]} />
-                                                        ))}
-                                                    </Pie>
-                                                    <Tooltip 
-                                                        formatter={(value: number) => [`${value} MB`, 'Memory']}
-                                                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                                                    />
-                                                    <Legend verticalAlign="bottom" height={36}/>
-                                                </PieChart>
-                                            </ResponsiveContainer>
-                                          ) : (
-                                              <div className="h-full flex items-center justify-center text-gray-400 italic">
-                                                  No process data available
-                                              </div>
-                                          )}
+                                      <div className="h-64 w-full">
+                                        {(() => {
+                                            const processData = (studentResourceData.exe_processes || [])
+                                                .map((p: any) => ({
+                                                    name: p.name,
+                                                    value: p.memory_info?.rss ? p.memory_info.rss / 1024 / 1024 : 0,
+                                                    pid: p.pid
+                                                }))
+                                                .sort((a: any, b: any) => b.value - a.value)
+                                                .slice(0, 5);
+                                            
+                                            const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
+
+                                            if (processData.length === 0) {
+                                                return <div className="h-full flex items-center justify-center text-gray-400 italic">No process data available</div>;
+                                            }
+
+                                            return (
+                                                <ResponsiveContainer width="100%" height="100%">
+                                                    <PieChart>
+                                                        <Pie
+                                                            data={processData}
+                                                            cx="50%"
+                                                            cy="50%"
+                                                            labelLine={false}
+                                                            outerRadius={80}
+                                                            fill="#8884d8"
+                                                            dataKey="value"
+                                                            label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
+                                                        >
+                                                            {processData.map((entry: any, index: number) => (
+                                                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                                            ))}
+                                                        </Pie>
+                                                        <Tooltip 
+                                                            formatter={(value: number) => [`${value.toFixed(1)} MB`, 'Memory']}
+                                                            contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                                        />
+                                                        <Legend layout="vertical" verticalAlign="middle" align="right" wrapperStyle={{ fontSize: '12px' }}/>
+                                                    </PieChart>
+                                                </ResponsiveContainer>
+                                            );
+                                        })()}
                                       </div>
                                   </div>
                                   
