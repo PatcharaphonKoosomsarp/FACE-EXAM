@@ -1255,10 +1255,20 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                                 <PieChart>
                                                     <Pie
                                                         data={studentResourceData.exe_processes
-                                                            .map((proc: any) => ({
-                                                                name: proc.name,
-                                                                value: proc.memory_info?.rss ? parseFloat((proc.memory_info.rss / 1024 / 1024).toFixed(1)) : 0,
-                                                            }))
+                                                            .map((proc: any) => {
+                                                                let memoryMB = 0;
+                                                                if (proc.memory_info?.rss) {
+                                                                    memoryMB = parseFloat((proc.memory_info.rss / 1024 / 1024).toFixed(1));
+                                                                } else if (proc.memory_percent && studentResourceData.ram_total_gb) {
+                                                                    // Fallback: Calculate from percentage
+                                                                    memoryMB = parseFloat(((proc.memory_percent / 100) * studentResourceData.ram_total_gb * 1024).toFixed(1));
+                                                                }
+                                                                
+                                                                return {
+                                                                    name: proc.name,
+                                                                    value: memoryMB,
+                                                                };
+                                                            })
                                                             .sort((a: any, b: any) => b.value - a.value)
                                                             .slice(0, 5)
                                                         }

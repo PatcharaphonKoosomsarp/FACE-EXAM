@@ -346,16 +346,18 @@ def get_exe_processes():
     """Get list of all .exe processes sorted by CPU usage"""
     try:
         exe_processes = []
-        for proc in psutil.process_iter(['pid', 'name', 'exe', 'cpu_percent', 'memory_percent']):
+        for proc in psutil.process_iter(['pid', 'name', 'exe', 'cpu_percent', 'memory_percent', 'memory_info']):
             try:
                 # ใช้ proc.info['exe'] เพื่อกรองจากไฟล์ที่รันโดยตรง
                 if proc.info['exe'] and proc.info['exe'].lower().endswith('.exe'):
+                    mem_info = proc.info.get('memory_info')
                     exe_processes.append({
                         'pid': proc.info['pid'],
                         'name': os.path.basename(proc.info['exe']),
                         'exe_path': proc.info['exe'],
                         'cpu_percent': proc.info['cpu_percent'] or 0,
-                        'memory_percent': proc.info['memory_percent'] or 0
+                        'memory_percent': proc.info['memory_percent'] or 0,
+                        'memory_info': {'rss': mem_info.rss, 'vms': mem_info.vms} if mem_info else None
                     })
             except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
                 continue
