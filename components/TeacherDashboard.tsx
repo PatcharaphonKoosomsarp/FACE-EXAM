@@ -10,7 +10,6 @@ import { GoogleGenAI } from "@google/genai";
 import { supabase } from '../supabaseClient';
 import { sessionService } from '../services/sessionService';
 import emailjs from '@emailjs/browser';
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 // --- EMAIL CONFIGURATION (ต้องไปสมัครที่ emailjs.com แล้วเอาค่ามาใส่) ---
 // 1. สมัครสมาชิกที่ https://www.emailjs.com/ (ฟรี)
@@ -1242,57 +1241,38 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                       </div>
                                   </div>
 
-                                  {/* Processes (Pie Chart) */}
+                                  {/* Processes */}
                                   <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
                                       <h4 className="text-base font-bold text-gray-800 mb-3 flex justify-between items-center">
-                                          <span>Top 5 Memory Usage</span>
-                                          <span className="text-sm font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded">Pie Chart</span>
+                                          <span>Running Processes (Top 20)</span>
+                                          <span className="text-sm font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded">Top 20 (A-Z)</span>
                                       </h4>
                                       
-                                      <div className="h-64 w-full min-w-0">
-                                        {(() => {
-                                            const processData = (studentResourceData.exe_processes || [])
-                                                .map((p: any) => ({
-                                                    name: p.name,
-                                                    value: p.memory_info?.rss ? p.memory_info.rss / 1024 / 1024 : 0,
-                                                    pid: p.pid
-                                                }))
-                                                .sort((a: any, b: any) => b.value - a.value)
-                                                .slice(0, 5);
-                                            
-                                            const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
+                                      {/* Header Row */}
+                                      <div className="flex justify-between items-center text-xs font-semibold text-gray-500 px-2 mb-2 border-b border-gray-100 pb-2">
+                                          <div className="flex items-center gap-2">
+                                              <span className="w-12 text-right">PID</span>
+                                              <span>Process Name</span>
+                                          </div>
+                                          <span>Memory</span>
+                                      </div>
 
-                                            if (processData.length === 0) {
-                                                return <div className="h-full flex items-center justify-center text-gray-400 italic">No process data available</div>;
-                                            }
-
-                                            return (
-                                                <ResponsiveContainer width="100%" height="100%">
-                                                    <PieChart>
-                                                        <Pie
-                                                            data={processData}
-                                                            cx="50%"
-                                                            cy="50%"
-                                                            labelLine={false}
-                                                            outerRadius={80}
-                                                            fill="#8884d8"
-                                                            dataKey="value"
-                                                            nameKey="name"
-                                                            label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
-                                                        >
-                                                            {processData.map((entry: any, index: number) => (
-                                                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                                            ))}
-                                                        </Pie>
-                                                        <Tooltip 
-                                                            formatter={(value: number) => [`${value.toFixed(1)} MB`, 'Memory']}
-                                                            contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                                                        />
-                                                        <Legend layout="vertical" verticalAlign="middle" align="right" wrapperStyle={{ fontSize: '12px' }}/>
-                                                    </PieChart>
-                                                </ResponsiveContainer>
-                                            );
-                                        })()}
+                                      <div className="space-y-1 max-h-96 overflow-y-auto pr-1">
+                                          {Array.isArray(studentResourceData.exe_processes) && studentResourceData.exe_processes
+                                            .slice(0, 20)
+                                            .sort((a: any, b: any) => (a.name || '').localeCompare(b.name || ''))
+                                            .map((proc: any, idx: number) => (
+                                              <div key={idx} className="flex justify-between items-center text-sm p-2 bg-gray-50 rounded hover:bg-gray-100 transition">
+                                                  <div className="flex items-center gap-2 overflow-hidden">
+                                                      <span className="font-mono text-gray-400 w-12 text-right">{proc.pid}</span>
+                                                      <span className="font-medium text-gray-700 truncate" title={proc.name}>{proc.name}</span>
+                                                  </div>
+                                                  <span className="text-gray-500 whitespace-nowrap">{proc.memory_info?.rss ? (proc.memory_info.rss / 1024 / 1024).toFixed(1) + ' MB' : '-'}</span>
+                                              </div>
+                                          ))}
+                                          {(!studentResourceData.exe_processes || studentResourceData.exe_processes.length === 0) && (
+                                              <div className="text-sm text-gray-400 italic text-center py-4">No process data available</div>
+                                          )}
                                       </div>
                                   </div>
                                   
