@@ -62,13 +62,13 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
   });
 
   const T = {
-      leftTurn: -0.35,
-      rightTurn: 0.35,
-      up: 0.45,
-      down: 0.65,
-      blinkEAR: 0.15, // Relaxed from 0.1 for mobile
-      openEAR: 0.25,  // New threshold: Relaxed from 0.4 to allow looking down at screen
-      closeRatio: 1.25
+      leftTurn: -0.40,
+      rightTurn: 0.40,
+      up: 0.40,
+      down: 0.70,
+      blinkEAR: 0.12, // Stricter blink detection
+      openEAR: 0.30,  // Stricter open eye detection
+      closeRatio: 1.35
   };
 
   const EAR = (lm: any[], idx: number[]) => {
