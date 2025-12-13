@@ -274,12 +274,17 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
               const sessionIds = data.map(s => s.id);
               if (sessionIds.length > 0) {
                   // Check for logs in the last 30 seconds
-                  const thirtySecondsAgo = new Date(Date.now() - 30000).toISOString();
+                  // Fix: Use Local Time ISO string instead of UTC to match DB timestamp without timezone
+                  const now = new Date();
+                  const thirtySecondsAgoDate = new Date(now.getTime() - 30000);
+                  const tzOffset = thirtySecondsAgoDate.getTimezoneOffset() * 60000;
+                  const localISOTime = new Date(thirtySecondsAgoDate.getTime() - tzOffset).toISOString().slice(0, -1);
+                  
                   const { data: logs } = await supabase
                       .from('resource_logs')
                       .select('session_id')
                       .in('session_id', sessionIds)
-                      .gt('timestamp', thirtySecondsAgo);
+                      .gt('timestamp', localISOTime);
                   
                   if (logs) {
                       const onlineIds = new Set(logs.map(l => l.session_id));
