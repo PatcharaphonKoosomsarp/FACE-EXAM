@@ -1254,7 +1254,6 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                               <span className="w-12 text-right">PID</span>
                                               <span>Process Name</span>
                                           </div>
-                                          <span>Memory</span>
                                       </div>
 
                                       <div className="space-y-1 max-h-96 overflow-y-auto pr-1">
@@ -1267,7 +1266,6 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                                       <span className="font-mono text-gray-400 w-12 text-right">{proc.pid}</span>
                                                       <span className="font-medium text-gray-700 truncate" title={proc.name}>{proc.name}</span>
                                                   </div>
-                                                  <span className="text-gray-500 whitespace-nowrap">{proc.memory_info?.rss ? (proc.memory_info.rss / 1024 / 1024).toFixed(1) + ' MB' : '-'}</span>
                                               </div>
                                           ))}
                                           {(!studentResourceData.exe_processes || studentResourceData.exe_processes.length === 0) && (
