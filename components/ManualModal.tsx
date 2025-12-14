@@ -20,7 +20,7 @@ const ManualModal: React.FC<ManualModalProps> = ({ isOpen, onClose }) => {
       
       <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gray-50/50">
+        <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gray-50/50 shrink-0">
           <div>
             <h2 className="text-2xl font-bold text-gray-800">คู่มือการใช้งาน</h2>
             <p className="text-sm text-gray-500 mt-1">ระบบสแกนใบหน้าและติดตามการใช้ทรัพยากรคอมพิวเตอร์</p>
@@ -34,12 +34,12 @@ const ManualModal: React.FC<ManualModalProps> = ({ isOpen, onClose }) => {
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-gray-100 overflow-x-auto">
+        <div className="flex border-b border-gray-100 overflow-x-auto shrink-0">
           <button
             onClick={() => setActiveTab('student')}
             className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors whitespace-nowrap ${
               activeTab === 'student' 
-                ? 'text-primary border-b-2 border-primary bg-orange-50/30' 
+                ? 'text-orange-600 border-b-2 border-orange-600 bg-orange-50' 
                 : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
             }`}
           >
@@ -50,7 +50,7 @@ const ManualModal: React.FC<ManualModalProps> = ({ isOpen, onClose }) => {
             onClick={() => setActiveTab('teacher')}
             className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors whitespace-nowrap ${
               activeTab === 'teacher' 
-                ? 'text-primary border-b-2 border-primary bg-orange-50/30' 
+                ? 'text-orange-600 border-b-2 border-orange-600 bg-orange-50' 
                 : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
             }`}
           >
@@ -61,7 +61,7 @@ const ManualModal: React.FC<ManualModalProps> = ({ isOpen, onClose }) => {
             onClick={() => setActiveTab('agent')}
             className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors whitespace-nowrap ${
               activeTab === 'agent' 
-                ? 'text-primary border-b-2 border-primary bg-orange-50/30' 
+                ? 'text-orange-600 border-b-2 border-orange-600 bg-orange-50' 
                 : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
             }`}
           >
