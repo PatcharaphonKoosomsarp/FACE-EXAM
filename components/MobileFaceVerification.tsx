@@ -375,13 +375,6 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
                                         </div>
                                     </div>
                                 )}
-
-                                    <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/80 to-transparent animate-[scan_2s_linear_infinite] opacity-50"></div>
-                                )}
-                            </div>
-
-                            {/* Status Text (Centered below face box) */}
-                            <div className="absolute bottom-20 left-0 right-0 flex flex-col items-center z-20 gap-3">
                                 <div className="bg-black/70 text-white px-6 py-2 rounded-full text-lg font-semibold backdrop-blur-sm border border-white/10 whitespace-nowrap shadow-lg animate-in slide-in-from-bottom-4">
                                     {status === 'LOADING_MODELS' || status === 'LOADING_DATA' || status === 'FETCHING_INFO' ? (
                                         <span className="flex items-center">
