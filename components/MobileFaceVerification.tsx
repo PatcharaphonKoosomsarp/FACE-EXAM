@@ -25,6 +25,7 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
     const [modelsLoaded, setModelsLoaded] = useState(false);
     const [labeledDescriptors, setLabeledDescriptors] = useState<any[]>([]);
     const [faceMatcher, setFaceMatcher] = useState<any | null>(null);
+    const [currentDistance, setCurrentDistance] = useState<number | null>(null);
     const successHandled = useRef(false);
 
     // 1. Fetch User Photos (Critical) & Exam Info (Optional)
@@ -199,10 +200,8 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
             if (videoRef.current?.paused || videoRef.current?.ended) return;
 
             try {
-                const detections = await faceapi.detectAllFaces(videoRef.current, new faceapi.TinyFaceDetectorOptions()) // Use Tiny for mobile performance? Or SSD?
-                    // Let's stick to SSD if possible, but Tiny is faster on mobile.
-                    // FaceVerification uses SSD. Let's try SSD first. If slow, we might need to switch.
-                    // Actually, let's use SSD for consistency with desktop.
+                // Use SSD MobileNet for consistency with PC (More accurate than Tiny)
+                const detections = await faceapi.detectAllFaces(videoRef.current)
                     .withFaceLandmarks()
                     .withFaceDescriptors();
 
@@ -214,7 +213,7 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
                 if (resizedDetections.length > 0) {
                     let bestMatch: any | null = null;
                     for (const detection of resizedDetections) {
-                        if (detection.detection.score > 0.55) {
+                        if (detection.detection.score > 0.5) {
                             const match = faceMatcher.findBestMatch(detection.descriptor);
                             if (match.label === user.id) {
                                 if (!bestMatch || match.distance < bestMatch.distance) {
@@ -222,6 +221,12 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
                                 }
                             }
                         }
+                    }
+
+                    if (bestMatch) {
+                        setCurrentDistance(bestMatch.distance);
+                    } else {
+                        setCurrentDistance(null);
                     }
 
                     if (bestMatch && bestMatch.distance < 0.55) {
@@ -334,6 +339,37 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
                                 
                                 {/* Scanning Line Animation */}
                                 {status === 'SCANNING' && (
+                                {/* Real-time Distance Feedback */}
+                                {status === 'SCANNING' && currentDistance !== null && (
+                                    <div className="bg-black/60 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/10 flex flex-col items-center animate-in slide-in-from-bottom-2 mb-2">
+                                        <div className="flex items-center gap-3 mb-1">
+                                            <span className="text-sm text-gray-300">ความเหมือน</span>
+                                            <span className={`text-xl font-bold font-mono ${currentDistance < 0.55 ? 'text-green-400' : 'text-yellow-400'}`}>
+                                                {((1 - currentDistance) * 100).toFixed(0)}%
+                                            </span>
+                                        </div>
+                                        
+                                        {/* Visual Bar */}
+                                        <div className="w-48 h-2 bg-gray-700 rounded-full overflow-hidden relative">
+                                            {/* Threshold Marker at 45% */}
+                                            <div className="absolute top-0 bottom-0 w-0.5 bg-white/50 left-[45%] z-10"></div>
+                                            
+                                            <div 
+                                                className={`h-full transition-all duration-300 ${currentDistance < 0.55 ? 'bg-green-500' : 'bg-yellow-500'}`}
+                                                style={{ width: `${Math.min(100, Math.max(5, (1 - currentDistance) * 100))}%` }}
+                                            />
+                                        </div>
+                                        <div className="flex justify-between w-full text-[10px] text-gray-500 mt-1 px-1">
+                                            <span>0%</span>
+                                            <span>เป้าหมาย &gt; 45%</span>
+                                            <span>100%</span>
+                                        </div>
+                                        <div className="text-xs text-gray-400 mt-1 font-mono">
+                                            Dist: {currentDistance.toFixed(3)} (&lt; 0.55)
+                                        </div>
+                                    </div>
+                                )}
+
                                     <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/80 to-transparent animate-[scan_2s_linear_infinite] opacity-50"></div>
                                 )}
                             </div>
