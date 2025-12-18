@@ -890,7 +890,7 @@ def auto_update_ip_mac():
                 if update_res.data:
                     print("Agent: Update IP successful.")
                 else:
-                    print("Agent: Update IP failed.")
+                    print(f"Agent: Update IP failed. Response: {update_res}")
             else:
                 print(f"Agent: Machine is already registered correctly at Seat {mapping['seat_number']}. IP matches.")
             return
@@ -917,7 +917,7 @@ def auto_update_ip_mac():
                     if update_res.data:
                         print("Agent: Binding MAC successful.")
                     else:
-                        print("Agent: Binding MAC failed.")
+                        print(f"Agent: Binding MAC failed. Response: {update_res}")
                     return
                 else:
                     print(f"Agent: Found IP {local_ip} at Seat {mapping['seat_number']}, but it is already bound to MAC {current_mac}.")
