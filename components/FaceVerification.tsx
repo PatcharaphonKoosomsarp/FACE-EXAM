@@ -341,8 +341,8 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                 console.log(`Computed ${descriptors.length} reference descriptors`);
                 const labeledDescriptor = new faceapi.LabeledFaceDescriptors(user.id, descriptors);
                 setLabeledDescriptors([labeledDescriptor]);
-                // Use threshold 0.55 for FaceMatcher to match Mobile settings
-                setFaceMatcher(new faceapi.FaceMatcher([labeledDescriptor], 0.55));
+                // Use threshold 0.45 for FaceMatcher to match Mobile settings
+                setFaceMatcher(new faceapi.FaceMatcher([labeledDescriptor], 0.45));
                 setStatus('SCANNING');
                 startCamera();
 
@@ -431,8 +431,8 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                         setCurrentDistance(null);
                     }
 
-                    // Threshold 0.55 (Adjusted for easier verification and consistency with Mobile)
-                    if (bestMatch && bestMatch.distance < 0.55) { 
+                    // Threshold 0.45 (Adjusted for easier verification and consistency with Mobile)
+                    if (bestMatch && bestMatch.distance < 0.45) { 
                         clearInterval(interval);
                         handleSuccess(resizedDetections[0].descriptor); // Use the descriptor of the detected face
                     }
@@ -628,22 +628,22 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                                 <div className="mt-32 bg-black/70 backdrop-blur-md px-6 py-3 rounded-2xl text-white border border-white/10 animate-in fade-in slide-in-from-bottom-4">
                                     <div className="flex items-center justify-between gap-4 mb-2">
                                         <span className="text-sm text-gray-300">ความเหมือน</span>
-                                        <span className={`text-lg font-bold font-mono ${currentDistance < 0.55 ? 'text-green-400' : 'text-yellow-400'}`}>
+                                        <span className={`text-lg font-bold font-mono ${currentDistance < 0.45 ? 'text-green-400' : 'text-yellow-400'}`}>
                                             {((1 - currentDistance) * 100).toFixed(0)}%
                                         </span>
                                     </div>
                                     
                                     {/* Progress Bar */}
                                     <div className="w-48 h-2 bg-gray-700 rounded-full overflow-hidden relative">
-                                        <div className="absolute top-0 bottom-0 w-0.5 bg-white/50 left-[45%] z-10" title="Threshold"></div>
+                                        <div className="absolute top-0 bottom-0 w-0.5 bg-white/50 left-[55%] z-10" title="Threshold"></div>
                                         <div 
-                                            className={`h-full transition-all duration-300 ${currentDistance < 0.55 ? 'bg-green-500' : 'bg-yellow-500'}`}
+                                            className={`h-full transition-all duration-300 ${currentDistance < 0.45 ? 'bg-green-500' : 'bg-yellow-500'}`}
                                             style={{ width: `${Math.min(100, Math.max(5, (1 - currentDistance) * 100))}%` }}
                                         />
                                     </div>
                                     
                                     <div className="text-xs text-center mt-2 text-gray-400 font-mono">
-                                        Distance: {currentDistance.toFixed(3)} (&lt; 0.55)
+                                        Distance: {currentDistance.toFixed(3)} (&lt; 0.45)
                                     </div>
                                 </div>
                             ) : (

@@ -158,7 +158,8 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
 
                 const labeledDescriptor = new faceapi.LabeledFaceDescriptors(user.id, descriptors);
                 setLabeledDescriptors([labeledDescriptor]);
-                setFaceMatcher(new faceapi.FaceMatcher([labeledDescriptor], 0.55));
+                // Use stricter threshold 0.45 to prevent false positives
+                setFaceMatcher(new faceapi.FaceMatcher([labeledDescriptor], 0.45));
                 setStatus('SCANNING');
                 startCamera();
 
@@ -229,7 +230,8 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
                         setCurrentDistance(null);
                     }
 
-                    if (bestMatch && bestMatch.distance < 0.55) {
+                    // Stricter threshold 0.45
+                    if (bestMatch && bestMatch.distance < 0.45) {
                         clearInterval(interval);
                         handleSuccess(resizedDetections[0].descriptor);
                     }
@@ -350,28 +352,28 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
                                     <div className="bg-black/60 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/10 flex flex-col items-center animate-in slide-in-from-bottom-2 mb-2">
                                         <div className="flex items-center gap-3 mb-1">
                                             <span className="text-sm text-gray-300">ความเหมือน</span>
-                                            <span className={`text-xl font-bold font-mono ${currentDistance < 0.55 ? 'text-green-400' : 'text-yellow-400'}`}>
+                                            <span className={`text-xl font-bold font-mono ${currentDistance < 0.45 ? 'text-green-400' : 'text-yellow-400'}`}>
                                                 {((1 - currentDistance) * 100).toFixed(0)}%
                                             </span>
                                         </div>
                                         
                                         {/* Visual Bar */}
                                         <div className="w-48 h-2 bg-gray-700 rounded-full overflow-hidden relative">
-                                            {/* Threshold Marker at 45% */}
-                                            <div className="absolute top-0 bottom-0 w-0.5 bg-white/50 left-[45%] z-10"></div>
+                                            {/* Threshold Marker at 55% (Distance 0.45) */}
+                                            <div className="absolute top-0 bottom-0 w-0.5 bg-white/50 left-[55%] z-10"></div>
                                             
                                             <div 
-                                                className={`h-full transition-all duration-300 ${currentDistance < 0.55 ? 'bg-green-500' : 'bg-yellow-500'}`}
+                                                className={`h-full transition-all duration-300 ${currentDistance < 0.45 ? 'bg-green-500' : 'bg-yellow-500'}`}
                                                 style={{ width: `${Math.min(100, Math.max(5, (1 - currentDistance) * 100))}%` }}
                                             />
                                         </div>
                                         <div className="flex justify-between w-full text-[10px] text-gray-500 mt-1 px-1">
                                             <span>0%</span>
-                                            <span>เป้าหมาย &gt; 45%</span>
+                                            <span>เป้าหมาย &gt; 55%</span>
                                             <span>100%</span>
                                         </div>
                                         <div className="text-xs text-gray-400 mt-1 font-mono">
-                                            Dist: {currentDistance.toFixed(3)} (&lt; 0.55)
+                                            Dist: {currentDistance.toFixed(3)} (&lt; 0.45)
                                         </div>
                                     </div>
                                 )}
