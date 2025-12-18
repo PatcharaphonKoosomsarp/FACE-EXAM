@@ -8,6 +8,8 @@ import ctypes  # For MessageBox
 from datetime import datetime
 import os
 import socket
+import sys
+import subprocess
 from supabase import create_client, Client
 from flask import Flask, jsonify
 from flask_cors import CORS
@@ -1148,6 +1150,22 @@ def debug_check_blocked_resources():
         print(f"[DEBUG] Error fetching blocked resources: {e}\n")
 
 if __name__ == "__main__":
+    # === Auto-Relaunch with pythonw.exe (Background Mode) ===
+    # ตรวจสอบว่ารันด้วย python.exe (มีหน้าต่าง) หรือไม่ ถ้าใช่ให้ Relaunch ด้วย pythonw.exe
+    if os.name == 'nt' and sys.executable.lower().endswith('python.exe'):
+        try:
+            # หา path ของ pythonw.exe ในโฟลเดอร์เดียวกับ python.exe
+            python_dir = os.path.dirname(sys.executable)
+            pythonw_path = os.path.join(python_dir, 'pythonw.exe')
+            
+            if os.path.exists(pythonw_path):
+                # Relaunch สคริปต์นี้ด้วย pythonw.exe (ไม่มีหน้าต่าง Console)
+                # ใช้ os.path.abspath(__file__) เพื่อให้แน่ใจว่า path ถูกต้อง
+                subprocess.Popen([pythonw_path, os.path.abspath(__file__)] + sys.argv[1:], close_fds=True)
+                sys.exit() # ปิดโปรแกรมตัวปัจจุบัน (ที่มีหน้าต่าง)
+        except Exception as e:
+            print(f"Warning: Could not relaunch in background mode: {e}")
+
     # === เริ่มบริการ Agent ===
     
     # ทดสอบดึงข้อมูล Blocked Resources ทันทีที่รัน
