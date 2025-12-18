@@ -20,7 +20,7 @@ const ManualModal: React.FC<ManualModalProps> = ({ isOpen, onClose }) => {
       
       <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gray-50/50">
+        <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gray-50/50 shrink-0">
           <div>
             <h2 className="text-2xl font-bold text-gray-800">คู่มือการใช้งาน</h2>
             <p className="text-sm text-gray-500 mt-1">ระบบสแกนใบหน้าและติดตามการใช้ทรัพยากรคอมพิวเตอร์</p>
@@ -34,12 +34,12 @@ const ManualModal: React.FC<ManualModalProps> = ({ isOpen, onClose }) => {
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-gray-100 overflow-x-auto">
+        <div className="flex border-b border-gray-100 overflow-x-auto shrink-0">
           <button
             onClick={() => setActiveTab('student')}
             className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors whitespace-nowrap ${
               activeTab === 'student' 
-                ? 'text-primary border-b-2 border-primary bg-orange-50/30' 
+                ? 'text-orange-600 border-b-2 border-orange-600 bg-orange-50' 
                 : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
             }`}
           >
@@ -50,7 +50,7 @@ const ManualModal: React.FC<ManualModalProps> = ({ isOpen, onClose }) => {
             onClick={() => setActiveTab('teacher')}
             className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors whitespace-nowrap ${
               activeTab === 'teacher' 
-                ? 'text-primary border-b-2 border-primary bg-orange-50/30' 
+                ? 'text-orange-600 border-b-2 border-orange-600 bg-orange-50' 
                 : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
             }`}
           >
@@ -61,7 +61,7 @@ const ManualModal: React.FC<ManualModalProps> = ({ isOpen, onClose }) => {
             onClick={() => setActiveTab('agent')}
             className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors whitespace-nowrap ${
               activeTab === 'agent' 
-                ? 'text-primary border-b-2 border-primary bg-orange-50/30' 
+                ? 'text-orange-600 border-b-2 border-orange-600 bg-orange-50' 
                 : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
             }`}
           >
@@ -73,61 +73,119 @@ const ManualModal: React.FC<ManualModalProps> = ({ isOpen, onClose }) => {
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-white">
           {activeTab === 'student' && (
-            <div className="space-y-8 max-w-3xl mx-auto">
+            <div className="space-y-12 max-w-4xl mx-auto">
+              {/* 1. การเตรียมความพร้อมของ Agent */}
               <section>
-                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <span className="w-8 h-8 rounded-full bg-orange-100 text-primary flex items-center justify-center text-sm">1</span>
-                  การเตรียมความพร้อม (First Time Setup)
+                <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3 border-b pb-2">
+                  <span className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold">1</span>
+                  การเตรียมความพร้อมของ Agent
                 </h3>
-                <div className="pl-10 space-y-3 text-gray-600">
-                  <p>1. เข้าสู่หน้าเว็บ Login</p>
-                  <p>2. คลิกที่ไอคอน <strong>Download</strong> (มุมขวาล่าง) เพื่อดาวน์โหลดไฟล์ <span className="font-mono bg-gray-100 px-1 rounded">Agent.zip</span></p>
-                  <p>3. แตกไฟล์ (Extract) และรันโปรแกรม <span className="font-mono bg-gray-100 px-1 rounded">agent_26.py</span> (หรือไฟล์ .exe)</p>
-                  <div className="bg-yellow-50 p-3 rounded border border-yellow-100 text-sm text-yellow-800">
-                    <strong>หมายเหตุ:</strong> ต้องเปิด Agent ทิ้งไว้ตลอดการสอบ ห้ามปิดหน้าต่าง Console
+                <div className="space-y-8 pl-4 md:pl-11">
+                  <div className="space-y-3">
+                    <img src="/manual_picture/1.png" alt="Download Agent" className="rounded-lg shadow-md border border-gray-200 max-w-full h-auto" />
+                    <p className="text-gray-700 font-medium">1. Download Agent.zip</p>
                   </div>
-                  <p>4. กลับมาที่หน้าเว็บ เลือก <strong>"Student Login"</strong> และเข้าสู่ระบบด้วย Google Account</p>
+                  <div className="space-y-3">
+                    <img src="/manual_picture/2.png" alt="Extract Agent" className="rounded-lg shadow-md border border-gray-200 max-w-full h-auto" />
+                    <p className="text-gray-700 font-medium">2. แตกไฟล์ Agent.zip</p>
+                  </div>
+                  <div className="space-y-3">
+                    <img src="/manual_picture/3.png" alt="Run Agent" className="rounded-lg shadow-md border border-gray-200 max-w-full h-auto" />
+                    <p className="text-gray-700 font-medium">3. รัน agent_26.py ดับเบิ้ลคลิก agent_26.py หรือ ใช้คำสั่ง <code className="bg-gray-100 px-2 py-1 rounded text-sm font-mono text-red-500">python agent_26.py</code></p>
+                  </div>
                 </div>
               </section>
 
+              {/* 2. การใช้งานเว็บแอปพลิเคชัน */}
               <section>
-                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <span className="w-8 h-8 rounded-full bg-orange-100 text-primary flex items-center justify-center text-sm">2</span>
-                  การลงทะเบียนใบหน้า (Face Registration)
+                <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3 border-b pb-2">
+                  <span className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold">2</span>
+                  การใช้งานเว็บแอปพลิเคชัน
                 </h3>
-                <div className="pl-10 space-y-3 text-gray-600">
-                  <p>1. หากเข้าใช้งานครั้งแรก ระบบจะพาไปหน้า <strong>Face Registration</strong></p>
-                  <p>2. อนุญาตให้ Browser เข้าถึงกล้อง Web Camera</p>
-                  <p>3. ทำตามคำแนะนำบนหน้าจอ:</p>
-                  <ul className="list-disc list-inside pl-4 space-y-1">
-                    <li><strong>หน้าตรง:</strong> มองกล้องตรงๆ นิ่งๆ จนกว่าแถบความคืบหน้าจะเต็ม</li>
-                    <li><strong>หันซ้าย:</strong> หันหน้าไปทางซ้ายเล็กน้อย</li>
-                    <li><strong>หันขวา:</strong> หันหน้าไปทางขวาเล็กน้อย</li>
-                  </ul>
-                  <p>4. เมื่อครบ 3 ขั้นตอน กดปุ่ม <strong>"Save Face Data"</strong></p>
+                <div className="space-y-8 pl-4 md:pl-11">
+                  <div className="space-y-3">
+                    <img src="/manual_picture/4.png" alt="Login" className="rounded-lg shadow-md border border-gray-200 max-w-full h-auto" />
+                    <p className="text-gray-700 font-medium">1. หน้าเข้าสู่ระบบ ให้นักศึกษาเข้าสู่ระบบด้วยบัญชีอีเมลของมหาลัย</p>
+                  </div>
                 </div>
               </section>
 
+              {/* 3. การลงทะเบียนใบหน้า */}
               <section>
-                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <span className="w-8 h-8 rounded-full bg-orange-100 text-primary flex items-center justify-center text-sm">3</span>
-                  การเข้าสอบ (Taking Exam)
+                <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3 border-b pb-2">
+                  <span className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold">3</span>
+                  การลงทะเบียนใบหน้า
                 </h3>
-                <div className="pl-10 space-y-3 text-gray-600">
-                  <p>1. เมื่อถึงเวลาสอบ ให้ Login เข้าสู่ระบบ</p>
-                  <p>2. ระบบจะแสดงหน้า <strong>Face Verification</strong></p>
-                  <p>3. มองกล้องเพื่อยืนยันตัวตน (ระบบจะเทียบกับข้อมูลที่ลงทะเบียนไว้)</p>
-                  <p>4. เมื่อผ่านการยืนยัน จะเข้าสู่หน้า <strong>Student Dashboard</strong></p>
-                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 mt-2">
-                    <h4 className="font-semibold text-blue-800 mb-2 flex items-center gap-2">
-                      <Monitor className="w-4 h-4" />
-                      การตรวจสอบสถานะ
-                    </h4>
-                    <ul className="list-disc list-inside text-sm text-blue-700 space-y-1">
-                      <li>สถานะ <strong>Agent Status</strong> ต้องขึ้นเป็นสีเขียว (Connected)</li>
-                      <li>หากสถานะเป็นสีแดง ให้ตรวจสอบว่าเปิดโปรแกรม Agent หรือยัง</li>
-                      <li>ห้ามเปิดโปรแกรมที่อาจารย์ห้ามไว้ มิฉะนั้นจะถูกแจ้งเตือนและปิดโปรแกรมทันที</li>
-                    </ul>
+                <div className="space-y-8 pl-4 md:pl-11">
+                  <div className="space-y-3">
+                    <img src="/manual_picture/5.png" alt="Select Register" className="rounded-lg shadow-md border border-gray-200 max-w-full h-auto" />
+                    <p className="text-gray-700 font-medium">1. เลือกลงทะเบียนใบหน้า</p>
+                  </div>
+                  <div className="space-y-3">
+                    <img src="/manual_picture/6.png" alt="Select Method" className="rounded-lg shadow-md border border-gray-200 max-w-full h-auto" />
+                    <div className="text-gray-700 font-medium space-y-1">
+                      <p>2. เลือกวิธีการลงทะเบียนใบหน้า โดยใช้กล้องเว็บแคม บนอุปกรณ์นี้</p>
+                      <p>3. เลือกวิธีการลงทะเบียนใบหน้า โดยใช้สแกน QR Code เปิดกล้องผ่านมือถือ</p>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <img src="/manual_picture/7.png" alt="Webcam Register" className="rounded-lg shadow-md border border-gray-200 max-w-full h-auto" />
+                    <p className="text-gray-700 font-medium">4. ใช้กล้องเว็บแคม สำหรับลงทะเบียนใบหน้าด้วยท่าทางต่างๆ ตามขั้นตอนการลงทะเบียนใบหน้า</p>
+                  </div>
+                  <div className="space-y-3">
+                    <img src="/manual_picture/8.png" alt="QR Scan" className="rounded-lg shadow-md border border-gray-200 max-w-full h-auto" />
+                    <p className="text-gray-700 font-medium">5. สแกน QR Code เพื่อเปิดกล้องผ่านมือถือ</p>
+                  </div>
+                  <div className="space-y-3">
+                    <img src="/manual_picture/9.png" alt="Mobile Register" className="rounded-lg shadow-md border border-gray-200 max-w-full h-auto" />
+                    <div className="text-gray-700 font-medium space-y-1">
+                      <p>6. อนุญาตการเข้าถึงกล้อง</p>
+                      <p>7. ใช้กล้องผ่านมือถือ สำหรับลงทะเบียนใบหน้าด้วยท่าทางต่างๆ ตามขั้นตอนการลงทะเบียนใบหน้า</p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* 4. การเข้าสอบ */}
+              <section>
+                <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3 border-b pb-2">
+                  <span className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold">4</span>
+                  การเข้าสอบ
+                </h3>
+                <div className="space-y-8 pl-4 md:pl-11">
+                  <div className="space-y-3">
+                    <img src="/manual_picture/10.png" alt="Select Exam List" className="rounded-lg shadow-md border border-gray-200 max-w-full h-auto" />
+                    <p className="text-gray-700 font-medium">1. เลือกรายการตารางสอบ</p>
+                  </div>
+                  <div className="space-y-3">
+                    <img src="/manual_picture/11.png" alt="Select Subject" className="rounded-lg shadow-md border border-gray-200 max-w-full h-auto" />
+                    <p className="text-gray-700 font-medium">2. เลือกวิชาสอบให้ตรงกับตารางสอบของนักศึกษา</p>
+                  </div>
+                  <div className="space-y-3">
+                    <img src="/manual_picture/12.png" alt="Verify Method" className="rounded-lg shadow-md border border-gray-200 max-w-full h-auto" />
+                    <div className="text-gray-700 font-medium space-y-1">
+                      <p>3. เลือกวิธีการยืนยันตัวตน โดยใช้กล้องเว็บแคม บนอุปกรณ์นี้</p>
+                      <p>4. เลือกวิธีการยืนยันตัวตน โดยใช้สแกน QR Code เปิดกล้องผ่านมือถือ</p>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <img src="/manual_picture/13.png" alt="Webcam Verify" className="rounded-lg shadow-md border border-gray-200 max-w-full h-auto" />
+                    <p className="text-gray-700 font-medium">5. ใช้กล้องเว็บแคม สำหรับยืนยันตัวตน</p>
+                  </div>
+                  <div className="space-y-3">
+                    <img src="/manual_picture/14.png" alt="QR Verify" className="rounded-lg shadow-md border border-gray-200 max-w-full h-auto" />
+                    <p className="text-gray-700 font-medium">6. สแกน QR Code เพื่อเปิดกล้องผ่านมือถือ</p>
+                  </div>
+                  <div className="space-y-3">
+                    <img src="/manual_picture/15.png" alt="Mobile Verify" className="rounded-lg shadow-md border border-gray-200 max-w-full h-auto" />
+                    <div className="text-gray-700 font-medium space-y-1">
+                      <p>7. อนุญาตการเข้าถึงกล้อง</p>
+                      <p>8. ใช้กล้องผ่านมือถือ สำหรับยืนยันตัวตน</p>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <img src="/manual_picture/16.png" alt="Success" className="rounded-lg shadow-md border border-gray-200 max-w-full h-auto" />
+                    <p className="text-gray-700 font-medium">9. เข้าห้องสอบสำเร็จ</p>
                   </div>
                 </div>
               </section>
@@ -135,76 +193,139 @@ const ManualModal: React.FC<ManualModalProps> = ({ isOpen, onClose }) => {
           )}
 
           {activeTab === 'teacher' && (
-            <div className="space-y-8 max-w-3xl mx-auto">
+            <div className="space-y-12 max-w-4xl mx-auto">
+              {/* 1. การใช้งานเว็บแอปพลิเคชัน */}
               <section>
-                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <span className="w-8 h-8 rounded-full bg-orange-100 text-primary flex items-center justify-center text-sm">1</span>
-                  การจัดการห้องสอบ (Room Setup)
+                <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3 border-b pb-2">
+                  <span className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold">1</span>
+                  การใช้งานเว็บแอปพลิเคชัน
                 </h3>
-                <div className="pl-10 space-y-3 text-gray-600">
-                  <p>1. Login เข้าสู่ระบบด้วย <strong>"Teacher Login"</strong></p>
-                  <p>2. ไปที่แท็บ <strong>"Room Layout"</strong></p>
-                  <p>3. สร้างผังที่นั่งสอบ โดยระบุจำนวนแถวและคอลัมน์</p>
-                  <p>4. กำหนด <strong>IP Address</strong> ให้กับแต่ละที่นั่ง (เพื่อระบุตำแหน่งเครื่องนักศึกษา)</p>
-                </div>
-              </section>
-
-              <section>
-                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <span className="w-8 h-8 rounded-full bg-orange-100 text-primary flex items-center justify-center text-sm">2</span>
-                  การสร้างการสอบ (Create Exam)
-                </h3>
-                <div className="pl-10 space-y-3 text-gray-600">
-                  <p>1. ไปที่แท็บ <strong>"Exam Schedule"</strong></p>
-                  <p>2. กดปุ่ม <strong>"Add Exam"</strong></p>
-                  <p>3. กรอกรายละเอียด:</p>
-                  <ul className="list-disc list-inside pl-4 space-y-1">
-                    <li>ชื่อวิชา (Subject)</li>
-                    <li>วันที่และเวลาสอบ (Date & Time)</li>
-                    <li><strong>Blocked Resources:</strong> ระบุชื่อโปรแกรมหรือเว็บที่ห้ามใช้ (เช่น chrome, chatgpt)</li>
-                  </ul>
-                  <div className="bg-green-50 p-2 rounded border border-green-100 text-sm text-green-800 mt-2">
-                    <strong>Tip:</strong> ใช้ปุ่ม "AI Suggest" เพื่อให้ AI แนะนำโปรแกรมที่ควรบล็อกตามชื่อวิชา
+                <div className="space-y-8 pl-4 md:pl-11">
+                  <div className="space-y-3">
+                    <img src="/manual_picture/17.png" alt="Teacher Login" className="rounded-lg shadow-md border border-gray-200 max-w-full h-auto" />
+                    <p className="text-gray-700 font-medium">1. หน้าเข้าสู่ระบบ ให้อาจารย์เข้าสู่ระบบด้วยบัญชีอีเมลของมหาลัย</p>
                   </div>
-                  <p>4. กด <strong>Save</strong> เพื่อบันทึก</p>
                 </div>
               </section>
 
+              {/* 2. การจัดการสอบ */}
               <section>
-                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <span className="w-8 h-8 rounded-full bg-orange-100 text-primary flex items-center justify-center text-sm">3</span>
-                  การคุมสอบ (Proctoring)
+                <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3 border-b pb-2">
+                  <span className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold">2</span>
+                  การจัดการสอบ
                 </h3>
-                <div className="pl-10 space-y-3 text-gray-600">
-                  <p>1. ในวันสอบ ให้เปิดหน้า <strong>Dashboard</strong></p>
-                  <p>2. เลือกวิชาที่กำลังสอบจาก Dropdown</p>
-                  <p>3. ระบบจะแสดงสถานะของนักศึกษาทุกคน:</p>
-                  <ul className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
-                    <li className="flex items-center gap-2 bg-green-50 p-2 rounded border border-green-100">
-                      <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                      <span className="text-sm"><strong>Online:</strong> ปกติ (Heartbeat OK)</span>
-                    </li>
-                    <li className="flex items-center gap-2 bg-red-50 p-2 rounded border border-red-100">
-                      <span className="w-2 h-2 rounded-full bg-red-500"></span>
-                      <span className="text-sm"><strong>Offline:</strong> หลุดการเชื่อมต่อ (No Heartbeat {'>'} 30s)</span>
-                    </li>
-                    <li className="flex items-center gap-2 bg-orange-50 p-2 rounded border border-orange-100">
-                      <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></span>
-                      <span className="text-sm"><strong>Violation:</strong> พบการทุจริต (กระพริบ 1 นาที)</span>
-                    </li>
-                  </ul>
-                  <p className="mt-2">4. หากมีการทุจริต ระบบจะแจ้งเตือนบนหน้าจอและส่ง Email แจ้งเตือนอาจารย์</p>
+                <div className="space-y-8 pl-4 md:pl-11">
+                  <div className="space-y-3">
+                    <img src="/manual_picture/18.png" alt="Manage Exam" className="rounded-lg shadow-md border border-gray-200 max-w-full h-auto" />
+                    <p className="text-gray-700 font-medium">1. เลือกจัดการสอบ</p>
+                  </div>
                 </div>
               </section>
 
+              {/* 3. ขั้นตอนที่ 1 : สร้างห้องสอบ */}
               <section>
-                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <span className="w-8 h-8 rounded-full bg-orange-100 text-primary flex items-center justify-center text-sm">4</span>
-                  หลังการสอบ (Post-Exam)
+                <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3 border-b pb-2">
+                  <span className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold">3</span>
+                  ขั้นตอนที่ 1 : สร้างห้องสอบ
                 </h3>
-                <div className="pl-10 space-y-3 text-gray-600">
-                  <p>1. กดปุ่ม <strong>"Export Report"</strong> เพื่อดาวน์โหลดรายงานสรุปผลการสอบ</p>
-                  <p>2. ไฟล์ CSV จะประกอบด้วย: รายชื่อนักศึกษา, เวลาเข้า-ออก, ประวัติการทุจริต, และสถานะการยืนยันตัวตน</p>
+                <div className="space-y-8 pl-4 md:pl-11">
+                  <div className="space-y-3">
+                    <img src="/manual_picture/19.png" alt="Create Room" className="rounded-lg shadow-md border border-gray-200 max-w-full h-auto" />
+                    <div className="text-gray-700 font-medium space-y-1">
+                      <p>1. เลือกสร้างห้องสอบใหม่</p>
+                      <p>2. กรอกข้อมูลชื่อห้องสอบ จำนวนแถวและ จำนวนคอลัมน์</p>
+                      <p>3. บันทึกห้องใหม่</p>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <img src="/manual_picture/20.png" alt="Select Room" className="rounded-lg shadow-md border border-gray-200 max-w-full h-auto" />
+                    <div className="text-gray-700 font-medium space-y-1">
+                      <p>4. เลือกห้องสอบที่มีอยู่</p>
+                      <p>5. กดเลือกห้องสอบ</p>
+                      <p>6. ขั้นตอนถัดไป</p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* 4. ขั้นตอนที่ 2 : สร้างตารางสอบ */}
+              <section>
+                <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3 border-b pb-2">
+                  <span className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold">4</span>
+                  ขั้นตอนที่ 2 : สร้างตารางสอบ
+                </h3>
+                <div className="space-y-8 pl-4 md:pl-11">
+                  <div className="space-y-3">
+                    <img src="/manual_picture/21.png" alt="Create Schedule" className="rounded-lg shadow-md border border-gray-200 max-w-full h-auto" />
+                    <div className="text-gray-700 font-medium space-y-1">
+                      <p>1. กรอกข้อมูลตารางสอบ</p>
+                      <p>2. ขั้นตอนถัดไป</p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* 5. ขั้นตอนที่ 3 : กำหนด IP Address */}
+              <section>
+                <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3 border-b pb-2">
+                  <span className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold">5</span>
+                  ขั้นตอนที่ 3 : กำหนด IP Address
+                </h3>
+                <div className="space-y-8 pl-4 md:pl-11">
+                  <div className="space-y-3">
+                    <img src="/manual_picture/22.png" alt="Set IP" className="rounded-lg shadow-md border border-gray-200 max-w-full h-auto" />
+                    <div className="text-gray-700 font-medium space-y-1">
+                      <p>1. เลือกที่นั่งเพื่อกำหนด IP</p>
+                      <p>2. กรอก IP Address กำหนดให้กับที่นั่งนั้นๆ</p>
+                      <p>3. บันทึก / อัปเดต</p>
+                      <p>4. ขั้นตอนถัดไป</p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* 6. ขั้นตอนที่ 4: กำหนดทรัพยากร */}
+              <section>
+                <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3 border-b pb-2">
+                  <span className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold">6</span>
+                  ขั้นตอนที่ 4: กำหนดทรัพยากร
+                </h3>
+                <div className="space-y-8 pl-4 md:pl-11">
+                  <div className="space-y-3">
+                    <img src="/manual_picture/23.png" alt="Set Resources" className="rounded-lg shadow-md border border-gray-200 max-w-full h-auto" />
+                    <div className="text-gray-700 font-medium space-y-1">
+                      <p>1. เลือกรายการที่แนะนำ</p>
+                      <p>2. ใช้ AI แนะนำ</p>
+                      <p>3. กรอกรายการที่ไม่อนุญาตให้ใช้งานได้</p>
+                      <p>4. บันทึกข้อมูล</p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* 7. รายการตารางสอบ */}
+              <section>
+                <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3 border-b pb-2">
+                  <span className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold">7</span>
+                  รายการตารางสอบ
+                </h3>
+                <div className="space-y-8 pl-4 md:pl-11">
+                  <div className="space-y-3">
+                    <img src="/manual_picture/24.png" alt="Exam List" className="rounded-lg shadow-md border border-gray-200 max-w-full h-auto" />
+                    <p className="text-gray-700 font-medium">1. เลือกรายการตารางสอบ</p>
+                  </div>
+                  <div className="space-y-3">
+                    <img src="/manual_picture/25.png" alt="Select Room for Exam" className="rounded-lg shadow-md border border-gray-200 max-w-full h-auto" />
+                    <p className="text-gray-700 font-medium">2. เลือกห้องสอบ</p>
+                  </div>
+                  <div className="space-y-3">
+                    <img src="/manual_picture/26.png" alt="Student Seat" className="rounded-lg shadow-md border border-gray-200 max-w-full h-auto" />
+                    <p className="text-gray-700 font-medium">3. เลือกที่นั่งของนักศึกษา เพื่อดูข้อมูลของนักศึกษาและการใช้งานทรัพยากรคอมพิวเตอร์</p>
+                  </div>
+                  <div className="space-y-3">
+                    <img src="/manual_picture/27.png" alt="Student Info" className="rounded-lg shadow-md border border-gray-200 max-w-full h-auto" />
+                    <p className="text-gray-700 font-medium">4. ข้อมูลต่างๆในที่นั่งของนักศึกษา</p>
+                  </div>
                 </div>
               </section>
             </div>

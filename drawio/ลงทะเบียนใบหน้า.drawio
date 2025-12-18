@@ -1,0 +1,86 @@
+<mxfile host="65bd71144e">
+    <diagram id="N7OuojY4ljK7WFXCwh9-" name="Page-1">
+        <mxGraphModel dx="1106" dy="-486" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="307" value="" style="group" parent="1" vertex="1" connectable="0">
+                    <mxGeometry x="660" y="1900" width="171" height="730" as="geometry"/>
+                </mxCell>
+                <mxCell id="308" value="&lt;font data-font-src=&quot;https://fonts.googleapis.com/css?family=TH+Sarabun+New&quot; face=&quot;TH Sarabun New&quot;&gt;ลงทะเบียนใบหน้า&lt;/font&gt;" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.start_1;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="307" vertex="1">
+                    <mxGeometry x="41" width="100" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="309" value="&lt;div&gt;&lt;font face=&quot;TH Sarabun New&quot; data-font-src=&quot;https://fonts.googleapis.com/css?family=TH+Sarabun+New&quot;&gt;ตรวจสอบ&lt;/font&gt;&lt;/div&gt;&lt;font face=&quot;TH Sarabun New&quot; data-font-src=&quot;https://fonts.googleapis.com/css?family=TH+Sarabun+New&quot;&gt;Webcam&lt;/font&gt;" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.decision;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="307" vertex="1">
+                    <mxGeometry x="51" y="150" width="80" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="310" value="&lt;font data-font-src=&quot;https://fonts.googleapis.com/css?family=TH+Sarabun+New&quot; face=&quot;TH Sarabun New&quot;&gt;True&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=1;points=[];autosize=1;strokeColor=none;fillColor=none;movable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="307" vertex="1">
+                    <mxGeometry x="1" y="160" width="50" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="311" value="&lt;font data-font-src=&quot;https://fonts.googleapis.com/css?family=TH+Sarabun+New&quot; face=&quot;TH Sarabun New&quot;&gt;False&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=1;points=[];autosize=1;strokeColor=none;fillColor=none;movable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="307" vertex="1">
+                    <mxGeometry x="91" y="230" width="50" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="312" style="edgeStyle=none;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="307" source="313" target="316" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="313" value="&lt;div&gt;&lt;font color=&quot;#000000&quot;&gt;จับภาพใบหน้า ดังนี้&lt;br&gt;1. ตา ปิด/เปิด&lt;/font&gt;&lt;/div&gt;&lt;div&gt;&lt;font color=&quot;#000000&quot;&gt;2. หันซ้าย&lt;/font&gt;&lt;/div&gt;&lt;div&gt;&lt;font color=&quot;#000000&quot;&gt;3. หันขวา&lt;/font&gt;&lt;/div&gt;&lt;div&gt;&lt;font color=&quot;#000000&quot;&gt;4. เงยหน้า&lt;/font&gt;&lt;/div&gt;&lt;div&gt;&lt;font color=&quot;#000000&quot;&gt;5. ก้มหน้า&lt;/font&gt;&lt;/div&gt;&lt;div&gt;&lt;font color=&quot;#000000&quot;&gt;6. หน้าเข้าใกล้กล้อง&lt;/font&gt;&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="307" vertex="1">
+                    <mxGeometry x="26" y="450" width="130" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="314" style="edgeStyle=none;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="307" source="315" target="313" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="315" value="" style="verticalLabelPosition=bottom;verticalAlign=top;html=1;shape=mxgraph.flowchart.on-page_reference;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="307" vertex="1">
+                    <mxGeometry x="76" y="390" width="30" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="316" value="&lt;font data-font-src=&quot;https://fonts.googleapis.com/css?family=TH+Sarabun+New&quot; face=&quot;TH Sarabun New&quot;&gt;บันทึกภาพใบหน้าลง Supabase&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="307" vertex="1">
+                    <mxGeometry x="26" y="600" width="130" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="317" value="&lt;font face=&quot;TH Sarabun New&quot;&gt;End&lt;/font&gt;" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.start_1;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="307" vertex="1">
+                    <mxGeometry x="41" y="670" width="100" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="318" style="edgeStyle=none;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="307" source="316" target="317" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="319" value="&lt;font data-font-src=&quot;https://fonts.googleapis.com/css?family=TH+Sarabun+New&quot; face=&quot;TH Sarabun New&quot;&gt;สเเกน&lt;br&gt;&lt;/font&gt;&lt;div&gt;&lt;font data-font-src=&quot;https://fonts.googleapis.com/css?family=TH+Sarabun+New&quot; face=&quot;TH Sarabun New&quot;&gt;QR Code&lt;/font&gt;&lt;/div&gt;" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.decision;whiteSpace=wrap;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="307" vertex="1">
+                    <mxGeometry x="51" y="270" width="80" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="320" value="" style="verticalLabelPosition=bottom;verticalAlign=top;html=1;shape=mxgraph.flowchart.on-page_reference;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="307" vertex="1">
+                    <mxGeometry x="76" y="90" width="30" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="321" style="edgeStyle=none;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;" parent="307" source="308" target="320" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="322" style="edgeStyle=none;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;" parent="307" source="309" target="319" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="323" style="edgeStyle=none;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;" parent="307" source="320" target="309" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="324" style="edgeStyle=none;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;" parent="307" source="319" target="315" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="325" value="&lt;font data-font-src=&quot;https://fonts.googleapis.com/css?family=TH+Sarabun+New&quot; face=&quot;TH Sarabun New&quot;&gt;Pass&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=1;points=[];autosize=1;strokeColor=none;fillColor=none;movable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="307" vertex="1">
+                    <mxGeometry x="96" y="350" width="40" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="326" value="&lt;font data-font-src=&quot;https://fonts.googleapis.com/css?family=TH+Sarabun+New&quot; face=&quot;TH Sarabun New&quot;&gt;Fail&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=1;points=[];autosize=1;strokeColor=none;fillColor=none;movable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="307" vertex="1">
+                    <mxGeometry x="131" y="280" width="40" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="327" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;" parent="307" source="309" target="315" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint y="190"/>
+                            <mxPoint y="405"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="328" style="edgeStyle=none;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;" parent="307" source="319" target="320" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="170" y="310"/>
+                            <mxPoint x="170" y="105"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
