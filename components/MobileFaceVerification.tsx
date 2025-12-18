@@ -339,6 +339,12 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
                                 
                                 {/* Scanning Line Animation */}
                                 {status === 'SCANNING' && (
+                                    <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/80 to-transparent animate-[scan_2s_linear_infinite] opacity-50"></div>
+                                )}
+                            </div>
+
+                            {/* Status Text (Centered below face box) */}
+                            <div className="absolute bottom-20 left-0 right-0 flex flex-col items-center z-20 gap-3">
                                 {/* Real-time Distance Feedback */}
                                 {status === 'SCANNING' && currentDistance !== null && (
                                     <div className="bg-black/60 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/10 flex flex-col items-center animate-in slide-in-from-bottom-2 mb-2">
