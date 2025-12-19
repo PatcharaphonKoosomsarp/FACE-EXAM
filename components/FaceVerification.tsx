@@ -627,44 +627,60 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
 
                     {/* Scanning Overlay */}
                     {status === 'SCANNING' && (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/10">
-                            <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent animate-[scan_2s_linear_infinite]" style={{ animationName: 'scan' }}></div>
+                        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                            {/* Live Indicator */}
+                            <div className="absolute top-4 left-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm flex items-center z-20 backdrop-blur-sm border border-white/10">
+                                <div className="w-2 h-2 bg-red-500 rounded-full mr-2 animate-pulse"></div>
+                                Live Face Detection
+                            </div>
+
+                            {/* Face Box Overlay (Oval) */}
+                            <div className="absolute w-80 h-[28rem] border-2 border-white/40 rounded-[50%] top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 shadow-[0_0_0_9999px_rgba(0,0,0,0.6)] z-10">
+                                {/* Corner Markers */}
+                                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1 w-1 h-2 bg-primary"></div>
+                                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1 w-1 h-2 bg-primary"></div>
+                                <div className="absolute top-1/2 left-0 transform -translate-x-1 -translate-y-1/2 w-2 h-1 bg-primary"></div>
+                                <div className="absolute top-1/2 right-0 transform translate-x-1 -translate-y-1/2 w-2 h-1 bg-primary"></div>
+                                
+                                {/* Scanning Line Animation */}
+                                <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/80 to-transparent animate-[scan_2s_linear_infinite] opacity-50"></div>
+                            </div>
                             
-                            {/* Real-time Distance Feedback */}
-                            {currentDistance !== null ? (
-                                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-black/40 backdrop-blur-sm p-6 text-white animate-in slide-in-from-bottom-2">
-                                    <div className="flex items-center justify-between gap-6 max-w-xl mx-auto">
-                                        {/* Text Info */}
-                                        <div className="flex flex-col">
-                                            <span className="text-xs text-gray-300 uppercase tracking-wider">Similarity Score</span>
-                                            <span className={`text-3xl font-bold font-mono ${currentDistance < 0.45 ? 'text-green-400' : currentDistance < 0.6 ? 'text-yellow-400' : 'text-red-400'}`}>
+                            {/* Status Text & Feedback */}
+                            <div className="absolute bottom-8 left-0 right-0 flex flex-col items-center z-20 gap-3">
+                                {/* Status Pill */}
+                                <div className="bg-black/70 text-white px-6 py-2 rounded-full text-lg font-semibold backdrop-blur-sm border border-white/10 whitespace-nowrap shadow-lg animate-in slide-in-from-bottom-4">
+                                    <span>มองตรงไปที่กล้อง</span>
+                                </div>
+
+                                {/* Real-time Distance Feedback */}
+                                {currentDistance !== null && (
+                                    <div className="bg-black/60 backdrop-blur-md px-8 py-4 rounded-2xl border border-white/10 flex flex-col items-center animate-in slide-in-from-bottom-2 mb-2 min-w-[320px]">
+                                        <div className="flex items-center justify-between w-full gap-6 mb-2">
+                                            <span className="text-sm text-gray-300">ความเหมือน</span>
+                                            <span className={`text-2xl font-bold font-mono ${currentDistance < 0.45 ? 'text-green-400' : currentDistance < 0.6 ? 'text-yellow-400' : 'text-red-400'}`}>
                                                 {((1 - currentDistance) * 100).toFixed(0)}%
                                             </span>
                                         </div>
                                         
-                                        {/* Progress Bar Container */}
-                                        <div className="flex-1 flex flex-col justify-end">
-                                             <div className="flex justify-between text-xs text-gray-400 mb-1">
-                                                <span>0%</span>
-                                                <span className="text-white font-medium">Target &gt; 55%</span>
-                                                <span>100%</span>
-                                            </div>
-                                            <div className="h-4 bg-gray-700/50 rounded-full overflow-hidden relative border border-white/10">
-                                                {/* Threshold Marker at 55% */}
-                                                <div className="absolute top-0 bottom-0 w-0.5 bg-white left-[55%] z-10 shadow-[0_0_10px_rgba(255,255,255,0.5)]"></div>
-                                                <div 
-                                                    className={`h-full transition-all duration-300 ${currentDistance < 0.45 ? 'bg-green-500 shadow-[0_0_15px_rgba(34,197,94,0.5)]' : currentDistance < 0.6 ? 'bg-yellow-500' : 'bg-red-500'}`}
-                                                    style={{ width: `${Math.min(100, Math.max(5, (1 - currentDistance) * 100))}%` }}
-                                                />
-                                            </div>
+                                        {/* Visual Bar */}
+                                        <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative">
+                                            {/* Threshold Marker at 55% */}
+                                            <div className="absolute top-0 bottom-0 w-0.5 bg-white/50 left-[55%] z-10"></div>
+                                            
+                                            <div 
+                                                className={`h-full transition-all duration-300 ${currentDistance < 0.45 ? 'bg-green-500' : currentDistance < 0.6 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                                                style={{ width: `${Math.min(100, Math.max(5, (1 - currentDistance) * 100))}%` }}
+                                            />
+                                        </div>
+                                        <div className="flex justify-between w-full text-[10px] text-gray-500 mt-1">
+                                            <span>0%</span>
+                                            <span>เป้าหมาย &gt; 55%</span>
+                                            <span>100%</span>
                                         </div>
                                     </div>
-                                </div>
-                            ) : (
-                                <div className="bg-black/40 backdrop-blur-sm px-4 py-2 rounded-full text-white text-sm border border-white/20">
-                                    มองตรงไปที่กล้อง
-                                </div>
-                            )}
+                                )}
+                            </div>
                         </div>
                     )}
 
