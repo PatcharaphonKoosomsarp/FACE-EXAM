@@ -19,6 +19,17 @@ const MobileFaceRegistration: React.FC<MobileFaceRegistrationProps> = ({ targetU
         alert("คุณสามารถปิดหน้าต่างนี้ได้");
     };
 
+    const handleClose = () => {
+        window.close();
+        // Hack for some mobile browsers
+        try { window.open('', '_self', ''); window.close(); } catch (e) {}
+        
+        // Fallback if blocked
+        setTimeout(() => {
+            alert("กรุณากดปิดหน้าต่างที่ตัวเบราว์เซอร์");
+        }, 500);
+    };
+
     if (isComplete) {
         return (
             <div className="min-h-screen bg-black flex flex-col">
@@ -42,7 +53,7 @@ const MobileFaceRegistration: React.FC<MobileFaceRegistrationProps> = ({ targetU
                             คุณสามารถกลับไปที่หน้าจอหลักบนคอมพิวเตอร์ได้ทันที
                         </p>
                         <button 
-                            onClick={() => window.close()}
+                            onClick={handleClose}
                             className="bg-white text-black px-8 py-3 rounded-full font-bold hover:bg-gray-200 transition shadow-lg shadow-white/10"
                         >
                             ปิดหน้าต่าง

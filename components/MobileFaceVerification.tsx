@@ -279,6 +279,17 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
         }
     };
 
+    const handleClose = () => {
+        window.close();
+        // Hack for some mobile browsers
+        try { window.open('', '_self', ''); window.close(); } catch (e) {}
+        
+        // Fallback if blocked
+        setTimeout(() => {
+            alert("กรุณากดปิดหน้าต่างที่ตัวเบราว์เซอร์");
+        }, 500);
+    };
+
     return (
         <div className="min-h-screen bg-black flex flex-col">
             {/* Header */}
@@ -299,7 +310,7 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
                         <h2 className="text-3xl font-bold text-white mb-2">ยืนยันตัวตนสำเร็จ!</h2>
                         <p className="text-gray-400 mb-8">คุณสามารถดำเนินการต่อบนหน้าจอคอมพิวเตอร์ได้เลย</p>
                         <button 
-                            onClick={() => window.close()}
+                            onClick={handleClose}
                             className="bg-white text-black px-8 py-3 rounded-full font-bold hover:bg-gray-200 transition shadow-lg shadow-white/10"
                         >
                             ปิดหน้าต่าง
