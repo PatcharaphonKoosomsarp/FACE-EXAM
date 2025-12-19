@@ -591,7 +591,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
 
     return (
         <div className="fixed inset-0 bg-gray-900/90 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl overflow-hidden shadow-2xl max-w-md w-full animate-in zoom-in-95 duration-200">
+            <div className="bg-white rounded-2xl overflow-hidden shadow-2xl max-w-3xl w-full animate-in zoom-in-95 duration-200">
                 <div className="bg-white p-5 border-b flex justify-between items-center">
                     <div>
                         <h3 className="font-bold text-gray-800 text-lg flex items-center">
@@ -632,28 +632,32 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                             
                             {/* Real-time Distance Feedback */}
                             {currentDistance !== null ? (
-                                <div className="mt-32 bg-black/70 backdrop-blur-md px-6 py-3 rounded-2xl text-white border border-white/10 animate-in fade-in slide-in-from-bottom-4">
-                                    <div className="flex items-center justify-between gap-4 mb-2">
-                                        <span className="text-sm text-gray-300">ความเหมือน</span>
-                                        <span className={`text-lg font-bold font-mono ${currentDistance < 0.45 ? 'text-green-400' : 'text-yellow-400'}`}>
-                                            {((1 - currentDistance) * 100).toFixed(0)}%
-                                        </span>
-                                    </div>
-                                    
-                                    {/* Progress Bar */}
-                                    <div className="w-48 h-2 bg-gray-700 rounded-full overflow-hidden relative">
-                                        {/* Threshold Marker at 55% (Distance 0.45) */}
-                                        <div className="absolute top-0 bottom-0 w-0.5 bg-white/50 left-[55%] z-10" title="Threshold"></div>
-                                        <div 
-                                            className={`h-full transition-all duration-300 ${currentDistance < 0.45 ? 'bg-green-500' : 'bg-yellow-500'}`}
-                                            style={{ width: `${Math.min(100, Math.max(5, (1 - currentDistance) * 100))}%` }}
-                                        />
-                                    </div>
-                                    
-                                    <div className="flex justify-between w-full text-[10px] text-gray-500 mt-1 px-1">
-                                        <span>0%</span>
-                                        <span>เป้าหมาย &gt; 55%</span>
-                                        <span>100%</span>
+                                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-black/40 backdrop-blur-sm p-6 text-white animate-in slide-in-from-bottom-2">
+                                    <div className="flex items-center justify-between gap-6 max-w-xl mx-auto">
+                                        {/* Text Info */}
+                                        <div className="flex flex-col">
+                                            <span className="text-xs text-gray-300 uppercase tracking-wider">Similarity Score</span>
+                                            <span className={`text-3xl font-bold font-mono ${currentDistance < 0.45 ? 'text-green-400' : currentDistance < 0.6 ? 'text-yellow-400' : 'text-red-400'}`}>
+                                                {((1 - currentDistance) * 100).toFixed(0)}%
+                                            </span>
+                                        </div>
+                                        
+                                        {/* Progress Bar Container */}
+                                        <div className="flex-1 flex flex-col justify-end">
+                                             <div className="flex justify-between text-xs text-gray-400 mb-1">
+                                                <span>0%</span>
+                                                <span className="text-white font-medium">Target &gt; 55%</span>
+                                                <span>100%</span>
+                                            </div>
+                                            <div className="h-4 bg-gray-700/50 rounded-full overflow-hidden relative border border-white/10">
+                                                {/* Threshold Marker at 55% */}
+                                                <div className="absolute top-0 bottom-0 w-0.5 bg-white left-[55%] z-10 shadow-[0_0_10px_rgba(255,255,255,0.5)]"></div>
+                                                <div 
+                                                    className={`h-full transition-all duration-300 ${currentDistance < 0.45 ? 'bg-green-500 shadow-[0_0_15px_rgba(34,197,94,0.5)]' : currentDistance < 0.6 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                                                    style={{ width: `${Math.min(100, Math.max(5, (1 - currentDistance) * 100))}%` }}
+                                                />
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             ) : (

@@ -355,7 +355,7 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
                                     <div className="bg-black/60 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/10 flex flex-col items-center animate-in slide-in-from-bottom-2 mb-2">
                                         <div className="flex items-center gap-3 mb-1">
                                             <span className="text-sm text-gray-300">ความเหมือน</span>
-                                            <span className={`text-xl font-bold font-mono ${currentDistance < 0.45 ? 'text-green-400' : 'text-yellow-400'}`}>
+                                            <span className={`text-xl font-bold font-mono ${currentDistance < 0.45 ? 'text-green-400' : currentDistance < 0.6 ? 'text-yellow-400' : 'text-red-400'}`}>
                                                 {((1 - currentDistance) * 100).toFixed(0)}%
                                             </span>
                                         </div>
@@ -366,7 +366,7 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
                                             <div className="absolute top-0 bottom-0 w-0.5 bg-white/50 left-[55%] z-10"></div>
                                             
                                             <div 
-                                                className={`h-full transition-all duration-300 ${currentDistance < 0.45 ? 'bg-green-500' : 'bg-yellow-500'}`}
+                                                className={`h-full transition-all duration-300 ${currentDistance < 0.45 ? 'bg-green-500' : currentDistance < 0.6 ? 'bg-yellow-500' : 'bg-red-500'}`}
                                                 style={{ width: `${Math.min(100, Math.max(5, (1 - currentDistance) * 100))}%` }}
                                             />
                                         </div>
