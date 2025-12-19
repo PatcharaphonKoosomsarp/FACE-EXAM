@@ -9,16 +9,6 @@ interface MobileFaceRegistrationProps {
 const MobileFaceRegistration: React.FC<MobileFaceRegistrationProps> = ({ targetUserId }) => {
     const [isComplete, setIsComplete] = useState(false);
 
-    const handleComplete = () => {
-        setIsComplete(true);
-    };
-
-    const handleCancel = () => {
-        // On mobile, cancel might just mean closing the tab or showing a message
-        window.close();
-        alert("คุณสามารถปิดหน้าต่างนี้ได้");
-    };
-
     const handleClose = () => {
         window.close();
         // Hack for some mobile browsers
@@ -28,6 +18,14 @@ const MobileFaceRegistration: React.FC<MobileFaceRegistrationProps> = ({ targetU
         setTimeout(() => {
             alert("กรุณากดปิดหน้าต่างที่ตัวเบราว์เซอร์");
         }, 500);
+    };
+
+    const handleComplete = () => {
+        setIsComplete(true);
+    };
+
+    const handleCancel = () => {
+        handleClose();
     };
 
     if (isComplete) {
