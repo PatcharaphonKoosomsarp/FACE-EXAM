@@ -239,15 +239,15 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
 
                 const descriptors: Float32Array[] = [];
                 
-                // Photo types exactly as in authentication_face.html
+                // Photo types - Filtered for better verification accuracy (Removing extreme angles)
                 const photoTypes = [
-                    { key: 'closed_eye', label: 'ตาปิด' },
+                    // { key: 'closed_eye', label: 'ตาปิด' }, // Removed: Low feature visibility
                     { key: 'open_eye', label: 'ตาเปิด' },
                     { key: 'turn_left', label: 'หันซ้าย' },
                     { key: 'turn_right', label: 'หันขวา' },
-                    { key: 'look_up', label: 'มองขึ้น' },
-                    { key: 'look_down', label: 'มองลง' },
-                    { key: 'move_close', label: 'เข้าใกล้' }
+                    // { key: 'look_up', label: 'มองขึ้น' }, // Removed: Distortion
+                    // { key: 'look_down', label: 'มองลง' }, // Removed: Distortion
+                    // { key: 'move_close', label: 'เข้าใกล้' } // Removed: Distortion
                 ];
 
                 // Also add face_forward if available (it's in the DB but not in the original list, but it's crucial)
@@ -341,8 +341,8 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                 console.log(`Computed ${descriptors.length} reference descriptors`);
                 const labeledDescriptor = new faceapi.LabeledFaceDescriptors(user.id, descriptors);
                 setLabeledDescriptors([labeledDescriptor]);
-                // Use threshold 0.50 for FaceMatcher to match Mobile settings
-                setFaceMatcher(new faceapi.FaceMatcher([labeledDescriptor], 0.50));
+                // Use threshold 0.45 (Stricter for security, but using better reference photos)
+                setFaceMatcher(new faceapi.FaceMatcher([labeledDescriptor], 0.45));
                 setStatus('SCANNING');
                 startCamera();
 
@@ -361,7 +361,13 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
         setErrorType(null);
 
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { 
+                    width: { ideal: 640 },
+                    height: { ideal: 480 },
+                    frameRate: { ideal: 30 }
+                } 
+            });
             if (videoRef.current) {
                 videoRef.current.srcObject = stream;
             }
@@ -392,8 +398,8 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
         let interval: NodeJS.Timeout;
 
         const detect = async () => {
-            if (status !== 'SCANNING' || !videoRef.current || !faceMatcher) return;
-
+            if (staIncreased minConfidence to 0.5 to reduce false positives from poor detections
+                const detections = await faceapi.detectAllFaces(videoRef.current, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.5 })
             if (videoRef.current.paused || videoRef.current.ended) return;
 
             try {
@@ -628,22 +634,25 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                                 <div className="mt-32 bg-black/70 backdrop-blur-md px-6 py-3 rounded-2xl text-white border border-white/10 animate-in fade-in slide-in-from-bottom-4">
                                     <div className="flex items-center justify-between gap-4 mb-2">
                                         <span className="text-sm text-gray-300">ความเหมือน</span>
-                                        <span className={`text-lg font-bold font-mono ${currentDistance < 0.50 ? 'text-green-400' : 'text-yellow-400'}`}>
+                                        <span className={`text-lg font-bold font-mono ${currentDistance < 0.45 ? 'text-green-400' : 'text-yellow-400'}`}>
                                             {((1 - currentDistance) * 100).toFixed(0)}%
                                         </span>
                                     </div>
                                     
                                     {/* Progress Bar */}
                                     <div className="w-48 h-2 bg-gray-700 rounded-full overflow-hidden relative">
-                                        <div className="absolute top-0 bottom-0 w-0.5 bg-white/50 left-[50%] z-10" title="Threshold"></div>
+                                        {/* Threshold Marker at 55% (Distance 0.45) */}
+                                        <div className="absolute top-0 bottom-0 w-0.5 bg-white/50 left-[55%] z-10" title="Threshold"></div>
                                         <div 
-                                            className={`h-full transition-all duration-300 ${currentDistance < 0.50 ? 'bg-green-500' : 'bg-yellow-500'}`}
+                                            className={`h-full transition-all duration-300 ${currentDistance < 0.45 ? 'bg-green-500' : 'bg-yellow-500'}`}
                                             style={{ width: `${Math.min(100, Math.max(5, (1 - currentDistance) * 100))}%` }}
                                         />
                                     </div>
                                     
-                                    <div className="text-xs text-center mt-2 text-gray-400 font-mono">
-                                        Distance: {currentDistance.toFixed(3)} (&lt; 0.50)
+                                    <div className="flex justify-between w-full text-[10px] text-gray-500 mt-1 px-1">
+                                        <span>0%</span>
+                                        <span>เป้าหมาย &gt; 55%</span>
+                                        <span>100%</span>
                                     </div>
                                 </div>
                             ) : (
