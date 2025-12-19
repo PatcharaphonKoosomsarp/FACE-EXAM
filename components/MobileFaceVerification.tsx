@@ -158,8 +158,9 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
 
                 const labeledDescriptor = new faceapi.LabeledFaceDescriptors(user.id, descriptors);
                 setLabeledDescriptors([labeledDescriptor]);
-                // Use threshold 0.45 (Stricter)
-                setFaceMatcher(new faceapi.FaceMatcher([labeledDescriptor], 0.45));
+                // Use high threshold (2.0) to ensure we get distance feedback even if not yet verified
+                // The actual verification check is done manually with < 0.45
+                setFaceMatcher(new faceapi.FaceMatcher([labeledDescriptor], 2.0));
                 setStatus('SCANNING');
                 startCamera();
 
