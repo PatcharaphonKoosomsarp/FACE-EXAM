@@ -298,9 +298,12 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
                         </div>
                         <h2 className="text-3xl font-bold text-white mb-2">ยืนยันตัวตนสำเร็จ!</h2>
                         <p className="text-gray-400 mb-8">คุณสามารถดำเนินการต่อบนหน้าจอคอมพิวเตอร์ได้เลย</p>
-                        <div className="text-sm text-gray-600">
-                            (หน้าจอนี้จะปิดเองไม่ได้ กรุณาปิดด้วยตนเอง)
-                        </div>
+                        <button 
+                            onClick={() => window.close()}
+                            className="bg-white text-black px-8 py-3 rounded-full font-bold hover:bg-gray-200 transition shadow-lg shadow-white/10"
+                        >
+                            ปิดหน้าต่าง
+                        </button>
                     </div>
                 ) : status === 'FAILED' ? (
                     <div className="text-center p-8">
