@@ -202,9 +202,9 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
         const detect = async () => {
             if (videoRef.current?.paused || videoRef.current?.ended) return;
 
-            try {, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.5 })
+            try {
                 // Use SSD MobileNet for consistency with PC (More accurate than Tiny)
-                const detections = await faceapi.detectAllFaces(videoRef.current)
+                const detections = await faceapi.detectAllFaces(videoRef.current, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.5 }))
                     .withFaceLandmarks()
                     .withFaceDescriptors();
 
