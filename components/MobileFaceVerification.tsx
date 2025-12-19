@@ -230,10 +230,10 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
                         setCurrentDistance(bestMatch.distance);
                     } else {
                         setCurrentDistance(null);
-                    }45 (Stricter)
-                    if (bestMatch && bestMatch.distance < 0.45
-                    // Threshold 0.50 (Balanced)
-                    if (bestMatch && bestMatch.distance < 0.50) {
+                    }
+
+                    // Threshold 0.45 (Stricter)
+                    if (bestMatch && bestMatch.distance < 0.45) {
                         clearInterval(interval);
                         handleSuccess(resizedDetections[0].descriptor);
                     }

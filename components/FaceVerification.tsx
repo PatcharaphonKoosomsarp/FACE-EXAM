@@ -398,14 +398,14 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
         let interval: NodeJS.Timeout;
 
         const detect = async () => {
-            if (staIncreased minConfidence to 0.5 to reduce false positives from poor detections
-                const detections = await faceapi.detectAllFaces(videoRef.current, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.5 })
+            if (status !== 'SCANNING' || !videoRef.current || !faceMatcher) return;
+
             if (videoRef.current.paused || videoRef.current.ended) return;
 
             try {
                 // Use detectAllFaces with SSD MobileNet (more accurate than detectSingleFace/TinyFace)
-                // as used in authentication_face.html logic
-                const detections = await faceapi.detectAllFaces(videoRef.current)
+                // Increased minConfidence to 0.5 to reduce false positives from poor detections
+                const detections = await faceapi.detectAllFaces(videoRef.current, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.5 }))
                     .withFaceLandmarks()
                     .withFaceDescriptors();
 
