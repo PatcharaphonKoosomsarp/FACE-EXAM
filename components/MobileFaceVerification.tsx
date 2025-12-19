@@ -350,6 +350,22 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
 
                             {/* Status Text (Centered below face box) */}
                             <div className="absolute bottom-20 left-0 right-0 flex flex-col items-center z-20 gap-3">
+                                <div className="bg-black/70 text-white px-6 py-2 rounded-full text-lg font-semibold backdrop-blur-sm border border-white/10 whitespace-nowrap shadow-lg animate-in slide-in-from-bottom-4">
+                                    {status === 'LOADING_MODELS' || status === 'LOADING_DATA' || status === 'FETCHING_INFO' ? (
+                                        <span className="flex items-center">
+                                            <Loader2 className="w-5 h-5 text-primary animate-spin mr-2" />
+                                            กำลังเตรียมระบบ...
+                                        </span>
+                                    ) : status === 'VERIFYING_IP' ? (
+                                        <span className="flex items-center">
+                                            <Loader2 className="w-5 h-5 text-blue-500 animate-spin mr-2" />
+                                            กำลังบันทึกข้อมูล...
+                                        </span>
+                                    ) : (
+                                        <span>มองตรงไปที่กล้อง</span>
+                                    )}
+                                </div>
+
                                 {/* Real-time Distance Feedback */}
                                 {status === 'SCANNING' && currentDistance !== null && (
                                     <div className="bg-black/60 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/10 flex flex-col items-center animate-in slide-in-from-bottom-2 mb-2">
@@ -377,21 +393,6 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
                                         </div>
                                     </div>
                                 )}
-                                <div className="bg-black/70 text-white px-6 py-2 rounded-full text-lg font-semibold backdrop-blur-sm border border-white/10 whitespace-nowrap shadow-lg animate-in slide-in-from-bottom-4">
-                                    {status === 'LOADING_MODELS' || status === 'LOADING_DATA' || status === 'FETCHING_INFO' ? (
-                                        <span className="flex items-center">
-                                            <Loader2 className="w-5 h-5 text-primary animate-spin mr-2" />
-                                            กำลังเตรียมระบบ...
-                                        </span>
-                                    ) : status === 'VERIFYING_IP' ? (
-                                        <span className="flex items-center">
-                                            <Loader2 className="w-5 h-5 text-blue-500 animate-spin mr-2" />
-                                            กำลังบันทึกข้อมูล...
-                                        </span>
-                                    ) : (
-                                        <span>มองตรงไปที่กล้อง</span>
-                                    )}
-                                </div>
                             </div>
                         </div>
                     </>
