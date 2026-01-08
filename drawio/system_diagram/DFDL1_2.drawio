@@ -1,0 +1,159 @@
+<mxfile host="65bd71144e">
+    <diagram id="JrijGQzLlb2HnzYog_8C" name="Page-1">
+        <mxGraphModel dx="-635" dy="614" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="2" value="2.1" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=20;fillColor=#ffffff;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;swimlaneFillColor=#ffffff;" vertex="1" parent="1">
+                    <mxGeometry x="2690" y="397" width="115" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="3" value="เพิ่มข้อมูลตารางสอบ" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="2">
+                    <mxGeometry y="20" width="115" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="4" value="2.2" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=20;fillColor=#ffffff;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;swimlaneFillColor=#ffffff;" vertex="1" parent="1">
+                    <mxGeometry x="2690" y="487" width="120" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="5" value="เเก้ไขข้อมูล&lt;span style=&quot;color: rgb(0, 0, 0);&quot;&gt;ตาราง&lt;/span&gt;สอบ" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="4">
+                    <mxGeometry y="20" width="120" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="6" value="2.3" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=20;fillColor=#ffffff;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;swimlaneFillColor=#ffffff;" vertex="1" parent="1">
+                    <mxGeometry x="2690" y="577" width="115" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="7" value="ลบข้อมูล&lt;span style=&quot;color: rgb(0, 0, 0);&quot;&gt;ตาราง&lt;/span&gt;สอบ" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="6">
+                    <mxGeometry y="20" width="115" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="8" value="" style="endArrow=classic;html=1;" edge="1" parent="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="2480" y="407.28999999999996" as="sourcePoint"/>
+                        <mxPoint x="2690" y="407" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="9" value="ข้อมูล&lt;span style=&quot;color: rgb(0, 0, 0);&quot;&gt;ตาราง&lt;/span&gt;สอบที่ต้องการเพิ่ม" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="8">
+                    <mxGeometry x="-0.4061" y="1" relative="1" as="geometry">
+                        <mxPoint x="38" y="1" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="10" value="" style="endArrow=classic;html=1;" edge="1" parent="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="2690" y="440" as="sourcePoint"/>
+                        <mxPoint x="2480" y="440" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="11" value="ข้อมูล&lt;span style=&quot;color: rgb(0, 0, 0);&quot;&gt;ตาราง&lt;/span&gt;สอบ" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="10">
+                    <mxGeometry x="-0.2212" y="-1" relative="1" as="geometry">
+                        <mxPoint x="-18" y="1" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="12" value="" style="endArrow=classic;html=1;" edge="1" parent="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="2480" y="497.28999999999996" as="sourcePoint"/>
+                        <mxPoint x="2690" y="497" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="13" value="ข้อมูล&lt;span style=&quot;color: rgb(0, 0, 0);&quot;&gt;ตาราง&lt;/span&gt;สอบที่ต้องการเเก้ไข" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="12">
+                    <mxGeometry x="-0.4061" y="1" relative="1" as="geometry">
+                        <mxPoint x="38" y="1" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="14" value="" style="endArrow=classic;html=1;" edge="1" parent="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="2690" y="527" as="sourcePoint"/>
+                        <mxPoint x="2480" y="527" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="15" value="ข้อมูล&lt;span style=&quot;color: rgb(0, 0, 0);&quot;&gt;ตาราง&lt;/span&gt;สอบ" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="14">
+                    <mxGeometry x="-0.2212" y="-1" relative="1" as="geometry">
+                        <mxPoint x="-18" y="1" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="16" value="" style="endArrow=classic;html=1;" edge="1" parent="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="2480" y="587.29" as="sourcePoint"/>
+                        <mxPoint x="2690" y="587" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="17" value="ข้อมูลตารางสอบที่ต้องการลบ" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="16">
+                    <mxGeometry x="-0.4061" y="1" relative="1" as="geometry">
+                        <mxPoint x="38" y="1" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="18" value="" style="endArrow=classic;html=1;" edge="1" parent="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="2805" y="409.99999999999994" as="sourcePoint"/>
+                        <mxPoint x="3085" y="499.71" as="targetPoint"/>
+                        <Array as="points">
+                            <mxPoint x="3085" y="409.71"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="19" value="ข้อมูล&lt;span style=&quot;color: rgb(0, 0, 0);&quot;&gt;ตาราง&lt;/span&gt;สอบที่เพิ่ม" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="18">
+                    <mxGeometry x="-0.4061" y="1" relative="1" as="geometry">
+                        <mxPoint x="38" y="1" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="20" value="" style="endArrow=classic;html=1;" edge="1" parent="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="3065" y="499.71" as="sourcePoint"/>
+                        <mxPoint x="2805" y="439.71" as="targetPoint"/>
+                        <Array as="points">
+                            <mxPoint x="3065" y="439.71"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="21" value="เเสดงข้อมูล&lt;span style=&quot;color: rgb(0, 0, 0);&quot;&gt;ตาราง&lt;/span&gt;สอบ" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="20">
+                    <mxGeometry x="-0.2212" y="-1" relative="1" as="geometry">
+                        <mxPoint x="-50" y="1" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="22" value="" style="endArrow=classic;html=1;" edge="1" parent="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="2810" y="500.28999999999996" as="sourcePoint"/>
+                        <mxPoint x="3020" y="500" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="23" value="ข้อมูล&lt;span style=&quot;color: rgb(0, 0, 0);&quot;&gt;ตาราง&lt;/span&gt;สอบที่เเก้ไข" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="22">
+                    <mxGeometry x="-0.4061" y="1" relative="1" as="geometry">
+                        <mxPoint x="38" y="1" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="24" value="" style="endArrow=classic;html=1;" edge="1" parent="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="3020" y="530" as="sourcePoint"/>
+                        <mxPoint x="2810" y="530" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="25" value="เเสดงข้อมูล&lt;span style=&quot;color: rgb(0, 0, 0);&quot;&gt;ตาราง&lt;/span&gt;สอบ" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="24">
+                    <mxGeometry x="-0.2212" y="-1" relative="1" as="geometry">
+                        <mxPoint x="-18" y="1" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="26" value="" style="endArrow=classic;html=1;" edge="1" parent="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="2805" y="590" as="sourcePoint"/>
+                        <mxPoint x="3075" y="529.71" as="targetPoint"/>
+                        <Array as="points">
+                            <mxPoint x="3075" y="589.71"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="27" value="ข้อมูล&lt;span style=&quot;color: rgb(0, 0, 0);&quot;&gt;ตาราง&lt;/span&gt;สอบที่ลบ" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="26">
+                    <mxGeometry x="-0.4061" y="1" relative="1" as="geometry">
+                        <mxPoint x="38" y="1" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="28" value="" style="group" vertex="1" connectable="0" parent="1">
+                    <mxGeometry x="3020" y="500" width="130" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="29" value="D2" style="html=1;dashed=0;whiteSpace=wrap;shape=mxgraph.dfd.dataStoreID;align=left;spacingLeft=3;points=[[0,0],[0.5,0],[1,0],[0,0.5],[1,0.5],[0,1],[0.5,1],[1,1]];" vertex="1" parent="28">
+                    <mxGeometry width="110" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="30" value="ข้อมูลตารางสอบ" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="28">
+                    <mxGeometry x="30" width="100" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="31" value="Data Flow Diagram Level 1 การจัดการตารางสอบ" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+                    <mxGeometry x="2640" y="640" width="270" height="30" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
