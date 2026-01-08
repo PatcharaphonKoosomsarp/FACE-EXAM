@@ -4,41 +4,41 @@
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
-                <mxCell id="2" value="4.2" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=20;fillColor=#ffffff;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;swimlaneFillColor=#ffffff;" vertex="1" parent="1">
+                <mxCell id="2" value="4.2" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=20;fillColor=#ffffff;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;swimlaneFillColor=#ffffff;" parent="1" vertex="1">
                     <mxGeometry x="2679.25" y="980" width="136.5" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="3" value="&lt;span style=&quot;color: rgb(0, 0, 0); font-size: 11px; background-color: rgb(255, 255, 255);&quot;&gt;ลบการใช้งานทรัพยากร&lt;/span&gt;&lt;div&gt;&lt;span style=&quot;color: rgb(0, 0, 0); font-size: 11px; background-color: rgb(255, 255, 255);&quot;&gt;คอมพิวเตอร์ที่ไม่อนุญาต&lt;/span&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="2">
+                <mxCell id="3" value="&lt;span style=&quot;color: rgb(0, 0, 0); font-size: 11px; background-color: rgb(255, 255, 255);&quot;&gt;ลบการใช้งานทรัพยากร&lt;/span&gt;&lt;div&gt;&lt;span style=&quot;color: rgb(0, 0, 0); font-size: 11px; background-color: rgb(255, 255, 255);&quot;&gt;คอมพิวเตอร์ที่ไม่อนุญาต&lt;/span&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="2" vertex="1">
                     <mxGeometry y="20" width="136.5" height="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="4" value="" style="endArrow=classic;html=1;" edge="1" parent="1">
+                <mxCell id="4" value="" style="endArrow=classic;html=1;" parent="1" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="2360" y="890" as="sourcePoint"/>
                         <mxPoint x="2688.5" y="890" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="5" value="ข้อมูล&lt;span style=&quot;scrollbar-color: rgb(226, 226, 226) rgb(251, 251, 251); background-color: rgb(255, 255, 255); color: rgb(0, 0, 0);&quot;&gt;การใช้งานทรัพยากรคอมพิวเตอร์ที่ไม่อนุญาต&lt;/span&gt;ที่ต้องการเพิ่ม" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="4">
+                <mxCell id="5" value="ข้อมูล&lt;span style=&quot;scrollbar-color: rgb(226, 226, 226) rgb(251, 251, 251); background-color: rgb(255, 255, 255); color: rgb(0, 0, 0);&quot;&gt;การใช้งานทรัพยากรคอมพิวเตอร์ที่ไม่อนุญาต&lt;/span&gt;ที่ต้องการเพิ่ม" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="4" vertex="1" connectable="0">
                     <mxGeometry x="-0.4061" y="1" relative="1" as="geometry">
                         <mxPoint x="63" y="1" as="offset"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="6" value="" style="endArrow=classic;html=1;" edge="1" parent="1">
+                <mxCell id="6" value="" style="endArrow=classic;html=1;" parent="1" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="2688.5" y="920" as="sourcePoint"/>
                         <mxPoint x="2360" y="920" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="7" value="&lt;span style=&quot;color: rgb(0, 0, 0);&quot;&gt;ข้อมูล&lt;/span&gt;&lt;span style=&quot;scrollbar-color: rgb(226, 226, 226) rgb(251, 251, 251); background-color: rgb(255, 255, 255); color: rgb(0, 0, 0);&quot;&gt;การใช้งานทรัพยากรคอมพิวเตอร์ที่ไม่อนุญาต&lt;/span&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="6">
+                <mxCell id="7" value="&lt;span style=&quot;color: rgb(0, 0, 0);&quot;&gt;ข้อมูล&lt;/span&gt;&lt;span style=&quot;scrollbar-color: rgb(226, 226, 226) rgb(251, 251, 251); background-color: rgb(255, 255, 255); color: rgb(0, 0, 0);&quot;&gt;การใช้งานทรัพยากรคอมพิวเตอร์ที่ไม่อนุญาต&lt;/span&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="6" vertex="1" connectable="0">
                     <mxGeometry x="-0.2212" y="-1" relative="1" as="geometry">
                         <mxPoint x="-41" y="1" as="offset"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="8" value="4.1" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=20;fillColor=#ffffff;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;swimlaneFillColor=#ffffff;" vertex="1" parent="1">
+                <mxCell id="8" value="4.1" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=20;fillColor=#ffffff;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;swimlaneFillColor=#ffffff;" parent="1" vertex="1">
                     <mxGeometry x="2688.5" y="880" width="123" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="9" value="&lt;span style=&quot;scrollbar-color: rgb(226, 226, 226) rgb(251, 251, 251); font-size: 11px; background-color: rgb(255, 255, 255); color: rgb(0, 0, 0);&quot;&gt;เพิ่มการใช้งานทรัพยากร&lt;/span&gt;&lt;div style=&quot;color: rgb(63, 63, 63); scrollbar-color: rgb(226, 226, 226) rgb(251, 251, 251);&quot;&gt;&lt;span style=&quot;scrollbar-color: rgb(226, 226, 226) rgb(251, 251, 251); font-size: 11px; background-color: rgb(255, 255, 255); color: rgb(0, 0, 0);&quot;&gt;คอมพิวเตอร์ที่ไม่อนุญาต&lt;/span&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="8">
+                <mxCell id="9" value="&lt;span style=&quot;scrollbar-color: rgb(226, 226, 226) rgb(251, 251, 251); font-size: 11px; background-color: rgb(255, 255, 255); color: rgb(0, 0, 0);&quot;&gt;เพิ่มการใช้งานทรัพยากร&lt;/span&gt;&lt;div style=&quot;color: rgb(63, 63, 63); scrollbar-color: rgb(226, 226, 226) rgb(251, 251, 251);&quot;&gt;&lt;span style=&quot;scrollbar-color: rgb(226, 226, 226) rgb(251, 251, 251); font-size: 11px; background-color: rgb(255, 255, 255); color: rgb(0, 0, 0);&quot;&gt;คอมพิวเตอร์ที่ไม่อนุญาต&lt;/span&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="8" vertex="1">
                     <mxGeometry y="20" width="123" height="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="10" value="" style="endArrow=classic;html=1;" edge="1" parent="1">
+                <mxCell id="10" value="" style="endArrow=classic;html=1;" parent="1" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="2811.5" y="890.04" as="sourcePoint"/>
                         <mxPoint x="3180" y="960" as="targetPoint"/>
@@ -47,12 +47,12 @@
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="11" value="ข้อมูลการใช้งานทรัพยากรคอมพิวเตอร์ที่ไม่อนุญาตที่เพิ่ม" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="10">
+                <mxCell id="11" value="ข้อมูลการใช้งานทรัพยากรคอมพิวเตอร์ที่ไม่อนุญาตที่เพิ่ม" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="10" vertex="1" connectable="0">
                     <mxGeometry x="-0.4061" y="1" relative="1" as="geometry">
                         <mxPoint x="65" y="1" as="offset"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="12" value="" style="endArrow=classic;html=1;" edge="1" parent="1">
+                <mxCell id="12" value="" style="endArrow=classic;html=1;" parent="1" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="3160" y="960" as="sourcePoint"/>
                         <mxPoint x="2811.5" y="920" as="targetPoint"/>
@@ -61,32 +61,32 @@
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="13" value="เเสดงข้อมูล&lt;span style=&quot;color: rgb(0, 0, 0);&quot;&gt;การใช้งานทรัพยากรคอมพิวเตอร์ที่ไม่อนุญาต&lt;/span&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="12">
+                <mxCell id="13" value="เเสดงข้อมูล&lt;span style=&quot;color: rgb(0, 0, 0);&quot;&gt;การใช้งานทรัพยากรคอมพิวเตอร์ที่ไม่อนุญาต&lt;/span&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="12" vertex="1" connectable="0">
                     <mxGeometry x="-0.2212" y="-1" relative="1" as="geometry">
                         <mxPoint x="-50" y="1" as="offset"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="14" value="" style="group" vertex="1" connectable="0" parent="1">
+                <mxCell id="14" value="" style="group" parent="1" vertex="1" connectable="0">
                     <mxGeometry x="3110" y="960" width="170" height="35" as="geometry"/>
                 </mxCell>
-                <mxCell id="15" value="D3" style="html=1;dashed=0;whiteSpace=wrap;shape=mxgraph.dfd.dataStoreID;align=left;spacingLeft=3;points=[[0,0],[0.5,0],[1,0],[0,0.5],[1,0.5],[0,1],[0.5,1],[1,1]];" vertex="1" parent="14">
+                <mxCell id="15" value="D3" style="html=1;dashed=0;whiteSpace=wrap;shape=mxgraph.dfd.dataStoreID;align=left;spacingLeft=3;points=[[0,0],[0.5,0],[1,0],[0,0.5],[1,0.5],[0,1],[0.5,1],[1,1]];" parent="14" vertex="1">
                     <mxGeometry width="150" height="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="16" value="&lt;span style=&quot;scrollbar-color: rgb(226, 226, 226) rgb(251, 251, 251); text-align: center; font-size: 11px; background-color: rgb(255, 255, 255); color: rgb(0, 0, 0);&quot;&gt;ข้อมูลการใช้งานทรัพยากร&lt;/span&gt;&lt;div style=&quot;color: rgb(63, 63, 63); scrollbar-color: rgb(226, 226, 226) rgb(251, 251, 251); text-align: center;&quot;&gt;&lt;span style=&quot;scrollbar-color: rgb(226, 226, 226) rgb(251, 251, 251); font-size: 11px; background-color: rgb(255, 255, 255); color: rgb(0, 0, 0);&quot;&gt;คอมพิวเตอร์ที่ไม่อนุญาต&lt;/span&gt;&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="14">
+                <mxCell id="16" value="&lt;span style=&quot;scrollbar-color: rgb(226, 226, 226) rgb(251, 251, 251); text-align: center; font-size: 11px; background-color: rgb(255, 255, 255); color: rgb(0, 0, 0);&quot;&gt;ข้อมูลการใช้งานทรัพยากร&lt;/span&gt;&lt;div style=&quot;color: rgb(63, 63, 63); scrollbar-color: rgb(226, 226, 226) rgb(251, 251, 251); text-align: center;&quot;&gt;&lt;span style=&quot;scrollbar-color: rgb(226, 226, 226) rgb(251, 251, 251); font-size: 11px; background-color: rgb(255, 255, 255); color: rgb(0, 0, 0);&quot;&gt;คอมพิวเตอร์ที่ไม่อนุญาต&lt;/span&gt;&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="14" vertex="1">
                     <mxGeometry x="30" y="-5" width="140" height="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="17" value="" style="endArrow=classic;html=1;" edge="1" parent="1">
+                <mxCell id="17" value="" style="endArrow=classic;html=1;" parent="1" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="2350.75" y="1000" as="sourcePoint"/>
                         <mxPoint x="2679.25" y="1000" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="18" value="ข้อมูล&lt;span style=&quot;scrollbar-color: rgb(226, 226, 226) rgb(251, 251, 251); background-color: rgb(255, 255, 255); color: rgb(0, 0, 0);&quot;&gt;การใช้งานทรัพยากรคอมพิวเตอร์ที่ไม่อนุญาต&lt;/span&gt;ที่ต้องการลบ" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="17">
+                <mxCell id="18" value="ข้อมูล&lt;span style=&quot;scrollbar-color: rgb(226, 226, 226) rgb(251, 251, 251); background-color: rgb(255, 255, 255); color: rgb(0, 0, 0);&quot;&gt;การใช้งานทรัพยากรคอมพิวเตอร์ที่ไม่อนุญาต&lt;/span&gt;ที่ต้องการลบ" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="17" vertex="1" connectable="0">
                     <mxGeometry x="-0.4061" y="1" relative="1" as="geometry">
                         <mxPoint x="63" y="1" as="offset"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="19" value="" style="endArrow=classic;html=1;" edge="1" parent="1">
+                <mxCell id="19" value="" style="endArrow=classic;html=1;" parent="1" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="2815.75" y="1009.7" as="sourcePoint"/>
                         <mxPoint x="3170" y="990" as="targetPoint"/>
@@ -95,13 +95,10 @@
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="20" value="ข้อมูล&lt;span style=&quot;scrollbar-color: rgb(226, 226, 226) rgb(251, 251, 251); background-color: rgb(255, 255, 255); color: rgb(0, 0, 0);&quot;&gt;การใช้งานทรัพยากรคอมพิวเตอร์ที่ไม่อนุญาต&lt;/span&gt;ที่ลบ" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="19">
+                <mxCell id="20" value="ข้อมูล&lt;span style=&quot;scrollbar-color: rgb(226, 226, 226) rgb(251, 251, 251); background-color: rgb(255, 255, 255); color: rgb(0, 0, 0);&quot;&gt;การใช้งานทรัพยากรคอมพิวเตอร์ที่ไม่อนุญาต&lt;/span&gt;ที่ลบ" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="19" vertex="1" connectable="0">
                     <mxGeometry x="-0.4061" y="1" relative="1" as="geometry">
                         <mxPoint x="63" y="1" as="offset"/>
                     </mxGeometry>
-                </mxCell>
-                <mxCell id="21" value="Data Flow Diagram Level 1 การจัดการใช้ทรัพยากรที่ไม่อนุญาต" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
-                    <mxGeometry x="2577.5" y="1060" width="340" height="30" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>
