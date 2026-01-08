@@ -25,6 +25,7 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
     const [modelsLoaded, setModelsLoaded] = useState(false);
     const [labeledDescriptors, setLabeledDescriptors] = useState<any[]>([]);
     const [faceMatcher, setFaceMatcher] = useState<any | null>(null);
+    const [currentDistance, setCurrentDistance] = useState<number | null>(null);
     const successHandled = useRef(false);
 
     // 1. Fetch User Photos (Critical) & Exam Info (Optional)
@@ -116,13 +117,13 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
                 
                 const photoTypes = [
                     { key: 'face_forward', label: 'หน้าตรง' },
-                    { key: 'closed_eye', label: 'ตาปิด' },
+                    // { key: 'closed_eye', label: 'ตาปิด' }, // Removed
                     { key: 'open_eye', label: 'ตาเปิด' },
                     { key: 'turn_left', label: 'หันซ้าย' },
                     { key: 'turn_right', label: 'หันขวา' },
-                    { key: 'look_up', label: 'มองขึ้น' },
-                    { key: 'look_down', label: 'มองลง' },
-                    { key: 'move_close', label: 'เข้าใกล้' }
+                    // { key: 'look_up', label: 'มองขึ้น' }, // Removed
+                    // { key: 'look_down', label: 'มองลง' }, // Removed
+                    // { key: 'move_close', label: 'เข้าใกล้' } // Removed
                 ];
 
                 for (const type of photoTypes) {
@@ -157,7 +158,9 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
 
                 const labeledDescriptor = new faceapi.LabeledFaceDescriptors(user.id, descriptors);
                 setLabeledDescriptors([labeledDescriptor]);
-                setFaceMatcher(new faceapi.FaceMatcher([labeledDescriptor], 0.55));
+                // Use high threshold (2.0) to ensure we get distance feedback even if not yet verified
+                // The actual verification check is done manually with < 0.45
+                setFaceMatcher(new faceapi.FaceMatcher([labeledDescriptor], 2.0));
                 setStatus('SCANNING');
                 startCamera();
 
@@ -176,7 +179,9 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
             // Use back camera if available, else front
             const stream = await navigator.mediaDevices.getUserMedia({ 
                 video: { 
-                    facingMode: 'user' // 'environment' for back camera, 'user' for front. Verification usually uses front.
+                    facingMode: 'user', // 'environment' for back camera, 'user' for front. Verification usually uses front.
+                    width: { ideal: 640 },
+                    height: { ideal: 480 }
                 } 
             });
             if (videoRef.current) {
@@ -199,10 +204,8 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
             if (videoRef.current?.paused || videoRef.current?.ended) return;
 
             try {
-                const detections = await faceapi.detectAllFaces(videoRef.current, new faceapi.TinyFaceDetectorOptions()) // Use Tiny for mobile performance? Or SSD?
-                    // Let's stick to SSD if possible, but Tiny is faster on mobile.
-                    // FaceVerification uses SSD. Let's try SSD first. If slow, we might need to switch.
-                    // Actually, let's use SSD for consistency with desktop.
+                // Use SSD MobileNet for consistency with PC (More accurate than Tiny)
+                const detections = await faceapi.detectAllFaces(videoRef.current, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.5 }))
                     .withFaceLandmarks()
                     .withFaceDescriptors();
 
@@ -214,7 +217,7 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
                 if (resizedDetections.length > 0) {
                     let bestMatch: any | null = null;
                     for (const detection of resizedDetections) {
-                        if (detection.detection.score > 0.55) {
+                        if (detection.detection.score > 0.5) {
                             const match = faceMatcher.findBestMatch(detection.descriptor);
                             if (match.label === user.id) {
                                 if (!bestMatch || match.distance < bestMatch.distance) {
@@ -224,7 +227,14 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
                         }
                     }
 
-                    if (bestMatch && bestMatch.distance < 0.55) {
+                    if (bestMatch) {
+                        setCurrentDistance(bestMatch.distance);
+                    } else {
+                        setCurrentDistance(null);
+                    }
+
+                    // Threshold 0.45 (Stricter)
+                    if (bestMatch && bestMatch.distance < 0.45) {
                         clearInterval(interval);
                         handleSuccess(resizedDetections[0].descriptor);
                     }
@@ -269,6 +279,17 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
         }
     };
 
+    const handleClose = () => {
+        window.close();
+        // Hack for some mobile browsers
+        try { window.open('', '_self', ''); window.close(); } catch (e) {}
+        
+        // Fallback if blocked
+        setTimeout(() => {
+            alert("กรุณากดปิดหน้าต่างที่ตัวเบราว์เซอร์");
+        }, 500);
+    };
+
     return (
         <div className="min-h-screen bg-black flex flex-col">
             {/* Header */}
@@ -288,9 +309,12 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
                         </div>
                         <h2 className="text-3xl font-bold text-white mb-2">ยืนยันตัวตนสำเร็จ!</h2>
                         <p className="text-gray-400 mb-8">คุณสามารถดำเนินการต่อบนหน้าจอคอมพิวเตอร์ได้เลย</p>
-                        <div className="text-sm text-gray-600">
-                            (หน้าจอนี้จะปิดเองไม่ได้ กรุณาปิดด้วยตนเอง)
-                        </div>
+                        <button 
+                            onClick={handleClose}
+                            className="bg-white text-black px-8 py-3 rounded-full font-bold hover:bg-gray-200 transition shadow-lg shadow-white/10"
+                        >
+                            ปิดหน้าต่าง
+                        </button>
                     </div>
                 ) : status === 'FAILED' ? (
                     <div className="text-center p-8">
@@ -355,6 +379,34 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
                                         <span>มองตรงไปที่กล้อง</span>
                                     )}
                                 </div>
+
+                                {/* Real-time Distance Feedback */}
+                                {status === 'SCANNING' && currentDistance !== null && (
+                                    <div className="bg-black/60 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/10 flex flex-col items-center animate-in slide-in-from-bottom-2 mb-2">
+                                        <div className="flex items-center gap-3 mb-1">
+                                            <span className="text-sm text-gray-300">ความเหมือน</span>
+                                            <span className={`text-xl font-bold font-mono ${currentDistance < 0.45 ? 'text-green-400' : currentDistance < 0.6 ? 'text-yellow-400' : 'text-red-400'}`}>
+                                                {((1 - currentDistance) * 100).toFixed(0)}%
+                                            </span>
+                                        </div>
+                                        
+                                        {/* Visual Bar */}
+                                        <div className="w-48 h-2 bg-gray-700 rounded-full overflow-hidden relative">
+                                            {/* Threshold Marker at 55% (Distance 0.45) */}
+                                            <div className="absolute top-0 bottom-0 w-0.5 bg-white/50 left-[55%] z-10"></div>
+                                            
+                                            <div 
+                                                className={`h-full transition-all duration-300 ${currentDistance < 0.45 ? 'bg-green-500' : currentDistance < 0.6 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                                                style={{ width: `${Math.min(100, Math.max(5, (1 - currentDistance) * 100))}%` }}
+                                            />
+                                        </div>
+                                        <div className="flex justify-between w-full text-[10px] text-gray-500 mt-1 px-1">
+                                            <span>0%</span>
+                                            <span>เป้าหมาย &gt; 55%</span>
+                                            <span>100%</span>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </>

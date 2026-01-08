@@ -7,6 +7,9 @@ import threading
 import ctypes  # For MessageBox
 from datetime import datetime
 import os
+import socket
+import sys
+import subprocess
 from supabase import create_client, Client
 from flask import Flask, jsonify
 from flask_cors import CORS
@@ -835,6 +838,101 @@ def get_client_ip():
         print(f"Warning: ไม่สามารถดึง IP address ได้: {e}")
         return "127.0.0.1"
 
+def get_mac_address(target_ip):
+    """
+    ดึง MAC Address ของ Network Interface ที่ใช้ IP ที่ระบุ
+    """
+    try:
+        interfaces = psutil.net_if_addrs()
+        for interface_name, addrs in interfaces.items():
+            for addr in addrs:
+                if addr.family == socket.AF_INET and addr.address == target_ip:
+                    # Found the interface with this IP, now look for MAC
+                    for addr2 in addrs:
+                        if addr2.family == psutil.AF_LINK:
+                            return addr2.address
+        return None
+    except Exception as e:
+        print(f"Error getting MAC: {e}")
+        return None
+
+def auto_update_ip_mac():
+    """
+    ตรวจสอบและอัปเดต IP/MAC Address ในฐานข้อมูลอัตโนมัติ
+    """
+    print("\n--- Auto-Updating IP/MAC Address ---")
+    local_ip = get_client_ip()
+    
+    if local_ip == "127.0.0.1":
+        print("Agent: Cannot determine local IP. Skipping auto-update.")
+        return
+
+    mac_address = get_mac_address(local_ip)
+    
+    if not mac_address:
+        print(f"Agent: Could not determine MAC address for IP {local_ip}. Skipping auto-update.")
+        return
+
+    print(f"Agent: Current Machine -> IP: {local_ip}, MAC: {mac_address}")
+
+    # 1. Try to find by MAC (เครื่องเคยลงทะเบียนแล้ว)
+    try:
+        # Note: ต้องมีคอลัมน์ 'mac_address' ในตาราง room_seat_ip_mappings
+        res = supabase.table('room_seat_ip_mappings').select('*').eq('mac_address', mac_address).execute()
+        
+        if res.data:
+            # Found by MAC -> Update IP if different
+            mapping = res.data[0]
+            if mapping['ip_address'] != local_ip:
+                print(f"Agent: Found registered MAC. Updating IP for Seat {mapping['seat_number']} (Row {mapping['row_number']}, Col {mapping['column_number']})")
+                print(f"       Old IP: {mapping['ip_address']} -> New IP: {local_ip}")
+                
+                update_res = supabase.table('room_seat_ip_mappings').update({'ip_address': local_ip, 'updated_at': datetime.now().astimezone().isoformat()}).eq('id', mapping['id']).execute()
+                
+                if update_res.data:
+                    print("Agent: Update IP successful.")
+                else:
+                    print(f"Agent: Update IP failed. Response: {update_res}")
+            else:
+                print(f"Agent: Machine is already registered correctly at Seat {mapping['seat_number']}. IP matches.")
+            return
+    except Exception as e:
+        print(f"Agent: Error checking MAC in DB: {e}")
+        # อาจจะ error ถ้าไม่มีคอลัมน์ mac_address หรือตารางไม่ถูกต้อง
+        return
+
+    # 2. If not found by MAC, try to find by IP (First time setup / Binding)
+    try:
+        print("Agent: MAC not found in DB. Checking by IP for first-time binding...")
+        res = supabase.table('room_seat_ip_mappings').select('*').eq('ip_address', local_ip).execute()
+        
+        if res.data:
+            # Found by IP -> Check if MAC is empty
+            # ถ้าเจอหลาย record (ซึ่งไม่ควรเกิดขึ้นถ้า IP unique) เอาอันแรก
+            for mapping in res.data:
+                current_mac = mapping.get('mac_address')
+                if not current_mac or current_mac.strip() == "":
+                    print(f"Agent: Found IP {local_ip} at Seat {mapping['seat_number']}. Binding MAC {mac_address} to this seat.")
+                    
+                    update_res = supabase.table('room_seat_ip_mappings').update({'mac_address': mac_address, 'updated_at': datetime.now().astimezone().isoformat()}).eq('id', mapping['id']).execute()
+                    
+                    if update_res.data:
+                        print("Agent: Binding MAC successful.")
+                    else:
+                        print(f"Agent: Binding MAC failed. Response: {update_res}")
+                    return
+                else:
+                    print(f"Agent: Found IP {local_ip} at Seat {mapping['seat_number']}, but it is already bound to MAC {current_mac}.")
+                    print("       Skipping to prevent conflict. Please ask teacher to reset MAC for this seat if needed.")
+        else:
+            print(f"Agent: IP {local_ip} not found in any seat mapping.")
+            print("       Please ask teacher to map this IP to a seat first.")
+            
+    except Exception as e:
+        print(f"Agent: Error checking IP in DB: {e}")
+    
+    print("------------------------------------\n")
+
 def get_blocked_resources(session_id, verbose=True):
     """
     ดึงรายการทรัพยากรที่ถูกบล็อกสำหรับ session นี้
@@ -1052,10 +1150,29 @@ def debug_check_blocked_resources():
         print(f"[DEBUG] Error fetching blocked resources: {e}\n")
 
 if __name__ == "__main__":
+    # === Auto-Relaunch with pythonw.exe (Background Mode) ===
+    # ตรวจสอบว่ารันด้วย python.exe (มีหน้าต่าง) หรือไม่ ถ้าใช่ให้ Relaunch ด้วย pythonw.exe
+    if os.name == 'nt' and sys.executable.lower().endswith('python.exe'):
+        try:
+            # หา path ของ pythonw.exe ในโฟลเดอร์เดียวกับ python.exe
+            python_dir = os.path.dirname(sys.executable)
+            pythonw_path = os.path.join(python_dir, 'pythonw.exe')
+            
+            if os.path.exists(pythonw_path):
+                # Relaunch สคริปต์นี้ด้วย pythonw.exe (ไม่มีหน้าต่าง Console)
+                # ใช้ os.path.abspath(__file__) เพื่อให้แน่ใจว่า path ถูกต้อง
+                subprocess.Popen([pythonw_path, os.path.abspath(__file__)] + sys.argv[1:], close_fds=True)
+                sys.exit() # ปิดโปรแกรมตัวปัจจุบัน (ที่มีหน้าต่าง)
+        except Exception as e:
+            print(f"Warning: Could not relaunch in background mode: {e}")
+
     # === เริ่มบริการ Agent ===
     
     # ทดสอบดึงข้อมูล Blocked Resources ทันทีที่รัน
     debug_check_blocked_resources()
+
+    # Auto-Update IP/MAC Address
+    auto_update_ip_mac()
 
     # เริ่มบริการ Agent สำหรับฟังคำสั่งจาก Supabase
     start_agent_service()

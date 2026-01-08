@@ -274,17 +274,16 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
               const sessionIds = data.map(s => s.id);
               if (sessionIds.length > 0) {
                   // Check for logs in the last 30 seconds
-                  // Fix: Use Local Time ISO string instead of UTC to match DB timestamp without timezone
-                  const now = new Date();
-                  const thirtySecondsAgoDate = new Date(now.getTime() - 30000);
-                  const tzOffset = thirtySecondsAgoDate.getTimezoneOffset() * 60000;
-                  const localISOTime = new Date(thirtySecondsAgoDate.getTime() - tzOffset).toISOString().slice(0, -1);
+                  // Fix: Use standard UTC ISO string for comparison. 
+                  // Supabase handles timestamptz correctly with UTC.
+                  const thirtySecondsAgoDate = new Date(Date.now() - 30000);
+                  const isoTime = thirtySecondsAgoDate.toISOString();
                   
                   const { data: logs } = await supabase
                       .from('resource_logs')
                       .select('session_id')
                       .in('session_id', sessionIds)
-                      .gt('timestamp', localISOTime);
+                      .gt('timestamp', isoTime);
                   
                   if (logs) {
                       const onlineIds = new Set(logs.map(l => l.session_id));
@@ -1128,7 +1127,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                                             {log.violation_type.replace(/_/g, ' ')}
                                                         </span>
                                                         <span className="text-sm text-gray-500 font-mono bg-white px-2 py-1 rounded border border-gray-200">
-                                                            {new Date(log.timestamp.replace(/Z$|[+-]\d{2}:?\d{2}$/, '')).toLocaleTimeString()}
+                                                            {new Date(log.timestamp).toLocaleTimeString()}
                                                         </span>
                                                     </div>
                                                     <div className="text-gray-800 text-base mb-3 font-medium break-words leading-relaxed pl-2">
@@ -1275,7 +1274,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                   </div>
                                   
                                   <div className="text-right text-sm text-gray-400">
-                                      Last updated: {new Date(studentResourceData.timestamp.replace(/Z$|[+-]\d{2}:?\d{2}$/, '')).toLocaleTimeString()}
+                                      Last updated: {new Date(studentResourceData.timestamp).toLocaleTimeString()}
                                   </div>
                               </div>
                           ) : (

@@ -523,22 +523,66 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
     };
   }, [method, retryCount, onResults]);
 
-  // QR Code Generation Logic
+  // QR Code Generation & Polling Logic
   useEffect(() => {
+    let pollInterval: NodeJS.Timeout;
+
     if (method === 'QR') {
-        const generateQR = async () => {
+        const startProcess = async () => {
             const { data: { user } } = await supabase.auth.getUser();
             if (user) {
-                // สร้าง URL สำหรับ QR Code โดยแนบ user_id ไปด้วย
-                // ใช้ URL ของ React App เอง แต่เพิ่ม parameter mode=mobile-register
+                // 1. Generate QR
                 const baseUrl = window.location.origin;
                 const url = `${baseUrl}/?mode=mobile-register&user_id=${encodeURIComponent(user.id)}`;
                 setQrUrl(url);
+
+                // 2. Get Initial State (to detect changes)
+                let initialFaceForward: string | null = null;
+                try {
+                    const { data: initialData } = await supabase
+                        .from('user_photos')
+                        .select('face_forward')
+                        .eq('user_id', user.id)
+                        .maybeSingle();
+                    if (initialData) {
+                        initialFaceForward = initialData.face_forward;
+                    }
+                } catch (e) { console.warn("Error fetching initial state:", e); }
+
+                // 3. Start Polling
+                pollInterval = setInterval(async () => {
+                    try {
+                        const { data: currentData } = await supabase
+                            .from('user_photos')
+                            .select('face_forward')
+                            .eq('user_id', user.id)
+                            .maybeSingle();
+
+                        if (currentData && currentData.face_forward) {
+                            // If we didn't have a record before, and now we do -> Success
+                            if (!initialFaceForward) {
+                                clearInterval(pollInterval);
+                                onComplete();
+                            } 
+                            // If we had a record, check if it changed (timestamp in URL changes)
+                            else if (currentData.face_forward !== initialFaceForward) {
+                                clearInterval(pollInterval);
+                                onComplete();
+                            }
+                        }
+                    } catch (e) {
+                        console.error("Polling error:", e);
+                    }
+                }, 3000); // Check every 3 seconds
             }
         };
-        generateQR();
+        startProcess();
     }
-  }, [method]);
+
+    return () => {
+        if (pollInterval) clearInterval(pollInterval);
+    };
+  }, [method, onComplete]);
 
   const handleRetry = () => {
       setError(null);
