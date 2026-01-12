@@ -89,9 +89,6 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user, exams, rooms,
                 <div className="text-center">
                         <h1 className="text-3xl font-bold text-gray-800">แผงควบคุมนักศึกษา</h1>
                         <p className="text-gray-500">สวัสดี, {user.name}</p>
-                        <p className="text-sm text-gray-400 mt-1 font-mono">
-                            รหัสนักศึกษา: <span className="text-gray-600 font-medium">{user.email.split('@')[0].replace(/^s/i, '')}</span>
-                        </p>
                 </div>
             </header>
 
