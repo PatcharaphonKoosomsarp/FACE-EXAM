@@ -265,11 +265,6 @@ const App: React.FC = () => {
                     <img src={user.avatarUrl} alt="Avatar" className="w-10 h-10 rounded-full bg-gray-200" />
                     <div className="hidden md:block text-left leading-tight">
                         <div className="text-base font-bold text-gray-800">{user.name}</div>
-                        {user.role === UserRole.STUDENT && (
-                            <div className="text-xs font-semibold text-gray-700">
-                                {user.email.split('@')[0].replace(/^s/i, '')}
-                            </div>
-                        )}
                         <div className="text-xs text-gray-600">{user.email}</div>
                         <div className="text-[10px] text-gray-400 font-bold tracking-wider uppercase">{user.role}</div>
                     </div>
