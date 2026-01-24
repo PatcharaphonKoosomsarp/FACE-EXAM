@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="vlxT_IFgP8dquTQVFO-6" name="Page-1">
-        <mxGraphModel dx="2144" dy="768" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+        <mxGraphModel dx="1270" dy="315" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -58,7 +58,7 @@
                 <mxCell id="36" value="จัดการการตรวจสอบสภาพแวดล้อมและโปรแกรม" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="35" vertex="1">
                     <mxGeometry y="30" width="240" height="50" as="geometry"/>
                 </mxCell>
-                <mxCell id="45" value="" style="endArrow=classic;html=1;entryX=0;entryY=0.75;entryDx=0;entryDy=0;" edge="1" parent="1" target="95">
+                <mxCell id="45" value="" style="endArrow=classic;html=1;entryX=0;entryY=0.75;entryDx=0;entryDy=0;" parent="1" target="95" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="360" y="1290" as="sourcePoint"/>
                         <mxPoint x="120" y="1110" as="targetPoint"/>
@@ -68,12 +68,12 @@
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="49" value="ข้อมูลบัญชีผู้ใช้เพื่อยืนยันตัวตน" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="45">
+                <mxCell id="49" value="ข้อมูลบัญชีผู้ใช้เพื่อยืนยันตัวตน" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="45" vertex="1" connectable="0">
                     <mxGeometry x="0.0201" relative="1" as="geometry">
                         <mxPoint x="99" as="offset"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="50" value="" style="endArrow=classic;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" target="95">
+                <mxCell id="50" value="" style="endArrow=classic;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" target="95" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="360" y="1310" as="sourcePoint"/>
                         <mxPoint y="1100" as="targetPoint"/>
@@ -83,12 +83,12 @@
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="51" value="ผลการตรวจสอบและสิทธิ์การเข้าสอบ" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="50">
+                <mxCell id="51" value="ผลการตรวจสอบและสิทธิ์การเข้าสอบ" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="50" vertex="1" connectable="0">
                     <mxGeometry x="0.0201" relative="1" as="geometry">
                         <mxPoint x="114" as="offset"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="52" value="" style="endArrow=classic;html=1;" edge="1" parent="1">
+                <mxCell id="52" value="" style="endArrow=classic;html=1;" parent="1" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="140" y="1430" as="sourcePoint"/>
                         <mxPoint x="360" y="1470" as="targetPoint"/>
@@ -97,12 +97,12 @@
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="53" value="ข้อมูลการตั้งค่าห้องสอบและผังที่นั่ง" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="52">
+                <mxCell id="53" value="ข้อมูลการตั้งค่าห้องสอบและผังที่นั่ง" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="52" vertex="1" connectable="0">
                     <mxGeometry x="0.0201" relative="1" as="geometry">
                         <mxPoint x="18" as="offset"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="54" value="" style="endArrow=classic;html=1;" edge="1" parent="1">
+                <mxCell id="54" value="" style="endArrow=classic;html=1;" parent="1" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="130" y="1430" as="sourcePoint"/>
                         <mxPoint x="360" y="1490" as="targetPoint"/>
@@ -111,12 +111,12 @@
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="55" value="ข้อมูลกำหนดการสอบและรายวิชา" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="54">
+                <mxCell id="55" value="ข้อมูลกำหนดการสอบและรายวิชา" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="54" vertex="1" connectable="0">
                     <mxGeometry x="0.0201" relative="1" as="geometry">
                         <mxPoint x="32" as="offset"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="56" value="" style="endArrow=classic;html=1;" edge="1" parent="1">
+                <mxCell id="56" value="" style="endArrow=classic;html=1;" parent="1" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="120" y="1430" as="sourcePoint"/>
                         <mxPoint x="360" y="1509.29" as="targetPoint"/>
@@ -125,12 +125,12 @@
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="57" value="รายการโปรแกรมและเว็บไซต์ต้องห้าม" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="56">
+                <mxCell id="57" value="รายการโปรแกรมและเว็บไซต์ต้องห้าม" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="56" vertex="1" connectable="0">
                     <mxGeometry x="0.0201" relative="1" as="geometry">
                         <mxPoint x="46" y="1" as="offset"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="58" value="" style="endArrow=classic;html=1;entryX=0;entryY=0.8;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1">
+                <mxCell id="58" value="" style="endArrow=classic;html=1;entryX=0;entryY=0.8;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="130" y="1050" as="sourcePoint"/>
                         <mxPoint x="360" y="839.9999999999999" as="targetPoint"/>
@@ -140,12 +140,12 @@
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="59" value="ข้อมูลภาพใบหน้าต้นฉบับสำหรับลงทะเบียน" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="58">
+                <mxCell id="59" value="ข้อมูลภาพใบหน้าต้นฉบับสำหรับลงทะเบียน" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="58" vertex="1" connectable="0">
                     <mxGeometry x="0.0201" relative="1" as="geometry">
                         <mxPoint x="96" as="offset"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="60" value="" style="endArrow=classic;html=1;" edge="1" parent="1">
+                <mxCell id="60" value="" style="endArrow=classic;html=1;" parent="1" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="140" y="1050" as="sourcePoint"/>
                         <mxPoint x="360" y="1000" as="targetPoint"/>
@@ -154,12 +154,12 @@
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="61" value="ข้อมูลภาพใบหน้าปัจจุบันเพื่อเข้าห้องสอบ" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="60">
+                <mxCell id="61" value="ข้อมูลภาพใบหน้าปัจจุบันเพื่อเข้าห้องสอบ" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="60" vertex="1" connectable="0">
                     <mxGeometry x="0.0201" relative="1" as="geometry">
                         <mxPoint x="22" as="offset"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="62" value="" style="endArrow=classic;html=1;entryX=0.993;entryY=1.007;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1">
+                <mxCell id="62" value="" style="endArrow=classic;html=1;entryX=0.993;entryY=1.007;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="580" y="1000" as="sourcePoint"/>
                         <mxPoint x="579.9999999999998" y="1680" as="targetPoint"/>
@@ -169,12 +169,12 @@
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="63" value="สถานะยืนยันตัวตนผ่าน" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="62">
+                <mxCell id="63" value="สถานะยืนยันตัวตนผ่าน" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="62" vertex="1" connectable="0">
                     <mxGeometry x="0.0201" relative="1" as="geometry">
                         <mxPoint x="-400" y="-358" as="offset"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="68" value="" style="endArrow=classic;html=1;" edge="1" parent="1">
+                <mxCell id="68" value="" style="endArrow=classic;html=1;" parent="1" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="110" y="1430" as="sourcePoint"/>
                         <mxPoint x="360" y="1610" as="targetPoint"/>
@@ -183,28 +183,28 @@
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="69" value="คำสั่งเปิด/ปิดเซสชันการสอบ" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="68">
+                <mxCell id="69" value="คำสั่งเปิด/ปิดเซสชันการสอบ" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="68" vertex="1" connectable="0">
                     <mxGeometry x="0.0201" relative="1" as="geometry">
                         <mxPoint x="76" as="offset"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="74" value="" style="endArrow=classic;html=1;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="1" target="95">
+                <mxCell id="74" value="" style="endArrow=classic;html=1;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" parent="1" target="95" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="380" y="1680" as="sourcePoint"/>
                         <mxPoint x="50" y="1660" as="targetPoint"/>
                         <Array as="points">
                             <mxPoint x="380" y="1710"/>
-                            <mxPoint x="-20" y="1710"/>
+                            <mxPoint x="-10" y="1710"/>
                             <mxPoint x="-10" y="1065"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="75" value="ข้อมูลเลขที่นั่งสอบที่ได้รับจัดสรร" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="74">
+                <mxCell id="75" value="ข้อมูลเลขที่นั่งสอบที่ได้รับจัดสรร" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="74" vertex="1" connectable="0">
                     <mxGeometry x="0.0201" relative="1" as="geometry">
-                        <mxPoint x="248" y="144" as="offset"/>
+                        <mxPoint x="230" y="149" as="offset"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="76" value="" style="endArrow=classic;html=1;" edge="1" parent="1">
+                <mxCell id="76" value="" style="endArrow=classic;html=1;" parent="1" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="360" y="1630" as="sourcePoint"/>
                         <mxPoint x="100" y="1430" as="targetPoint"/>
@@ -213,12 +213,12 @@
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="77" value="การแจ้งเตือนการทุจริต/ละเมิดกฎ" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="76">
+                <mxCell id="77" value="การแจ้งเตือนการทุจริต/ละเมิดกฎ" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="76" vertex="1" connectable="0">
                     <mxGeometry x="0.0201" relative="1" as="geometry">
                         <mxPoint x="99" as="offset"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="78" value="" style="endArrow=classic;html=1;" edge="1" parent="1">
+                <mxCell id="78" value="" style="endArrow=classic;html=1;" parent="1" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="360" y="1650" as="sourcePoint"/>
                         <mxPoint x="90" y="1430" as="targetPoint"/>
@@ -227,12 +227,12 @@
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="79" value="ข้อมูล Log การใช้งานทรัพยากรของผู้เข้าสอบ" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="78">
+                <mxCell id="79" value="ข้อมูล Log การใช้งานทรัพยากรของผู้เข้าสอบ" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="78" vertex="1" connectable="0">
                     <mxGeometry x="0.0201" relative="1" as="geometry">
                         <mxPoint x="115" as="offset"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="80" value="" style="endArrow=classic;html=1;" edge="1" parent="1">
+                <mxCell id="80" value="" style="endArrow=classic;html=1;" parent="1" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="360" y="1670" as="sourcePoint"/>
                         <mxPoint x="80" y="1430" as="targetPoint"/>
@@ -241,12 +241,12 @@
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="81" value="รายงานสรุปผลการเข้าสอบท้ายวิชา" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="80">
+                <mxCell id="81" value="รายงานสรุปผลการเข้าสอบท้ายวิชา" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="80" vertex="1" connectable="0">
                     <mxGeometry x="0.0201" relative="1" as="geometry">
                         <mxPoint x="130" as="offset"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="82" value="" style="endArrow=classic;html=1;" edge="1" parent="1">
+                <mxCell id="82" value="" style="endArrow=classic;html=1;" parent="1" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="135" y="1370" as="sourcePoint"/>
                         <mxPoint x="360" y="1330" as="targetPoint"/>
@@ -255,12 +255,12 @@
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="83" value="ข้อมูลบัญชีผู้ใช้เพื่อยืนยันตัวตน" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="82">
+                <mxCell id="83" value="ข้อมูลบัญชีผู้ใช้เพื่อยืนยันตัวตน" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="82" vertex="1" connectable="0">
                     <mxGeometry x="0.0201" relative="1" as="geometry">
                         <mxPoint x="27" as="offset"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="84" value="" style="endArrow=classic;html=1;" edge="1" parent="1">
+                <mxCell id="84" value="" style="endArrow=classic;html=1;" parent="1" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="360" y="1350" as="sourcePoint"/>
                         <mxPoint x="145" y="1370" as="targetPoint"/>
@@ -269,84 +269,84 @@
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="85" value="ผลการตรวจสอบและสิทธิ์การเข้าสอบ" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="84">
+                <mxCell id="85" value="ผลการตรวจสอบและสิทธิ์การเข้าสอบ" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="84" vertex="1" connectable="0">
                     <mxGeometry x="0.0201" relative="1" as="geometry">
                         <mxPoint x="18" as="offset"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="89" value="อาจารย์" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="89" value="อาจารย์" style="whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="40" y="1370" width="120" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="95" value="นักศึกษา" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="95" value="นักศึกษา" style="whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="40" y="1050" width="120" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="96" value="1.0" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;rounded=1;fontSize=14;fontStyle=0;strokeWidth=2;resizeParent=0;resizeLast=1;shadow=0;dashed=0;align=center;arcSize=4;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="96" value="1.0" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;rounded=1;fontSize=14;fontStyle=0;strokeWidth=2;resizeParent=0;resizeLast=1;shadow=0;dashed=0;align=center;arcSize=4;whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="360" y="800" width="220" height="80" as="geometry"/>
                 </mxCell>
-                <mxCell id="97" value="จัดการการลงทะเบียนอัตลักษณ์ใบหน้า" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="96">
+                <mxCell id="97" value="จัดการการลงทะเบียนอัตลักษณ์ใบหน้า" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="96" vertex="1">
                     <mxGeometry y="30" width="220" height="50" as="geometry"/>
                 </mxCell>
-                <mxCell id="98" value="2.0" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;rounded=1;fontSize=14;fontStyle=0;strokeWidth=2;resizeParent=0;resizeLast=1;shadow=0;dashed=0;align=center;arcSize=4;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="98" value="2.0" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;rounded=1;fontSize=14;fontStyle=0;strokeWidth=2;resizeParent=0;resizeLast=1;shadow=0;dashed=0;align=center;arcSize=4;whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="360" y="960" width="220" height="80" as="geometry"/>
                 </mxCell>
-                <mxCell id="99" value="จัดการการยืนยันตัวตนก่อนเข้าห้องสอบ" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="98">
+                <mxCell id="99" value="จัดการการยืนยันตัวตนก่อนเข้าห้องสอบ" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="98" vertex="1">
                     <mxGeometry y="30" width="220" height="50" as="geometry"/>
                 </mxCell>
-                <mxCell id="100" value="6.0" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;rounded=1;fontSize=14;fontStyle=0;strokeWidth=2;resizeParent=0;resizeLast=1;shadow=0;dashed=0;align=center;arcSize=4;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="100" value="6.0" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;rounded=1;fontSize=14;fontStyle=0;strokeWidth=2;resizeParent=0;resizeLast=1;shadow=0;dashed=0;align=center;arcSize=4;whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="360" y="1600" width="220" height="80" as="geometry"/>
                 </mxCell>
-                <mxCell id="101" value="จัดการเซสชันการเข้าสอบและการรายงาน" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="100">
+                <mxCell id="101" value="จัดการเซสชันการเข้าสอบและการรายงาน" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="100" vertex="1">
                     <mxGeometry y="30" width="220" height="50" as="geometry"/>
                 </mxCell>
-                <mxCell id="102" value="" style="edgeStyle=none;orthogonalLoop=1;jettySize=auto;html=1;rounded=1;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;endArrow=classic;entryX=0;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" target="14">
+                <mxCell id="102" value="" style="edgeStyle=none;orthogonalLoop=1;jettySize=auto;html=1;rounded=1;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;endArrow=classic;entryX=0;entryY=0;entryDx=0;entryDy=0;" parent="1" target="14" edge="1">
                     <mxGeometry width="100" relative="1" as="geometry">
                         <mxPoint x="580" y="1305" as="sourcePoint"/>
                         <mxPoint x="810" y="1305" as="targetPoint"/>
                         <Array as="points"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="109" value="สถานะการเข้าใช้งานที่ต้องการอัปเดต" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" connectable="0" parent="102">
+                <mxCell id="109" value="สถานะการเข้าใช้งานที่ต้องการอัปเดต" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" parent="102" vertex="1" connectable="0">
                     <mxGeometry x="-0.2533" relative="1" as="geometry">
                         <mxPoint x="30" as="offset"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="103" value="" style="edgeStyle=none;orthogonalLoop=1;jettySize=auto;html=1;rounded=1;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;endArrow=classic;exitX=0;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="1" source="14">
+                <mxCell id="103" value="" style="edgeStyle=none;orthogonalLoop=1;jettySize=auto;html=1;rounded=1;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;endArrow=classic;exitX=0;exitY=1;exitDx=0;exitDy=0;" parent="1" source="14" edge="1">
                     <mxGeometry width="100" relative="1" as="geometry">
                         <mxPoint x="820" y="1335" as="sourcePoint"/>
                         <mxPoint x="580" y="1335" as="targetPoint"/>
                         <Array as="points"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="110" value="ข้อมูลพื้นฐานและสิทธิ์ผู้ใช้งานที่บันทึกไว้" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" connectable="0" parent="103">
+                <mxCell id="110" value="ข้อมูลพื้นฐานและสิทธิ์ผู้ใช้งานที่บันทึกไว้" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" parent="103" vertex="1" connectable="0">
                     <mxGeometry x="-0.0841" relative="1" as="geometry">
                         <mxPoint x="-10" as="offset"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="104" value="" style="edgeStyle=none;orthogonalLoop=1;jettySize=auto;html=1;rounded=1;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;endArrow=classic;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" target="18">
+                <mxCell id="104" value="" style="edgeStyle=none;orthogonalLoop=1;jettySize=auto;html=1;rounded=1;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;endArrow=classic;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" target="18" edge="1">
                     <mxGeometry width="100" relative="1" as="geometry">
                         <mxPoint x="580" y="1479.55" as="sourcePoint"/>
                         <mxPoint x="840" y="1479.55" as="targetPoint"/>
                         <Array as="points"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="111" value="ข้อมูลห้องสอบและรายการสิ่งต้องห้ามที่สร้างใหม่" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" connectable="0" parent="104">
+                <mxCell id="111" value="ข้อมูลห้องสอบและรายการสิ่งต้องห้ามที่สร้างใหม่" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" parent="104" vertex="1" connectable="0">
                     <mxGeometry x="0.0698" y="-2" relative="1" as="geometry">
                         <mxPoint x="-14" y="-2" as="offset"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="120" value="" style="edgeStyle=none;orthogonalLoop=1;jettySize=auto;html=1;rounded=1;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;endArrow=classic;entryX=0;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" target="24">
+                <mxCell id="120" value="" style="edgeStyle=none;orthogonalLoop=1;jettySize=auto;html=1;rounded=1;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;endArrow=classic;entryX=0;entryY=0;entryDx=0;entryDy=0;" parent="1" target="24" edge="1">
                     <mxGeometry width="100" relative="1" as="geometry">
                         <mxPoint x="580" y="825" as="sourcePoint"/>
                         <mxPoint x="680" y="825" as="targetPoint"/>
                         <Array as="points"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="124" value="ข้อมูลภาพอัตลักษณ์ใบหน้าที่ลงทะเบียน" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" connectable="0" parent="120">
+                <mxCell id="124" value="ข้อมูลภาพอัตลักษณ์ใบหน้าที่ลงทะเบียน" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" parent="120" vertex="1" connectable="0">
                     <mxGeometry x="-0.2828" y="4" relative="1" as="geometry">
                         <mxPoint x="34" y="4" as="offset"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="123" value="" style="edgeStyle=none;orthogonalLoop=1;jettySize=auto;html=1;rounded=1;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;endArrow=classic;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="1" source="24" target="98">
+                <mxCell id="123" value="" style="edgeStyle=none;orthogonalLoop=1;jettySize=auto;html=1;rounded=1;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;endArrow=classic;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.25;entryDx=0;entryDy=0;" parent="1" source="24" target="98" edge="1">
                     <mxGeometry width="100" relative="1" as="geometry">
                         <mxPoint x="750" y="855" as="sourcePoint"/>
                         <mxPoint x="580" y="855" as="targetPoint"/>
@@ -355,12 +355,12 @@
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="125" value="ข้อมูลใบหน้าต้นฉบับสำหรับยืนยันตัวตน" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" connectable="0" parent="123">
+                <mxCell id="125" value="ข้อมูลใบหน้าต้นฉบับสำหรับยืนยันตัวตน" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" parent="123" vertex="1" connectable="0">
                     <mxGeometry x="0.3417" relative="1" as="geometry">
                         <mxPoint x="20" as="offset"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="127" value="" style="edgeStyle=none;orthogonalLoop=1;jettySize=auto;html=1;rounded=1;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;endArrow=classic;exitX=0;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="1" source="95">
+                <mxCell id="127" value="" style="edgeStyle=none;orthogonalLoop=1;jettySize=auto;html=1;rounded=1;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;endArrow=classic;exitX=0;exitY=1;exitDx=0;exitDy=0;" parent="1" source="95" edge="1">
                     <mxGeometry width="100" relative="1" as="geometry">
                         <mxPoint x="150" y="1120" as="sourcePoint"/>
                         <mxPoint x="340" y="1190" as="targetPoint"/>
@@ -369,12 +369,12 @@
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="128" value="ข้อมูล Process, Active Window และ System Resources" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" connectable="0" parent="127">
+                <mxCell id="128" value="ข้อมูล Process, Active Window และ System Resources" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" parent="127" vertex="1" connectable="0">
                     <mxGeometry x="-0.147" y="2" relative="1" as="geometry">
                         <mxPoint x="68" y="2" as="offset"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="129" value="" style="edgeStyle=none;orthogonalLoop=1;jettySize=auto;html=1;rounded=1;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;endArrow=classic;entryX=0.5;entryY=1;entryDx=0;entryDy=0;exitX=0;exitY=0.2;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="36" target="95">
+                <mxCell id="129" value="" style="edgeStyle=none;orthogonalLoop=1;jettySize=auto;html=1;rounded=1;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;endArrow=classic;entryX=0.5;entryY=1;entryDx=0;entryDy=0;exitX=0;exitY=0.2;exitDx=0;exitDy=0;exitPerimeter=0;" parent="1" source="36" target="95" edge="1">
                     <mxGeometry width="100" relative="1" as="geometry">
                         <mxPoint x="340" y="1160" as="sourcePoint"/>
                         <mxPoint x="120" y="1140" as="targetPoint"/>
@@ -383,12 +383,12 @@
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="130" value="ข้อความแจ้งเตือนเมื่อทำผิดกฎ" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" connectable="0" parent="129">
+                <mxCell id="130" value="ข้อความแจ้งเตือนเมื่อทำผิดกฎ" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" parent="129" vertex="1" connectable="0">
                     <mxGeometry x="0.0328" relative="1" as="geometry">
                         <mxPoint x="29" as="offset"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="131" value="" style="edgeStyle=none;orthogonalLoop=1;jettySize=auto;html=1;rounded=1;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;endArrow=classic;" edge="1" parent="1">
+                <mxCell id="131" value="" style="edgeStyle=none;orthogonalLoop=1;jettySize=auto;html=1;rounded=1;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;endArrow=classic;" parent="1" edge="1">
                     <mxGeometry width="100" relative="1" as="geometry">
                         <mxPoint x="590" y="1160" as="sourcePoint"/>
                         <mxPoint x="580" y="1610" as="targetPoint"/>
@@ -398,12 +398,12 @@
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="132" value="ข้อมูลการละเมิดกฎ" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" connectable="0" parent="131">
+                <mxCell id="132" value="ข้อมูลการละเมิดกฎ" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" parent="131" vertex="1" connectable="0">
                     <mxGeometry x="0.6786" y="-4" relative="1" as="geometry">
                         <mxPoint x="-29" y="-446" as="offset"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="133" value="" style="endArrow=classic;html=1;" edge="1" parent="1">
+                <mxCell id="133" value="" style="endArrow=classic;html=1;" parent="1" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="370" y="1680" as="sourcePoint"/>
                         <mxPoint x="70" y="1430" as="targetPoint"/>
@@ -413,12 +413,12 @@
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="134" value="Dashboard แสดงสถานะผู้เข้าสอบแบบ Real-time" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="133">
+                <mxCell id="134" value="Dashboard แสดงสถานะผู้เข้าสอบแบบ Real-time" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="133" vertex="1" connectable="0">
                     <mxGeometry x="0.0201" relative="1" as="geometry">
                         <mxPoint x="130" as="offset"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="136" value="" style="edgeStyle=none;orthogonalLoop=1;jettySize=auto;html=1;rounded=1;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;endArrow=classic;" edge="1" parent="1">
+                <mxCell id="136" value="" style="edgeStyle=none;orthogonalLoop=1;jettySize=auto;html=1;rounded=1;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;endArrow=classic;" parent="1" edge="1">
                     <mxGeometry width="100" relative="1" as="geometry">
                         <mxPoint x="969" y="1465" as="sourcePoint"/>
                         <mxPoint x="590" y="1184" as="targetPoint"/>
@@ -427,12 +427,12 @@
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="137" value="&lt;span style=&quot;color: rgb(0, 0, 0);&quot;&gt;รายการโปรแกรมต้องห้ามสำหรับการตรวจสอบ&lt;/span&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" connectable="0" parent="136">
+                <mxCell id="137" value="&lt;span style=&quot;color: rgb(0, 0, 0);&quot;&gt;รายการโปรแกรมต้องห้ามสำหรับการตรวจสอบ&lt;/span&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" parent="136" vertex="1" connectable="0">
                     <mxGeometry x="0.6378" y="1" relative="1" as="geometry">
-                        <mxPoint x="61" as="offset"/>
+                        <mxPoint x="71" as="offset"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="138" value="" style="edgeStyle=none;orthogonalLoop=1;jettySize=auto;html=1;rounded=1;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;endArrow=classic;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="1">
+                <mxCell id="138" value="" style="edgeStyle=none;orthogonalLoop=1;jettySize=auto;html=1;rounded=1;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;endArrow=classic;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" parent="1" edge="1">
                     <mxGeometry width="100" relative="1" as="geometry">
                         <mxPoint x="935" y="1495" as="sourcePoint"/>
                         <mxPoint x="580" y="1600" as="targetPoint"/>
@@ -441,41 +441,41 @@
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="139" value="&lt;span style=&quot;font-family: monospace; font-size: 0px; text-align: start; background-color: rgb(251, 251, 251);&quot;&gt;%3CmxGraphModel%3E%3Croot%3E%3CmxCell%20id%3D%220%22%2F%3E%3CmxCell%20id%3D%221%22%20parent%3D%220%22%2F%3E%3CmxCell%20id%3D%222%22%20value%3D%22%E0%B8%82%E0%B9%89%E0%B8%AD%E0%B8%A1%E0%B8%B9%E0%B8%A5%E0%B8%9C%E0%B8%B1%E0%B8%87%E0%B8%97%E0%B8%B5%E0%B9%88%E0%B8%99%E0%B8%B1%E0%B9%88%E0%B8%87%E0%B8%AA%E0%B8%B3%E0%B8%AB%E0%B8%A3%E0%B8%B1%E0%B8%9A%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%88%E0%B8%B1%E0%B8%94%E0%B8%AA%E0%B8%A3%E0%B8%A3%22%20style%3D%22edgeLabel%3Bhtml%3D1%3Balign%3Dcenter%3BverticalAlign%3Dmiddle%3Bresizable%3D0%3Bpoints%3D%5B%5D%3BfontFamily%3DHelvetica%3BfontSize%3D11%3BfontColor%3Ddefault%3BlabelBackgroundColor%3Ddefault%3B%22%20vertex%3D%221%22%20connectable%3D%220%22%20parent%3D%221%22%3E%3CmxGeometry%20x%3D%22767.5072726311068%22%20y%3D%221930%22%20as%3D%22geometry%22%2F%3E%3C%2FmxCell%3E%3C%2Froot%3E%3C%2FmxGraphModel%3E&lt;/span&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" connectable="0" parent="138">
+                <mxCell id="139" value="&lt;span style=&quot;font-family: monospace; font-size: 0px; text-align: start; background-color: rgb(251, 251, 251);&quot;&gt;%3CmxGraphModel%3E%3Croot%3E%3CmxCell%20id%3D%220%22%2F%3E%3CmxCell%20id%3D%221%22%20parent%3D%220%22%2F%3E%3CmxCell%20id%3D%222%22%20value%3D%22%E0%B8%82%E0%B9%89%E0%B8%AD%E0%B8%A1%E0%B8%B9%E0%B8%A5%E0%B8%9C%E0%B8%B1%E0%B8%87%E0%B8%97%E0%B8%B5%E0%B9%88%E0%B8%99%E0%B8%B1%E0%B9%88%E0%B8%87%E0%B8%AA%E0%B8%B3%E0%B8%AB%E0%B8%A3%E0%B8%B1%E0%B8%9A%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%88%E0%B8%B1%E0%B8%94%E0%B8%AA%E0%B8%A3%E0%B8%A3%22%20style%3D%22edgeLabel%3Bhtml%3D1%3Balign%3Dcenter%3BverticalAlign%3Dmiddle%3Bresizable%3D0%3Bpoints%3D%5B%5D%3BfontFamily%3DHelvetica%3BfontSize%3D11%3BfontColor%3Ddefault%3BlabelBackgroundColor%3Ddefault%3B%22%20vertex%3D%221%22%20connectable%3D%220%22%20parent%3D%221%22%3E%3CmxGeometry%20x%3D%22767.5072726311068%22%20y%3D%221930%22%20as%3D%22geometry%22%2F%3E%3C%2FmxCell%3E%3C%2Froot%3E%3C%2FmxGraphModel%3E&lt;/span&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" parent="138" vertex="1" connectable="0">
                     <mxGeometry x="0.0177" y="3" relative="1" as="geometry">
                         <mxPoint as="offset"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="140" value="&lt;span style=&quot;color: rgb(0, 0, 0);&quot;&gt;ข้อมูลผังที่นั่งสำหรับการจัดสรร&lt;/span&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" connectable="0" parent="138">
+                <mxCell id="140" value="&lt;span style=&quot;color: rgb(0, 0, 0);&quot;&gt;ข้อมูลผังที่นั่งสำหรับการจัดสรร&lt;/span&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" parent="138" vertex="1" connectable="0">
                     <mxGeometry x="-0.076" y="-3" relative="1" as="geometry">
                         <mxPoint x="-98" y="3" as="offset"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="142" value="" style="edgeStyle=none;orthogonalLoop=1;jettySize=auto;html=1;rounded=1;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;endArrow=classic;entryX=0;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1">
+                <mxCell id="142" value="" style="edgeStyle=none;orthogonalLoop=1;jettySize=auto;html=1;rounded=1;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;endArrow=classic;entryX=0;entryY=0;entryDx=0;entryDy=0;" parent="1" edge="1">
                     <mxGeometry width="100" relative="1" as="geometry">
                         <mxPoint x="580" y="1634.39" as="sourcePoint"/>
                         <mxPoint x="880.0000000000005" y="1634.39" as="targetPoint"/>
                         <Array as="points"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="143" value="&lt;span style=&quot;color: rgb(0, 0, 0);&quot;&gt;ข้อมูลการลงทะเบียนเข้าสอบในเซสชัน&lt;/span&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" connectable="0" parent="142">
+                <mxCell id="143" value="&lt;span style=&quot;color: rgb(0, 0, 0);&quot;&gt;ข้อมูลการลงทะเบียนเข้าสอบในเซสชัน&lt;/span&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" parent="142" vertex="1" connectable="0">
                     <mxGeometry x="0.0068" relative="1" as="geometry">
                         <mxPoint as="offset"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="144" value="" style="edgeStyle=none;orthogonalLoop=1;jettySize=auto;html=1;rounded=1;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;endArrow=classic;exitX=0;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="1">
+                <mxCell id="144" value="" style="edgeStyle=none;orthogonalLoop=1;jettySize=auto;html=1;rounded=1;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;endArrow=classic;exitX=0;exitY=1;exitDx=0;exitDy=0;" parent="1" edge="1">
                     <mxGeometry width="100" relative="1" as="geometry">
                         <mxPoint x="880" y="1664.39" as="sourcePoint"/>
                         <mxPoint x="580" y="1664.39" as="targetPoint"/>
                         <Array as="points"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="145" value="&lt;span style=&quot;color: rgb(0, 0, 0);&quot;&gt;ข้อมูลสถานะผู้สอบและประวัติการทุจริตทั้งหมด&lt;/span&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" connectable="0" parent="144">
+                <mxCell id="145" value="&lt;span style=&quot;color: rgb(0, 0, 0);&quot;&gt;ข้อมูลสถานะผู้สอบและประวัติการทุจริตทั้งหมด&lt;/span&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" parent="144" vertex="1" connectable="0">
                     <mxGeometry x="-0.0705" y="-1" relative="1" as="geometry">
                         <mxPoint x="-11" y="1" as="offset"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="147" value="" style="edgeStyle=none;orthogonalLoop=1;jettySize=auto;html=1;rounded=1;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;endArrow=classic;exitX=1;exitY=0.25;exitDx=0;exitDy=0;" edge="1" parent="1">
+                <mxCell id="147" value="" style="edgeStyle=none;orthogonalLoop=1;jettySize=auto;html=1;rounded=1;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;endArrow=classic;exitX=1;exitY=0.25;exitDx=0;exitDy=0;" parent="1" edge="1">
                     <mxGeometry width="100" relative="1" as="geometry">
                         <mxPoint x="590" y="1135" as="sourcePoint"/>
                         <mxPoint x="1060" y="1635" as="targetPoint"/>
@@ -484,7 +484,7 @@
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="149" value="&lt;span style=&quot;color: rgb(0, 0, 0);&quot;&gt;บันทึกข้อมูลการละเมิดกฎระเบียบ&lt;/span&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" connectable="0" parent="147">
+                <mxCell id="149" value="&lt;span style=&quot;color: rgb(0, 0, 0);&quot;&gt;บันทึกข้อมูลการละเมิดกฎระเบียบ&lt;/span&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" parent="147" vertex="1" connectable="0">
                     <mxGeometry x="-0.58" y="4" relative="1" as="geometry">
                         <mxPoint x="-17" y="4" as="offset"/>
                     </mxGeometry>

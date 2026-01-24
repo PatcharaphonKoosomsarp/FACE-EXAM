@@ -1,0 +1,122 @@
+<mxfile host="65bd71144e">
+    <diagram id="J-U5r1LKzBkpdPI7Vu8B" name="Page-1">
+        <mxGraphModel dx="643" dy="787" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="2" value="3.1" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;rounded=1;fontSize=14;fontStyle=0;strokeWidth=2;resizeParent=0;resizeLast=1;shadow=0;dashed=0;align=center;arcSize=4;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="275" y="270" width="220" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="3" value="ตรวจสอบรายการโปรแกรมที่ทำงานอยู่" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="2" vertex="1">
+                    <mxGeometry y="30" width="220" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="4" value="3.2" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;rounded=1;fontSize=14;fontStyle=0;strokeWidth=2;resizeParent=0;resizeLast=1;shadow=0;dashed=0;align=center;arcSize=4;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="275" y="430" width="220" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="5" value="ตรวจสอบเทียบกับกฎระเบียบห้องสอบ" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="4" vertex="1">
+                    <mxGeometry y="30" width="220" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="6" value="3.3" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;rounded=1;fontSize=14;fontStyle=0;strokeWidth=2;resizeParent=0;resizeLast=1;shadow=0;dashed=0;align=center;arcSize=4;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="275" y="590" width="220" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="7" value="แจ้งเตือนและดำเนินการเมื่อพบการละเมิด" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="6" vertex="1">
+                    <mxGeometry y="30" width="220" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="26" value="" style="edgeStyle=none;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" edge="1">
+                    <mxGeometry width="100" relative="1" as="geometry">
+                        <mxPoint x="80" y="310" as="sourcePoint"/>
+                        <mxPoint x="275" y="309.5" as="targetPoint"/>
+                        <Array as="points"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="27" value="ข้อมูล Process, Active Window &lt;br&gt;และ System Resources" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="26" vertex="1" connectable="0">
+                    <mxGeometry x="0.0083" y="-1" relative="1" as="geometry">
+                        <mxPoint y="-1" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="28" style="edgeStyle=none;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="3" target="4" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="29" value="รายการโปรแกรมที่กำลังทำงาน" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="28" vertex="1" connectable="0">
+                    <mxGeometry x="-0.225" y="3" relative="1" as="geometry">
+                        <mxPoint y="9" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="33" value="" style="edgeStyle=none;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" parent="1" source="42" edge="1">
+                    <mxGeometry width="100" relative="1" as="geometry">
+                        <mxPoint x="730" y="470" as="sourcePoint"/>
+                        <mxPoint x="495" y="469.5" as="targetPoint"/>
+                        <Array as="points"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="34" value="รายการโปรแกรมต้องห้ามสำหรับการตรวจสอบ" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="33" vertex="1" connectable="0">
+                    <mxGeometry x="-0.0045" y="2" relative="1" as="geometry">
+                        <mxPoint x="2" y="-2" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="35" style="edgeStyle=none;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="5" target="6" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="36" value="ข้อมูลรายการโปรแกรมที่ละเมิดกฎ" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="35" vertex="1" connectable="0">
+                    <mxGeometry x="-0.25" relative="1" as="geometry">
+                        <mxPoint y="10" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="37" value="" style="edgeStyle=none;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" edge="1">
+                    <mxGeometry width="100" relative="1" as="geometry">
+                        <mxPoint x="275" y="610" as="sourcePoint"/>
+                        <mxPoint x="80" y="610" as="targetPoint"/>
+                        <Array as="points"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="39" value="ข้อความแจ้งเตือนเมื่อทำผิดกฎ" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="37" vertex="1" connectable="0">
+                    <mxGeometry x="0.1333" y="-4" relative="1" as="geometry">
+                        <mxPoint x="18" y="4" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="38" value="" style="edgeStyle=none;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" edge="1">
+                    <mxGeometry width="100" relative="1" as="geometry">
+                        <mxPoint x="275" y="650" as="sourcePoint"/>
+                        <mxPoint x="80" y="650" as="targetPoint"/>
+                        <Array as="points"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="40" value="ข้อมูลการละเมิดกฎ" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="38" vertex="1" connectable="0">
+                    <mxGeometry x="0.2083" relative="1" as="geometry">
+                        <mxPoint x="27" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="41" value="" style="group" vertex="1" connectable="0" parent="1">
+                    <mxGeometry x="730" y="455" width="190" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="42" value="D2" style="html=1;dashed=0;whiteSpace=wrap;shape=mxgraph.dfd.dataStoreID;align=left;spacingLeft=3;points=[[0,0],[0.5,0],[1,0],[0,0.5],[1,0.5],[0,1],[0.5,1],[1,1]];" vertex="1" parent="41">
+                    <mxGeometry width="190" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="43" value="ข้อมูลการสอบและกฎระเบียบ" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="41">
+                    <mxGeometry x="30" width="160" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="44" value="" style="edgeStyle=none;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" target="47">
+                    <mxGeometry width="100" relative="1" as="geometry">
+                        <mxPoint x="495" y="629.5799999999999" as="sourcePoint"/>
+                        <mxPoint x="720" y="630" as="targetPoint"/>
+                        <Array as="points"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="45" value="บันทึกข้อมูลการละเมิดกฎระเบียบ" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="44">
+                    <mxGeometry x="-0.3625" y="-1" relative="1" as="geometry">
+                        <mxPoint x="33" y="-1" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="46" value="" style="group" vertex="1" connectable="0" parent="1">
+                    <mxGeometry x="730" y="615" width="240" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="47" value="D4" style="html=1;dashed=0;whiteSpace=wrap;shape=mxgraph.dfd.dataStoreID;align=left;spacingLeft=3;points=[[0,0],[0.5,0],[1,0],[0,0.5],[1,0.5],[0,1],[0.5,1],[1,1]];" vertex="1" parent="46">
+                    <mxGeometry width="240" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="48" value="ข้อมูลการเข้าสอบและบันทึกเหตุการณ์" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="46">
+                    <mxGeometry x="30" width="210" height="30" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

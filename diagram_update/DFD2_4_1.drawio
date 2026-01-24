@@ -1,0 +1,103 @@
+<mxfile host="65bd71144e">
+    <diagram id="J-U5r1LKzBkpdPI7Vu8B" name="Page-1">
+        <mxGraphModel dx="804" dy="984" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="2" value="4.1" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;rounded=1;fontSize=14;fontStyle=0;strokeWidth=2;resizeParent=0;resizeLast=1;shadow=0;dashed=0;align=center;arcSize=4;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="275" y="270" width="220" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="3" value="ตรวจสอบข้อมูลบัญชีผู้ใช้" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="2" vertex="1">
+                    <mxGeometry y="30" width="220" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="4" value="4.2" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;rounded=1;fontSize=14;fontStyle=0;strokeWidth=2;resizeParent=0;resizeLast=1;shadow=0;dashed=0;align=center;arcSize=4;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="275" y="430" width="220" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="5" value="ตรวจสอบระดับสิทธิ์ผู้ใช้งาน" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="4" vertex="1">
+                    <mxGeometry y="30" width="220" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="26" value="" style="edgeStyle=none;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" edge="1">
+                    <mxGeometry width="100" relative="1" as="geometry">
+                        <mxPoint x="80" y="310" as="sourcePoint"/>
+                        <mxPoint x="275" y="309.5" as="targetPoint"/>
+                        <Array as="points"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="27" value="ข้อมูลบัญชีผู้ใช้เพื่อยืนยันตัวตน" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="26" vertex="1" connectable="0">
+                    <mxGeometry x="0.0083" y="-1" relative="1" as="geometry">
+                        <mxPoint y="-1" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="28" style="edgeStyle=none;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="3" target="4" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="29" value="ผลการยืนยันตัวตนที่ถูกต้อง" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="28" vertex="1" connectable="0">
+                    <mxGeometry x="-0.225" y="3" relative="1" as="geometry">
+                        <mxPoint y="9" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="33" value="" style="edgeStyle=none;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.167;exitY=1.016;exitDx=0;exitDy=0;exitPerimeter=0;" parent="1" source="50" edge="1">
+                    <mxGeometry width="100" relative="1" as="geometry">
+                        <mxPoint x="720" y="330" as="sourcePoint"/>
+                        <mxPoint x="495" y="449.5" as="targetPoint"/>
+                        <Array as="points">
+                            <mxPoint x="720" y="450"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="34" value="รายละเอียดสิทธิ์การใช้งาน" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="33" vertex="1" connectable="0">
+                    <mxGeometry x="-0.0045" y="2" relative="1" as="geometry">
+                        <mxPoint x="-73" y="-2" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="48" value="" style="edgeStyle=none;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="50">
+                    <mxGeometry width="100" relative="1" as="geometry">
+                        <mxPoint x="735" y="309.5" as="sourcePoint"/>
+                        <mxPoint x="495" y="309.5" as="targetPoint"/>
+                        <Array as="points"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="52" value="ข้อมูลบัญชีและรหัสผ่านของผู้ใช้งาน" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="48">
+                    <mxGeometry x="-0.0221" y="-2" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="49" value="" style="group" vertex="1" connectable="0" parent="1">
+                    <mxGeometry x="700" y="295" width="120" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="50" value="D1" style="html=1;dashed=0;whiteSpace=wrap;shape=mxgraph.dfd.dataStoreID;align=left;spacingLeft=3;points=[[0,0],[0.5,0],[1,0],[0,0.5],[1,0.5],[0,1],[0.5,1],[1,1]];" vertex="1" parent="49">
+                    <mxGeometry width="120" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="51" value="ข้อมูลผู้ใช้งาน" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="49">
+                    <mxGeometry x="30" width="90" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="53" value="" style="edgeStyle=none;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1">
+                    <mxGeometry width="100" relative="1" as="geometry">
+                        <mxPoint x="275" y="469.5" as="sourcePoint"/>
+                        <mxPoint x="60" y="470" as="targetPoint"/>
+                        <Array as="points"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="55" value="ผลการตรวจสอบและสิทธิ์การเข้าสอบ" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="53">
+                    <mxGeometry x="0.0083" y="-1" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="59" value="" style="edgeStyle=none;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1">
+                    <mxGeometry width="100" relative="1" as="geometry">
+                        <mxPoint x="495" y="495" as="sourcePoint"/>
+                        <mxPoint x="760" y="325" as="targetPoint"/>
+                        <Array as="points">
+                            <mxPoint x="760" y="495"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="60" value="สถานะการเข้าใช้งานที่ต้องการอัปเดต" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="59">
+                    <mxGeometry x="-0.4181" relative="1" as="geometry">
+                        <mxPoint x="45" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
