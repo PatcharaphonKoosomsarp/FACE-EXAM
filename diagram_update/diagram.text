@@ -176,3 +176,957 @@ Process 6.0: จัดการเซสชันการเข้าสอบ�
 ================================================================================
 จบเอกสาร
 ================================================================================
+
+--------------------------------------------------------------------------------
+5. Entity-Relationship Diagram (ERD)
+--------------------------------------------------------------------------------
+*หมายเหตุ: โครงสร้างฐานข้อมูลจาก Supabase (รวมทั้งหมด 10 Tables)
+
+[1. Entity: Users] (ข้อมูลผู้ใช้งาน - จาก Supabase Auth)
+- id (PK, UUID)
+- email
+- role (Teacher/Student - Derived from email)
+- created_at
+
+[2. Entity: User_Photos] (เก็บ URL รูปภาพใบหน้าสำหรับลงทะเบียน)
+- id (PK)
+- user_id (FK -> Users.id)
+- face_forward (URL)
+- open_eye (URL)
+- turn_left (URL)
+- turn_right (URL)
+- created_at
+- updated_at
+*Relationship: Users (1) ---- (1) User_Photos
+
+[3. Entity: Room_Seat_Layouts] (ผังที่นั่งห้องสอบ)
+- id (PK, UUID)
+- room_name
+- rows
+- columns
+- total_seats
+- created_by (FK -> Users.id)
+- created_at
+- updated_at
+*Relationship: Users (1) ---- (N) Room_Seat_Layouts
+
+[4. Entity: Room_Seat_Ip_Mappings] (การจับคู่ที่นั่งกับ IP Address)
+- id (PK)
+- room_id (FK -> Room_Seat_Layouts.id)
+- row_number
+- column_number
+- ip_address
+*Relationship: Room_Seat_Layouts (1) ---- (N) Room_Seat_Ip_Mappings
+
+[5. Entity: Exam_Rooms] (ตารางสอบ/การกำหนดวิชาสอบ)
+- id (PK, UUID)
+- room_name (Ref -> Room_Seat_Layouts.room_name)
+- course_code
+- course_name
+- section
+- exam_date
+- start_time
+- end_time
+- created_by (FK -> Users.id)
+*Relationship: Users (1) ---- (N) Exam_Rooms
+*Relationship: Room_Seat_Layouts (1) ---- (N) Exam_Rooms (Link via name)
+
+[6. Entity: Room_Blocked_Resources] (รายการโปรแกรมต้องห้าม)
+- id (PK)
+- room_id (FK -> Exam_Rooms.id)
+- pattern (ชื่อโปรแกรม/Process)
+- match_type (exact, contains)
+*Relationship: Exam_Rooms (1) ---- (N) Room_Blocked_Resources
+
+[7. Entity: Exam_Student_Sessions] (เซสชันการเข้าสอบของนักศึกษา)
+- id (PK)
+- layout_id (FK -> Room_Seat_Layouts.id)
+- student_email (Ref -> Users.email)
+- seat_number
+- ip_address
+- face_descriptor (Text/JSON)
+- is_active
+- session_start_time
+- student_profile_url
+*Relationship: Room_Seat_Layouts (1) ---- (N) Exam_Student_Sessions
+*Relationship: Users (1) ---- (N) Exam_Student_Sessions
+
+[8. Entity: Resource_Logs] (บันทึกทรัพยากรเครื่องของผู้เข้าสอบ)
+- id (PK)
+- session_id (FK -> Exam_Student_Sessions.id)
+- timestamp
+- cpu_usage, cpu_model, ram_usage, ram_total_gb
+- active_window_title, all_open_windows
+- exe_processes, network_download_mb
+*Relationship: Exam_Student_Sessions (1) ---- (N) Resource_Logs
+
+[9. Entity: Violation_Logs] (บันทึกการละเมิดกฎ)
+- id (PK)
+- session_id (FK -> Exam_Student_Sessions.id)
+- violation_type
+- detail
+- timestamp
+- evidence_url (รูปภาพหลักฐาน)
+*Relationship: Exam_Student_Sessions (1) ---- (N) Violation_Logs
+
+[10. Entity: Qr_Authentication] (ระบบยืนยันตัวตนผ่านมือถือ)
+- id (PK)
+- user_id (FK -> Users.id)
+- status (authenticated)
+- ip
+- authenticated_at
+- expires_at
+*Relationship: Users (1) ---- (1) Qr_Authentication
+
+--------------------------------------------------------------------------------
+6. Data Flow Description (รายละเอียดข้อมูลไหล)
+--------------------------------------------------------------------------------
+
+--- Process 1.0: จัดการการลงทะเบียนอัตลักษณ์ใบหน้า ---
+
+Data Flow ID : F001
+Data Flow Name : ข้อมูลภาพใบหน้าสำหรับลงทะเบียน
+Description : ภาพใบหน้าของผู้ใช้งานที่ถ่ายจากกล้องเพื่อใช้ในการลงทะเบียน
+Source : นักศึกษา (Process 1.1)
+Destination : Process 1.2 ทดสอบความเป็นบุคคลจริง
+Type Of Data Flow : ภายใน
+Data Structrue : ข้อมูลภาพใบหน้า = Image Blob/File + Face Landmarks (Coordinates) + Quality Score
+
+Data Flow ID : F002
+Data Flow Name : ข้อมูลภาพอัตลักษณ์ใบหน้าที่บันทึก
+Description : URL ของรูปภาพใบหน้าในท่วงท่าต่างๆ ที่ผ่านการตรวจสอบแล้วและบันทึกลงฐานข้อมูล
+Source : Process 1.3 บันทึกข้อมูลอัตลักษณ์ใบหน้า
+Destination : Data Store D3 (User_Photos)
+Type Of Data Flow : ฐานข้อมูล
+Data Structrue : ข้อมูลภาพอัตลักษณ์ = รหัสผู้ใช้งาน + URL(หน้าตรง) + URL(ลืมตา) + URL(หันซ้าย) + URL(หันขวา) + วันเวลาที่บันทึก
+
+--- Process 2.0: จัดการการยืนยันตัวตนก่อนเข้าห้องสอบ ---
+
+Data Flow ID : F003
+Data Flow Name : ข้อมูลรหัสลักษณะใบหน้า (Face Descriptor)
+Description : ค่าตัวเลขเวกเตอร์ที่แปลงจากภาพใบหน้าเพื่อใช้ในการเปรียบเทียบ
+Source : Process 2.1 ตรวจจับและแปลงข้อมูลใบหน้า
+Destination : Process 2.2 เปรียบเทียบใบหน้ากับฐานข้อมูล
+Type Of Data Flow : ภายใน
+Data Structrue : Face Descriptor = ชุดตัวเลขทศนิยม (Float32 Array 128 มิติ)
+
+Data Flow ID : F004
+Data Flow Name : สถานะยืนยันตัวตนผ่าน
+Description : สถานะการตรวจสอบว่าเป็นบุคคลเดียวกับที่ลงทะเบียนไว้เสร็จสมบูรณ์
+Source : Process 2.3 ตรวจสอบสิทธิ์การเข้าสอบ
+Destination : Process 6.0 (6.2 จัดสรรที่นั่งสอบ)
+Type Of Data Flow : ภายใน
+Data Structrue : สถานะยืนยันตัวตน = สถานะ (Verified) + รหัสผู้ใช้งาน + ค่าความเชื่อมั่น (Confidence Score)
+
+--- Process 3.0: จัดการการตรวจสอบสภาพแวดล้อมและโปรแกรม ---
+
+Data Flow ID : F005
+Data Flow Name : ข้อมูลทรัพยากรระบบ (System Resources)
+Description : ข้อมูลการทำงานของคอมพิวเตอร์ที่ส่งมาจากโปรแกรม Agent
+Source : นักศึกษา (Agent Software)
+Destination : Process 3.1 ตรวจสอบรายการโปรแกรมที่ทำงานอยู่
+Type Of Data Flow : เครือข่าย (API/JSON)
+Data Structrue : ข้อมูลทรัพยากรระบบ = เปอร์เซ็นต์การใช้ CPU + เปอร์เซ็นต์การใช้ RAM + ชื่อหน้าต่างที่ใช้งานอยู่ + รายการโปรแกรมที่รันอยู่ + การใช้งานเครือข่าย
+
+Data Flow ID : F006
+Data Flow Name : บันทึกข้อมูลการละเมิดกฎ
+Description : รายละเอียดการทำผิดกฎที่ตรวจพบ เช่น การเปิดโปรแกรมต้องห้าม
+Source : Process 3.3 แจ้งเตือนและดำเนินการเมื่อพบการละเมิด
+Destination : Data Store D4 (Violation_Logs)
+Type Of Data Flow : ฐานข้อมูล
+Data Structrue : ข้อมูลการละเมิด = รหัสเซสชัน + ประเภทการละเมิด + รายละเอียด/ชื่อโปรแกรม + รูปหลักฐาน (URL) + เวลาที่เกิดเหตุ
+
+--- Process 4.0: จัดการข้อมูลผู้ใช้งานและการตรวจสอบสิทธิ์ ---
+
+Data Flow ID : F007
+Data Flow Name : ข้อมูลบัญชีผู้ใช้
+Description : ข้อมูลอีเมลและรหัสผ่านสำหรับการยืนยันตัวตนเข้าสู่ระบบ
+Source : ผู้ใช้งาน (นักศึกษา/อาจารย์)
+Destination : Process 4.1 ตรวจสอบข้อมูลบัญชีผู้ใช้
+Type Of Data Flow : หน้าจอ (User Input)
+Data Structrue : ข้อมูลบัญชี = อีเมล (Email) + รหัสผ่าน (Password)
+
+Data Flow ID : F008
+Data Flow Name : ข้อมูลสิทธิ์การใช้งาน
+Description : ข้อมูลบทบาทและสิทธิ์ของผู้ใช้งานที่ดึงจากระบบ
+Source : Data Store D1 (Users)
+Destination : Process 4.2 ตรวจสอบระดับสิทธิ์ผู้ใช้งาน
+Type Of Data Flow : ฐานข้อมูล
+Data Structrue : ข้อมูลสิทธิ์ = รหัสผู้ใช้งาน + บทบาท (Teacher/Student) + สถานะการใช้งาน
+
+--- Process 5.0: จัดการข้อมูลการสอบและทรัพยากรต้องห้าม ---
+
+Data Flow ID : F009
+Data Flow Name : ข้อมูลการสอบและห้องสอบ
+Description : รายละเอียดเวลาสอบ วิชาสอบ และผังที่นั่งที่อาจารย์สร้างขึ้น
+Source : Process 5.1/5.2 สร้างข้อมูลห้องและวิชาสอบ
+Destination : Data Store D2 (Exam_Rooms)
+Type Of Data Flow : ฐานข้อมูล
+Data Structrue : ข้อมูลการสอบ = ชื่อห้องสอบ + รหัสวิชา + ชื่อวิชา + ตอนเรียน (Section) + วันที่สอบ + เวลาเริ่ม + เวลาสิ้นสุด + ผังที่นั่ง (Rows/Cols)
+
+Data Flow ID : F010
+Data Flow Name : รายการสิ่งต้องห้าม (Blocked Config)
+Description : รายชื่อโปรแกรมเว็บไซต์ หรือชื่อหน้าต่างที่ห้ามเปิดระหว่างสอบ
+Source : Process 5.3 กำหนดรายการโปรแกรมต้องห้าม
+Destination : Data Store D2 (Room_Blocked_Resources)
+Type Of Data Flow : ฐานข้อมูล
+Data Structrue : สิ่งต้องห้าม = ชื่อโปรแกรม/Keyword + รูปแบบการค้นหา (Exact/Contains) + รหัสห้องสอบ
+
+--- Process 6.0: จัดการเซสชันการเข้าสอบและการรายงาน ---
+
+Data Flow ID : F011
+Data Flow Name : ข้อมูลการลงทะเบียนเซสชัน
+Description : ข้อมูลการจับคู่ระหว่างนักเรียนกับที่นั่งสอบเมื่อเริ่มทำการสอบ
+Source : Process 6.2 จัดสรรที่นั่งสอบ
+Destination : Data Store D4 (Exam_Student_Sessions)
+Type Of Data Flow : ฐานข้อมูล
+Data Structrue : ข้อมูลเซสชัน = รหัสเซสชัน + อีเมลนักศึกษา + รหัสห้องสอบ(Layout ID) + เลขที่นั่งสอบ + IP Address + รหัสใบหน้า + เวลาเริ่มสอบ
+
+Data Flow ID : F012
+Data Flow Name : ข้อมูล Dashboard ติดตามผล
+Description : ข้อมูลสถานะของผู้เข้าสอบทุกคนแบบ Real-time ที่ส่งแสดงผลให้อาจารย์
+Source : Process 6.3 ติดตามและรายงานผลการสอบ
+Destination : อาจารย์
+Type Of Data Flow : หน้าจอ (Dashboard)
+Data Structrue : ข้อมูล Dashboard = รายชื่อนักศึกษา + สถานะออนไลน์ + เลขที่นั่ง + การละเมิดกฎ(จำนวนครั้ง) + ข้อมูลเครื่อง(IP/Status)
+
+--------------------------------------------------------------------------------
+7. Data Store Description (รายละเอียดแหล่งเก็บข้อมูล)
+--------------------------------------------------------------------------------
+
+Data Store ID : D1
+Data Store Name : ข้อมูลผู้ใช้งาน (Users)
+Description : เป็นแฟ้มที่เก็บรายละเอียดข้อมูลพื้นฐานของผู้ใช้งาน สำหรับใช้ในการยืนยันตัวตนและกำหนดสิทธิ์การใช้งาน
+File Type : ฐานข้อมูล (Supabase Auth & Public Table)
+Number of Record : แปรผันตามจำนวนอาจารย์และนักศึกษาในระบบ
+Data Structrue : ข้อมูลผู้ใช้งาน = รหัสผู้ใช้งาน(UUID) + ชื่อ-นามสกุล + อีเมล + บทบาท(อาจารย์/นักศึกษา) + รูปโปรไฟล์ + วันที่ลงทะเบียน
+
+Data Store ID : D2
+Data Store Name : ข้อมูลการสอบและกฎระเบียบ (Exams & Rules)
+Description : เป็นแฟ้มที่เก็บข้อมูลโครงสร้างห้องสอบ ผังที่นั่ง รายวิชาที่เปิดสอบ ตารางเวลา และรายการโปรแกรมต้องห้ามสำหรับการสอบ
+File Type : ฐานข้อมูล (Supabase Tables)
+Number of Record : แปรผันตามจำนวนวิชาที่เปิดสอบและรูปแบบห้องสอบ
+Data Structrue : ข้อมูลการสอบและกฎ = ข้อมูลห้องสอบ(ชื่อ, ขนาด, ผังที่นั่ง) + ข้อมูลวิชาสอบ(รหัสวิชา, ชื่อวิชา, วันเวลาสอบ) + กฎระเบียบ(รายชื่อโปรแกรมต้องห้าม, รูปแบบการตรวจจับ)
+
+Data Store ID : D3
+Data Store Name : ข้อมูลอัตลักษณ์ใบหน้า (Face Data)
+Description : เป็นแฟ้มที่เก็บ URL รูปภาพใบหน้าต้นฉบับของผู้ใช้งานในอิริยาบถต่างๆ เพื่อใช้เป็นเกณฑ์ในการตรวจสอบ Face Verification
+File Type : ฐานข้อมูลและไฟล์ (Supabase Table & Storage Bucket)
+Number of Record : 1 รายการต่อผู้ใช้งาน 1 คน (ประมาณเท่ากับ D1 ที่เป็นนักศึกษา)
+Data Structrue : ข้อมูลอัตลักษณ์ใบหน้า = รหัสผู้ใช้งาน + URLรูปหน้าตรง + URLรูปลืมตา + URLรูปหันซ้าย + URLรูปหันขวา + วันเวลาที่อัปเดตล่าสุด
+
+Data Store ID : D4
+Data Store Name : ข้อมูลการเข้าสอบและบันทึกเหตุการณ์ (Sessions & Logs)
+Description : เป็นแฟ้มที่เก็บสถานะ Real-time ของผู้เข้าสอบ ข้อมูลการใช้ทรัพยากรคอมพิวเตอร์ และประวัติการละเมิดกฎระเบียบ
+File Type : ฐานข้อมูล (Supabase Tables)
+Number of Record : เพิ่มขึ้นต่อเนื่องจำนวนมาก (High Volume) ตามระยะเวลาสอบและจำนวนผู้เข้าสอบ
+Data Structrue : ข้อมูลเซสชันและ Logs = ข้อมูลเซสชัน(รหัสเซสชัน, ผู้สอบ, ที่นั่ง, IP, เวลาเริ่ม) + Logsทรัพยากร(CPU, RAM, Processes List) + Logsการละเมิด(ประเภทการละเมิด, หลักฐานรูปภาพ, เวลาที่เกิดเหตุ)
+
+--------------------------------------------------------------------------------
+8. Process Specification (รายละเอียดประมวลผล)
+--------------------------------------------------------------------------------
+
+Process Number : 1.0
+Process Name : จัดการการลงทะเบียนอัตลักษณ์ใบหน้า
+Description : เป็น Process หลักที่ทำหน้าที่รับข้อมูลภาพใบหน้า ตรวจสอบคุณภาพ และบันทึกอัตลักษณ์สำหรับใช้ในการยืนยันตัวตน
+Input Data Flow : ข้อมูลภาพใบหน้าต้นฉบับสำหรับลงทะเบียน (ซ้าย/ขวา/หน้าตรง/ลืมตา)
+Out put Data Flow : ผลการลงทะเบียนสำเร็จ, ข้อความแจ้งเตือน
+Process Type : Online Processing
+Process Logic : 
+IF ได้รับคำขอลงทะเบียนใบหน้าจากนักศึกษา THEN
+    เรียกใช้ Process 1.1 ตรวจสอบคุณภาพและตำแหน่งใบหน้า
+    IF คุณภาพใบหน้าผ่านเกณฑ์ THEN
+        เรียกใช้ Process 1.2 ทดสอบความเป็นบุคคลจริง (Liveness Check)
+        IF ผ่านการทดสอบ Liveness THEN
+            เรียกใช้ Process 1.3 บันทึกข้อมูลอัตลักษณ์ใบหน้า
+        ELSE
+            แสดงข้อความแจ้งเตือน "กรุณาทดสอบใหม่"
+        ENDIF
+    ELSE
+        แสดงข้อความแจ้งเตือน "จัดวางใบหน้าไม่ถูกต้อง"
+    ENDIF
+ENDIF
+
+Process Number : 1.1
+Process Name : ตรวจสอบคุณภาพและตำแหน่งใบหน้า
+Description : เป็น Process ย่อยที่ใช้ AI (Face-API) เพื่อตรวจสอบว่ามีใบหน้าในเฟรมหรือไม่ และตำแหน่งองศาหน้าถูกต้องตามกำหนด
+Input Data Flow : ข้อมูลภาพใบหน้าต้นฉบับสำหรับลงทะเบียน
+Out put Data Flow : ผลการตรวจสอบคุณภาพใบหน้า, ข้อความแจ้งเตือนให้จัดตำแหน่งใบหน้าใหม่
+Process Type : Online Processing (Real-time)
+Process Logic :
+รับภาพจากกล้อง Webcam
+ตรวจสอบ Face Detection Score
+IF ไม่พบใบหน้า OR พบมากกว่า 1 ใบหน้า THEN
+    ส่งข้อความแจ้งเตือน "กรุณาอยู่หน้ากล้องเพียงคนเดียว"
+ELSE
+    คำนวณองศาใบหน้า (Pitch, Yaw, Roll)
+    IF องศาใบหน้าตรงกับท่าทางที่กำหนก (เช่น หน้าตรง, หันซ้าย) THEN
+        ส่ง "ผลการตรวจสอบคุณภาพใบหน้า" ไปยัง Process 1.2
+    ELSE
+        ส่งข้อความแจ้งเตือนให้หันหน้าตามคำสั่ง
+    ENDIF
+ENDIF
+
+Process Number : 1.2
+Process Name : ทดสอบความเป็นบุคคลจริง (Liveness Check)
+Description : เป็น Process ย่อยที่ตรวจสอบการขยับของใบหน้าเพื่อป้องกันการใช้รูปถ่าย (Anti-spoofing)
+Input Data Flow : ข้อมูลการขยับใบหน้าทดสอบความเป็นบุคคลจริง, ผลการตรวจสอบคุณภาพใบหน้า (จาก 1.1)
+Out put Data Flow : ผลการทดสอบความเป็นบุคคลจริง
+Process Type : Online Processing
+Process Logic :
+รับค่า Face Landmarks อย่างต่อเนื่อง
+คำนวณค่า Eye Aspect Ratio (EAR) หรือ Face Rotation
+IF มีการกระพริบตา (EAR < Threshold) หรือมีการหันหน้าจริง THEN
+    กำหนดสถานะเป็น "Human Detected"
+    ส่ง "ผลการทดสอบความเป็นบุคคลจริง" ไปยัง Process 1.3
+ELSE
+    รอการขยับใบหน้าต่อไป
+ENDIF
+
+Process Number : 1.3
+Process Name : บันทึกข้อมูลอัตลักษณ์ใบหน้า
+Description : เป็น Process ย่อยที่ทำการอัปโหลดรูปภาพขึ้น Cloud Storage และบันทึก URL ลงฐานข้อมูล
+Input Data Flow : ผลการทดสอบความเป็นบุคคลจริง
+Out put Data Flow : ข้อมูลภาพอัตลักษณ์ใบหน้าที่ลงทะเบียน (ไป D3), ผลการลงทะเบียนสำเร็จ
+Process Type : Online Processing
+Process Logic :
+รับภาพใบหน้าที่ผ่านการตรวจสอบ (Blob Data)
+อัปโหลดไฟล์ภาพไปยัง Supabase Storage (Bucket: user-photos)
+รับ URL ของไฟล์ภาพที่อัปโหลดสำเร็จ
+บันทึก URL และรหัสผู้ใช้งานลงใน Table 'user_photos' (D3)
+ส่งสถานะ "ผลการลงทะเบียนสำเร็จ" กลับไปยังผู้ใช้งาน
+
+Process Number : 2.0
+Process Name : จัดการการยืนยันตัวตนก่อนเข้าห้องสอบ
+Description : เป็น Process หลักสำหรับตรวจสอบใบหน้าผู้เข้าสอบเพื่อยืนยันว่าเป็นบุคคลเดียวกันกับที่ลงทะเบียนไว้
+Input Data Flow : ข้อมูลภาพใบหน้าปัจจุบันเพื่อเข้าห้องสอบ
+Out put Data Flow : สถานะยืนยันตัวตนผ่าน, ข้อความปฏิเสธการเข้าสอบ
+Process Type : Online Processing
+Process Logic :
+IF ได้รับรูปถ่ายจากกล้องหน้าห้องสอบ THEN
+    เรียกใช้ Process 2.1 ตรวจจับและแปลงข้อมูลใบหน้า
+    IF สามารถแปลงข้อมูลใบหน้าได้ (Face Descriptor) THEN
+        เรียกใช้ Process 2.2 เปรียบเทียบใบหน้ากับฐานข้อมูล
+        เรียกใช้ Process 2.3 ตรวจสอบสิทธิ์การเข้าสอบ
+    ELSE
+        แสดงข้อความ "ไม่พบใบหน้าหรือใบหน้าไม่ชัดเจน"
+    ENDIF
+ENDIF
+
+Process Number : 2.1
+Process Name : ตรวจจับและแปลงข้อมูลใบหน้า
+Description : ใช้ AI ในการตรวจจับตำแหน่งใบหน้าในภาพและแปลงเป็นรหัสตัวเลข (Vector/Descriptor)
+Input Data Flow : ข้อมูลภาพใบหน้าปัจจุบันเพื่อเข้าห้องสอบ
+Out put Data Flow : ข้อมูลรหัสลักษณะใบหน้า (Face Descriptor)
+Process Type : Online Processing
+Process Logic :
+รับภาพจากกล้อง Webcam
+ใช้ Face Detection Model ตรวจหาใบหน้า
+IF พบใบหน้า THEN
+    ใช้ Face Recognition Model คำนวณค่า Face Descriptor (128-float array)
+    ส่งข้อมูล "Face Descriptor" ไปยัง Process 2.2
+ELSE
+    แจ้งข้อผิดพลาดกลับไปยังผู้ใช้งาน
+ENDIF
+
+Process Number : 2.2
+Process Name : เปรียบเทียบใบหน้ากับฐานข้อมูล
+Description : เปรียบเทียบรหัสลักษณะใบหน้าที่ได้กับข้อมูลต้นฉบับในฐานข้อมูล
+Input Data Flow : ข้อมูลรหัสลักษณะใบหน้า (จาก 2.1), ข้อมูลใบหน้าต้นฉบับสำหรับยืนยันตัวตน (จาก D3)
+Out put Data Flow : ผลการเปรียบเทียบใบหน้า (Euclidean Distance)
+Process Type : Online Processing
+Process Logic :
+ดึงข้อมูล Face Descriptor ต้นฉบับของผู้ใช้ (จาก D3)
+คำนวณระยะห่าง (Euclidean Distance) ระหว่าง Descriptor ปัจจุบัน กับ ต้นฉบับ
+IF Distance < Threshold (เช่น 0.45) THEN
+    ผลการเปรียบเทียบ = "MATCH"
+ELSE
+    ผลการเปรียบเทียบ = "NOT MATCH"
+ENDIF
+ส่ง "ผลการเปรียบเทียบใบหน้า" ไปยัง Process 2.3
+
+Process Number : 2.3
+Process Name : ตรวจสอบสิทธิ์การเข้าสอบ
+Description : ตัดสินใจผลลัพธ์สุดท้ายของการยืนยันตัวตนและแจ้งสถานะการเข้าสอบ
+Input Data Flow : ผลการเปรียบเทียบใบหน้า (จาก 2.2)
+Out put Data Flow : สถานะยืนยันตัวตนผ่าน (ไป 6.0), ข้อความปฏิเสธการเข้าสอบ
+Process Type : Online Processing
+Process Logic :
+รับผลการเปรียบเทียบ
+IF ผลการเปรียบเทียบ == "MATCH" THEN
+    ส่ง "สถานะยืนยันตัวตนผ่าน" ไปให้ระบบจัดสรรที่นั่ง (Process 6.0)
+ELSE
+    ส่ง "ข้อความปฏิเสธการเข้าสอบ" แจ้งนักศึกษาให้ลองใหม่
+ENDIF
+
+Process Number : 3.0
+Process Name : จัดการการตรวจสอบสภาพแวดล้อมและโปรแกรม
+Description : ตรวจสอบการใช้งานโปรแกรมประยุกต์อื่นๆ และทรัพยากรเครื่องระหว่างสอบเพื่อป้องกันการทุจริต
+Input Data Flow : ข้อมูล Process, Active Window และ System Resources
+Out put Data Flow : ข้อความแจ้งเตือนเมื่อทำผิดกฎ, ข้อมูลการละเมิดกฎ
+Process Type : Online Processing / Background Service
+Process Logic :
+วนลูปตรวจสอบทุกๆ 3-5 วินาที
+    เรียกใช้ Process 3.1 ตรวจสอบรายการโปรแกรมที่ทำงานอยู่
+    เรียกใช้ Process 3.2 ตรวจสอบเทียบกับกฎระเบียบห้องสอบ
+    IF พบการละเมิดกฎ THEN
+        เรียกใช้ Process 3.3 แจ้งเตือนและดำเนินการเมื่อพบการละเมิด
+    ENDIF
+
+Process Number : 3.1
+Process Name : ตรวจสอบรายการโปรแกรมที่ทำงานอยู่
+Description : ดึงข้อมูลรายชื่อโปรแกรม (Process List) และหน้าต่างที่กำลังเปิดใช้งาน (Active Window)
+Input Data Flow : ข้อมูล Process, Active Window และ System Resources
+Out put Data Flow : รายการโปรแกรมที่กำลังทำงาน
+Process Type : Online Processing
+Process Logic :
+ใช้ OS System Call (เช่น psutil, win32api) ดึงรายชื่อ Running Processes
+ดึงรายชื่อ Active Windows Titles
+รวบรวมเป็น List ส่งไปยัง Process 3.2
+
+Process Number : 3.2
+Process Name : ตรวจสอบเทียบกับกฎระเบียบห้องสอบ
+Description : เปรียบเทียบโปรแกรมที่รันอยู่กับ Blacklist ที่อาจารย์กำหนด
+Input Data Flow : รายการโปรแกรมที่กำลังทำงาน (จาก 3.1), รายการโปรแกรมต้องห้าม (จาก D2)
+Out put Data Flow : ข้อมูลรายการโปรแกรมที่ละเมิดกฎ
+Process Type : Online Processing
+Process Logic :
+ดึง Blacklist Pattern จาก D2 (Exam ID ที่กำลังสอบ)
+FOR EACH โปรแกรม ใน รายการโปรแกรมที่กำลังทำงาน DO
+    IF ชื่อโปรแกรม ตรงกับ หรือ มีคำที่อยู่ใน Blacklist THEN
+        เพิ่มลงในรายการละเมิดกฎ
+    ENDIF
+ENDLOOP
+IF รายการละเมิดกฎ > 0 THEN
+    ส่งไป Process 3.3
+ENDIF
+
+Process Number : 3.3
+Process Name : แจ้งเตือนและดำเนินการเมื่อพบการละเมิด
+Description : แจ้งเตือนนักศึกษา บังคับปิดโปรแกรม และบันทึกหลักฐาน
+Input Data Flow : ข้อมูลรายการโปรแกรมที่ละเมิดกฎ (จาก 3.2)
+Out put Data Flow : ข้อความแจ้งเตือน (Pop-up), บันทึกการละเมิดกฎ (ไป D4)
+Process Type : Online Processing
+Process Logic :
+FOR EACH การละเมิด ใน รายการ THEN
+    สั่ง Terminate Process / Close Window นั้นๆ
+    แสดง Pop-up แจ้งเตือนนักศึกษา
+    บันทึก Log ลง D4 (ชื่อโปรแกรม, เวลา, รหัสผู้สอบ)
+    ส่งข้อมูลไปแสดงผลที่ Dashboard อาจารย์ (Process 6.0)
+ENDLOOP
+
+Process Number : 4.0
+Process Name : จัดการข้อมูลผู้ใช้งานและการตรวจสอบสิทธิ์
+Description : ดูแลเรื่องการ Authentication และ Authorization ของผู้ใช้ในระบบ
+Input Data Flow : ข้อมูลบัญชีผู้ใช้
+Out put Data Flow : ผลการตรวจสอบและสิทธิ์การเข้าสอบ
+Process Type : Online Processing
+Process Logic :
+เมื่อผู้ใช้งานเข้าสู่ระบบ
+    เรียกใช้ Process 4.1 ตรวจสอบข้อมูลบัญชีผู้ใช้
+    IF บัญชีถูกต้อง THEN
+        เรียกใช้ Process 4.2 ตรวจสอบระดับสิทธิ์ผู้ใช้งาน
+        อนุญาตให้เข้าสู่เมนูที่เหมาะสม (หน้าสอบสำหรับ นศ. / หน้าแดชบอร์ดสำหรับ อ.)
+    ELSE
+        แสดงข้อความ "Login Failed"
+    ENDIF
+
+Process Number : 4.1
+Process Name : ตรวจสอบข้อมูลบัญชีผู้ใช้
+Description : ตรวจสอบอีเมลและรหัสผ่านกับระบบ Authentication
+Input Data Flow : ข้อมูลบัญชีผู้ใช้ (จาก User), ข้อมูลบัญชี (จาก D1)
+Out put Data Flow : ผลการยืนยันตัวตนที่ถูกต้อง
+Process Type : Online Processing
+Process Logic :
+รับ Email และ Password
+Hash Password และเปรียบเทียบกับ D1 (หรือส่งให้ Auth Provider ตรวจสอบ)
+IF ตรงกัน THEN
+    สร้าง Session Token
+    ส่งสถานะ Success ไป 4.2
+ELSE
+    ส่งสถานะ Fail
+ENDIF
+
+Process Number : 4.2
+Process Name : ตรวจสอบระดับสิทธิ์ผู้ใช้งาน
+Description : ตรวจสอบ Domain ของอีเมลเพื่อระบุ Role (Teacher/Student)
+Input Data Flow : ผลการยืนยันตัวตนที่ถูกต้อง, รายละเอียดสิทธิ์ (จาก D1)
+Out put Data Flow : ผลการตรวจสอบและสิทธิ์การเข้าสอบ
+Process Type : Online Processing
+Process Logic :
+ตรวจสอบ Email Suffix
+IF @itm.kmutnb.ac.th THEN
+    Role = Teacher
+ELSE IF @email.kmutnb.ac.th THEN
+    Role = Student
+ELSE
+    Role = Guest
+ENDIF
+กำหนดสิทธิ์การเข้าถึงเมนูตาม Role
+
+Process Number : 5.0
+Process Name : จัดการข้อมูลการสอบและทรัพยากรต้องห้าม
+Description : เครื่องมือสำหรับอาจารย์ในการสร้างและกำหนดค่าการสอบ
+Input Data Flow : ข้อมูลการตั้งค่าห้องสอบ, ข้อมูลวิชาสอบ, รายการโปรแกรมต้องห้าม
+Out put Data Flow : ข้อมูลที่บันทึกลง D2
+Process Type : Online Processing
+Process Logic :
+เมื่ออาจารย์เลือกเมนู "สร้างการสอบ / จัดการห้องสอบ"
+    แสดงแบบฟอร์มรับ input
+    IF เลือกสร้างห้องสอบ -> 5.1
+    IF เลือกกำหนดวิชา -> 5.2
+    IF เลือกตั้งค่าการบล็อก -> 5.3
+
+Process Number : 5.1
+Process Name : สร้างและแก้ไขข้อมูลห้องสอบ
+Description : กำหนดขนาด Grid (แถว x คอลัมน์) ของห้องสอบ
+Input Data Flow : ข้อมูลการตั้งค่าห้องสอบและผังที่นั่ง
+Out put Data Flow : ข้อมูลห้องสอบที่สร้างใหม่ (ไป D2)
+Process Type : Online Processing
+Process Logic :
+รับค่า ชื่อห้อง, จำนวนแถว, จำนวนคอลัมน์
+คำนวณจำนวนที่นั่งรวม (Rows * Cols)
+บันทึกลง Table 'room_seat_layouts' (D2)
+
+Process Number : 5.2
+Process Name : กำหนดรายละเอียดวิชาสอบ
+Description : ตั้งค่ารายวิชาและเวลาสอบ
+Input Data Flow : ข้อมูลกำหนดการสอบและรายวิชา
+Out put Data Flow : รายละเอียดวิชาสอบที่สร้างใหม่ (ไป D2)
+Process Type : Online Processing
+Process Logic :
+รับค่า รหัสวิชา, ชื่อวิชา, Section, วันที่, เวลาเริ่ม-จบ
+ตรวจสอบความซ้ำซ้อนของเวลาและห้อง
+บันทึกลง Table 'exam_rooms' (D2)
+
+Process Number : 5.3
+Process Name : กำหนดรายการโปรแกรมต้องห้าม
+Description : ตั้งค่ารายชื่อโปรแกรมที่ไม่ต้องการให้ นศ. เปิด
+Input Data Flow : รายการโปรแกรมและเว็บไซต์ต้องห้าม
+Out put Data Flow : รายการสิ่งต้องห้ามที่สร้างใหม่ (ไป D2)
+Process Type : Online Processing
+Process Logic :
+รับรายการ Pattern ที่ต้องการบล็อก (เช่น "calculator", "chat")
+กำหนด Match Type (Exact/Contains)
+บันทึกลง Table 'room_blocked_resources' (D2)
+
+Process Number : 6.0
+Process Name : จัดการเซสชันการเข้าสอบและการรายงาน
+Description : ควบคุม Flow การสอบตั้งแต่เริ่มจนจบ และแสดงผล
+Input Data Flow : การเข้าสอบของ นศ., คำสั่งเปิดสอบ
+Out put Data Flow : Dashboard, รายงานผล
+Process Type : Online Processing
+Process Logic :
+รอรับการเชื่อมต่อจาก นศ. (ผ่าน 2.3) -> 6.2
+รอรับข้อมูล Violation (ผ่าน 3.3) -> 6.3
+รอรับคำสั่งเปิดปิดสอบจาก อ. -> 6.1
+
+Process Number : 6.1
+Process Name : ควบคุมสถานะเซสชันการสอบ
+Description : เปลี่ยนสถานะ Active/Inactive ของการสอบ
+Input Data Flow : คำสั่งเปิด/ปิดเซสชันการสอบ
+Out put Data Flow : สถานะการสอบที่ต้องการอัปเดต (ไป D2)
+Process Type : Online Processing
+Process Logic :
+รับคำสั่ง "เริ่มสอบ" -> Update status = IP_BINDING / STARTED
+รับคำสั่ง "จบการสอบ" -> Update status = ENDED
+Clear Session Data เมื่อจบการสอบ
+
+Process Number : 6.2
+Process Name : จัดสรรที่นั่งสอบ
+Description : ระบุตำแหน่งที่นั่งให้นักศึกษาตาม Machine IP
+Input Data Flow : สถานะยืนยันตัวตนผ่าน (จาก 2.3), ข้อมูลผังที่นั่ง (จาก D2)
+Out put Data Flow : ข้อมูลเลขที่นั่งสอบ, ข้อมูลการลงทะเบียนเข้าสอบ (ไป D4)
+Process Type : Online Processing
+Process Logic :
+รับ Request การเข้าห้องสอบจาก นศ.
+ตรวจสอบ Client IP Address เทียบกับ IP Mapping ใน D2
+ระบุเลขที่นั่ง (Row, Col)
+บันทึก Session ใหม่ลง Table 'exam_student_sessions' (D4)
+แจ้งเลขที่นั่งกลับไปที่หน้าจอ นศ.
+
+Process Number : 6.3
+Process Name : ติดตามและรายงานผลการสอบ
+Description : ดึงข้อมูล Real-time มาแสดงบน Dashboard อาจารย์
+Input Data Flow : ข้อมูลสถานะผู้สอบและประวัติการทุจริต (จาก D4)
+Out put Data Flow : Dashboard แสดงสถานะผู้เข้าสอบแบบ Real-time, รายงานสรุป
+Process Type : Online Processing
+Process Logic :
+Subscribe การเปลี่ยนแปลงใน Table 'exam_student_sessions' และ 'violation_logs'
+เมื่อมีข้อมูลใหม่ (นศ. เข้าห้อง / มีการโกง)
+    อัปเดต UI บนหน้าจออาจารย์ทันที (Real-time)
+เมื่อจบการสอบ
+    สรุปยอดผู้เข้าสอบ และรายการการทุจริตทั้งหมดเป็น Report
+
+--------------------------------------------------------------------------------
+9. Data Element Description (พจนานุกรมข้อมูล - รายละเอียดฟิลด์)
+--------------------------------------------------------------------------------
+
+Data Element ID : E001
+Data Element Name : id (รหัสอ้างอิงหลัก)
+Description : เป็นรหัสเฉพาะ (Primary Key) ที่ใช้ระบุตัวตนของข้อมูลในตารางต่างๆ แบบไม่ซ้ำกัน
+Data Type : uuid
+Length : 36
+Data format : xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx (Generated by System)
+
+Data Element ID : E002
+Data Element Name : email (อีเมลผู้ใช้งาน)
+Description : เป็นที่อยู่ไปรษณีย์อิเล็กทรอนิกส์ที่ใช้เป็นชื่อผู้ใช้ในการเข้าสู่ระบบและระบุตัวตน
+Data Type : varchar
+Length : 255
+Data format : example@email.kmutnb.ac.th
+
+Data Element ID : E003
+Data Element Name : role (บทบาทผู้ใช้งาน)
+Description : สิทธิ์การใช้งานในระบบ แบ่งเป็นอาจารย์และนักศึกษา
+Data Type : varchar
+Length : 20
+Data format : TEACHER, STUDENT
+
+Data Element ID : E004
+Data Element Name : full_name (ชื่อ-นามสกุล)
+Description : ชื่อและนามสกุลจริงของผู้ใช้งาน
+Data Type : varchar
+Length : 255
+Data format : นาย กอไก่ ใจดี
+
+Data Element ID : E005
+Data Element Name : face_image_url (URL รูปภาพใบหน้า)
+Description : ลิงก์ที่อยู่ของไฟล์รูปภาพใบหน้าที่จัดเก็บในระบบ Cloud Storage
+Data Type : text
+Length : -
+Data format : https://.../storage/v1/object/public/...
+
+Data Element ID : E006
+Data Element Name : face_descriptor (รหัสลักษณะใบหน้า)
+Description : ค่าเวกเตอร์ทางคณิตศาสตร์ 128 มิติที่แปลงมาจากใบหน้า ใช้สำหรับเปรียบเทียบ
+Data Type : text / jsonb
+Length : -
+Data format : [0.123, -0.456, ..., 0.789]
+
+Data Element ID : E007
+Data Element Name : room_name (ชื่อห้องสอบ)
+Description : ชื่อเรียกของห้องปฏิบัติการคอมพิวเตอร์ที่ใช้สอบ
+Data Type : varchar
+Length : 50
+Data format : Lab-78-601
+
+Data Element ID : E008
+Data Element Name : ip_address (ที่อยู่ไอพี)
+Description : หมายเลขระบุเครื่องคอมพิวเตอร์ในเครือข่าย
+Data Type : varchar
+Length : 45
+Data format : 192.168.1.10
+
+Data Element ID : E009
+Data Element Name : course_code (รหัสวิชา)
+Description : รหัสประจำรายวิชาที่เปิดสอบ
+Data Type : varchar
+Length : 20
+Data format : 040613405
+
+Data Element ID : E010
+Data Element Name : course_name (ชื่อวิชา)
+Description : ชื่อเต็มของรายวิชา
+Data Type : varchar
+Length : 255
+Data format : Computer Programming
+
+Data Element ID : E011
+Data Element Name : exam_date (วันที่สอบ)
+Description : วันเดือนปีที่ทำการสอบ
+Data Type : date
+Length : -
+Data format : YYYY-MM-DD
+
+Data Element ID : E012
+Data Element Name : start_time (เวลาเริ่มสอบ)
+Description : เวลาเริ่มต้นการสอบ
+Data Type : time
+Length : -
+Data format : HH:mm:ss
+
+Data Element ID : E013
+Data Element Name : pattern (รูปแบบโปรแกรมต้องห้าม)
+Description : คำค้นหาหรือชื่อไฟล์ Process ที่ต้องการบล็อก
+Data Type : varchar
+Length : 255
+Data format : chrome, discord, calculator.exe
+
+Data Element ID : E014
+Data Element Name : violation_type (ประเภทการละเมิด)
+Description : หมวดหมู่ของการกระทำความผิดที่ตรวจพบ
+Data Type : varchar
+Length : 50
+Data format : ACTIVE_WINDOW, PROCESS, BACKGROUND
+
+Data Element ID : E015
+Data Element Name : cpu_usage (เปอร์เซ็นต์ CPU)
+Description : ปริมาณการใช้งานหน่วยประมวลผลกลางหน่วยเป็นร้อยละ
+Data Type : float
+Length : -
+Data format : 0.00 - 100.00
+
+Data Element ID : E016
+Data Element Name : active_window_title (ชื่อหน้าต่างที่ใช้งาน)
+Description : ชื่อเรื่อง (Title Bar) ของโปรแกรมที่ผู้ใช้งานกำลังเปิดใช้งานอยู่ ณ ขณะนั้น
+Data Type : text
+Length : -
+Data format : Exam Browser - Google Chrome
+
+Data Element ID : E017
+Data Element Name : created_at (เวลาที่สร้าง)
+Description : วันและเวลาที่ข้อมูลถูกบันทึกลงในระบบ
+Data Type : timestamp with time zone
+Length : -
+Data format : YYYY-MM-DD HH:mm:ss+TZ
+
+Data Element ID : E018
+Data Element Name : status (สถานะ)
+Description : สถานะปัจจุบันของรายการนั้นๆ
+Data Type : varchar
+Length : 50
+Data format : authenticated, active, inactive, kicked
+
+Data Element ID : E019
+Data Element Name : rows (จำนวนแถว)
+Description : จำนวนแถวที่นั่งทั้งหมดภายในห้องสอบ
+Data Type : int
+Length : -
+Data format : 1-99
+
+Data Element ID : E020
+Data Element Name : columns (จำนวนคอลัมน์)
+Description : จำนวนคอลัมน์ที่นั่งทั้งหมดภายในห้องสอบ
+Data Type : int
+Length : -
+Data format : 1-99
+
+Data Element ID : E021
+Data Element Name : section (ตอนเรียน)
+Description : หมายเลขตอนเรียน (Section) ของรายวิชาที่สอบ
+Data Type : varchar
+Length : 10
+Data format : 01, 02A
+
+Data Element ID : E022
+Data Element Name : match_type (ประเภทการตรวจสอบ)
+Description : วิธีการเปรียบเทียบชื่อโปรแกรมต้องห้าม (เช่น ตรงตัวเป๊ะ หรือ มีคำนี้ประกอบ)
+Data Type : varchar
+Length : 20
+Data format : exact, contains
+
+Data Element ID : E023
+Data Element Name : seat_number (เลขที่นั่งสอบ)
+Description : หมายเลขที่นั่งสอบที่ระบบจัดสรรให้นักศึกษา
+Data Type : int
+Length : -
+Data format : 1-100
+
+Data Element ID : E024
+Data Element Name : ram_usage (ปริมาณการใช้ RAM)
+Description : ปริมาณหน่วยความจำหลักที่ถูกใช้งานไป (หน่วย %)
+Data Type : float
+Length : -
+Data format : 0.0 - 100.0
+
+Data Element ID : E025
+Data Element Name : network_speed_kbps (ความเร็วเน็ต)
+Description : ความเร็วในการรับส่งข้อมูลผ่านเครือข่าย
+Data Type : int
+Length : -
+Data format : 1024, 2048
+
+Data Element ID : E026
+Data Element Name : evidence_url (ลิงก์หลักฐาน)
+Description : URL ของรูปภาพหน้าจอ (Screenshot) ที่บันทึกไว้เมื่อเกิดการทุจริต
+Data Type : text
+Length : -
+Data format : https://.../evidence.png
+
+Data Element ID : E027
+Data Element Name : detail (รายละเอียดเพิ่มเติม)
+Description : ข้อมูลขยายความเกี่ยวกับการละเมิดกฎหรือเหตุการณ์ต่างๆ
+Data Type : text
+Length : -
+Data format : Deteced youtube in Chrome title
+
+Data Element ID : E028
+Data Element Name : session_start_time (เวลาเริ่มเซสชัน)
+Description : เวลาที่นักศึกษาเริ่มลงชื่อเข้าใช้งานห้องสอบจริง
+Data Type : timestamp
+Length : -
+Data format : YYYY-MM-DD HH:mm:ss
+
+Data Element ID : E029
+Data Element Name : expires_at (เวลาหมดอายุ)
+Description : กำหนดเวลาสิ้นสุดการใช้งานของ Token หรือสถานะ Authentication
+Data Type : timestamp
+Length : -
+Data format : YYYY-MM-DD HH:mm:ss
+
+Data Element ID : E030
+Data Element Name : student_id (รหัสนักศึกษา/อีเมล)
+Description : รหัสประจำตัวนักศึกษาที่ใช้ระบุตัวตน (ในระบบใช้อีเมลเป็น Key อ้างอิง)
+Data Type : varchar
+Length : 50
+Data format : s64000000000
+
+Data Element ID : E031
+Data Element Name : confidence_score (ค่าความเชื่อมั่น)
+Description : ค่าคะแนนความเหมือนของใบหน้า (0-1) ยิ่งน้อยยิ่งเหมือน
+Data Type : float
+Length : -
+Data format : 0.42, 0.35
+
+--------------------------------------------------------------------------------
+10. Table List (รายการแฟ้มข้อมูล/ตาราง)
+--------------------------------------------------------------------------------
+*หมายเหตุ: ชื่อไฟล์ในที่นี้คือชื่อ Table ในฐานข้อมูล Supabase
+
+ไฟล์ที่ : 1
+ชื่อไฟล์ : users
+ความหมาย : เก็บข้อมูลบัญชีผู้ใช้งาน สิทธิ์การเข้าถึง และข้อมูลส่วนตัวพื้นฐาน (Authentication)
+
+ไฟล์ที่ : 2
+ชื่อไฟล์ : user_photos
+ความหมาย : เก็บข้อมูล URL ของรูปภาพใบหน้าทั้ง 4 อิริยาบถสำหรับใช้ลงทะเบียนและตรวจสอบ
+
+ไฟล์ที่ : 3
+ชื่อไฟล์ : room_seat_layouts
+ความหมาย : เก็บข้อมูลโครงสร้างผังห้องสอบ ขนาด (แถวxคอลัมน์) และชื่อห้องปฏิบัติการ
+
+ไฟล์ที่ : 4
+ชื่อไฟล์ : room_seat_ip_mappings
+ความหมาย : เก็บข้อมูลการจับคู่ Mapping ระหว่างเลขที่นั่ง (Row/Col) กับหมายเลข IP Address
+
+ไฟล์ที่ : 5
+ชื่อไฟล์ : exam_rooms
+ความหมาย : เก็บข้อมูลรายวิชาที่เปิดสอบ กำหนดการสอบ และความเชื่อมโยงกับห้องสอบ
+
+ไฟล์ที่ : 6
+ชื่อไฟล์ : room_blocked_resources
+ความหมาย : เก็บข้อมูลรายการโปรแกรม ชื่อหน้าต่าง หรือเว็บไซต์ที่ไม่อนุญาตให้ใช้งานระหว่างสอบ
+
+ไฟล์ที่ : 7
+ชื่อไฟล์ : exam_student_sessions
+ความหมาย : เก็บข้อมูลสถานะ Session การเข้าสอบปัจจุบันของนักศึกษาแต่ละคนแบบ Real-time
+
+ไฟล์ที่ : 8
+ชื่อไฟล์ : resource_logs
+ความหมาย : เก็บประวัติ Log การใช้งานทรัพยากรเครื่อง (CPU, RAM, Network) ของผู้เข้าสอบอย่างละเอียด
+
+ไฟล์ที่ : 9
+ชื่อไฟล์ : violation_logs
+ความหมาย : เก็บประวัติการกระทำผิดกฎระเบียบ รายละเอียดการละเมิด และหลักฐานรูปภาพ
+
+ไฟล์ที่ : 10
+ชื่อไฟล์ : qr_authentication
+ความหมาย : เก็บข้อมูลการยืนยันตัวตนชั่วคราวผ่านมือถือ (QR Code) สำหรับการเข้าสู่ระบบแบบไร้สัมผัส
+
+--------------------------------------------------------------------------------
+11. Table Layout (การออกแบบตารางข้อมูล)
+--------------------------------------------------------------------------------
+
+ตารางที่ 1: users (ข้อมูลผู้ใช้งาน)
+ชื่อฟิลด์ | ความหมาย | ชนิด | ขนาด | หมายเหตุ | ตัวอย่างข้อมูล
+---|---|---|---|---|---
+id | รหัสผู้ใช้งาน | uuid | 36 | PK | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
+email | อีเมล | varchar | 255 | - | student@email.kmutnb.ac.th
+role | บทบาทผู้ใช้งาน | varchar | 20 | Derived | STUDENT
+full_name | ชื่อ-นามสกุล | varchar | 255 | Metadata | สมชาย รักเรียน
+created_at | วันที่สมัครสมาชิก | timestamp | - | - | 2024-02-15 09:30:00
+
+ตารางที่ 2: user_photos (ข้อมูลรูปภาพใบหน้า)
+ชื่อฟิลด์ | ความหมาย | ชนิด | ขนาด | หมายเหตุ | ตัวอย่างข้อมูล
+---|---|---|---|---|---
+id | รหัสรายการ | bigint | - | PK, Auto | 15
+user_id | รหัสผู้ใช้งาน | uuid | 36 | FK | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
+face_forward | URL รูปหน้าตรง | text | - | - | https://supa.../face.jpg
+open_eye | URL รูปลืมตา | text | - | - | https://supa.../eye.jpg
+turn_left | URL รูปหันซ้าย | text | - | - | https://supa.../left.jpg
+turn_right | URL รูปหันขวา | text | - | - | https://supa.../right.jpg
+updated_at | วันที่อัปเดตล่าสุด | timestamp | - | - | 2024-02-15 10:00:00
+
+ตารางที่ 3: room_seat_layouts (ข้อมูลผังห้องสอบ)
+ชื่อฟิลด์ | ความหมาย | ชนิด | ขนาด | หมายเหตุ | ตัวอย่างข้อมูล
+---|---|---|---|---|---
+id | รหัสผังห้องสอบ | uuid | 36 | PK | b2f4g5h6-1a2b-3c4d-5e6f-7g8h9i0j1k2l
+room_name | ชื่อห้องปฏิบัติการ | varchar | 100 | - | Lab-Com-702
+rows | จำนวนแถว | int | - | - | 5
+columns | จำนวนคอลัมน์ | int | - | - | 6
+total_seats | จำนวนที่นั่งรวม | int | - | - | 30
+created_by | ผู้สร้าง (อาจารย์) | uuid | 36 | FK | c1d2e3f4-g5h6-7i8j-9k0l-m1n2o3p4q5r6
+
+ตารางที่ 4: room_seat_ip_mappings (ข้อมูล Mapping IP)
+ชื่อฟิลด์ | ความหมาย | ชนิด | ขนาด | หมายเหตุ | ตัวอย่างข้อมูล
+---|---|---|---|---|---
+id | รหัสรายการ | bigint | - | PK, Auto | 102
+room_id | รหัสผังห้องสอบ | uuid | 36 | FK | b2f4g5h6-1a2b-3c4d-5e6f-7g8h9i0j1k2l
+row_number | หมายเลขแถว | int | - | - | 1
+column_number | หมายเลขคอลัมน์ | int | - | - | 3
+ip_address | หมายเลข IP | varchar | 45 | - | 192.168.10.15
+
+ตารางที่ 5: exam_rooms (ข้อมูลวิชาสอบและตารางสอบ)
+ชื่อฟิลด์ | ความหมาย | ชนิด | ขนาด | หมายเหตุ | ตัวอย่างข้อมูล
+---|---|---|---|---|---
+id | รหัสการสอบ | uuid | 36 | PK | x1y2z3a4-b5c6-d7e8-f9g0-h1i2j3k4l5m6
+room_name | ชื่อห้องสอบ | varchar | 100 | Ref | Lab-Com-702
+course_code | รหัสวิชา | varchar | 20 | - | 040613405
+course_name | ชื่อวิชา | varchar | 255 | - | Computer Programming
+section | ตอนเรียน | varchar | 10 | - | 01
+exam_date | วันที่สอบ | date | - | - | 2024-03-20
+start_time | เวลาเริ่ม | time | - | - | 09:00:00
+end_time | เวลาสิ้นสุด | time | - | - | 12:00:00
+status | สถานะการสอบ | varchar | 20 | - | STARTED
+
+ตารางที่ 6: room_blocked_resources (รายการโปรแกรมต้องห้าม)
+ชื่อฟิลด์ | ความหมาย | ชนิด | ขนาด | หมายเหตุ | ตัวอย่างข้อมูล
+---|---|---|---|---|---
+id | รหัสรายการ | bigint | - | PK, Auto | 55
+room_id | รหัสการสอบ | uuid | 36 | FK | x1y2z3a4-b5c6-d7e8-f9g0-h1i2j3k4l5m6
+pattern | ชื่อโปรแกรม/คำค้น | varchar | 255 | - | discord
+match_type | รูปแบบการค้นหา | varchar | 20 | - | contains
+
+ตารางที่ 7: exam_student_sessions (ข้อมูลเซสชันผู้เข้าสอบ)
+ชื่อฟิลด์ | ความหมาย | ชนิด | ขนาด | หมายเหตุ | ตัวอย่างข้อมูล
+---|---|---|---|---|---
+id | รหัสเซสชัน | uuid | 36 | PK | s1t2u3v4-w5x6-y7z8-a9b0-c1d2e3f4g5h6
+layout_id | รหัสผังห้องสอบ | uuid | 36 | FK | b2f4g5h6-1a2b-3c4d-5e6f-7g8h9i0j1k2l
+student_email | อีเมลนักศึกษา | varchar | 255 | FK (Ref) | student1@email.kmutnb.ac.th
+seat_number | เลขที่นั่งสอบ | int | - | - | 15
+ip_address | หมายเลข IP | varchar | 45 | - | 192.168.10.15
+face_descriptor | รหัสลักษณะใบหน้า | text | - | JSON | [-0.123, 0.456, ...]
+is_active | สถานะออนไลน์ | boolean | - | - | true
+student_id | รหัสนักศึกษา | varchar | 20 | - | 640000000000
+
+ตารางที่ 8: resource_logs (ประวัติทรัพยากรเครื่อง)
+ชื่อฟิลด์ | ความหมาย | ชนิด | ขนาด | หมายเหตุ | ตัวอย่างข้อมูล
+---|---|---|---|---|---
+id | รหัส Log | bigint | - | PK, Auto | 9999
+session_id | รหัสเซสชัน | uuid | 36 | FK | s1t2u3v4-w5x6-y7z8-a9b0-c1d2e3f4g5h6
+timestamp | เวลาที่บันทึก | timestamp | - | - | 2024-03-20 09:15:30
+cpu_usage | การใช้ CPU (%) | float | - | - | 15.5
+ram_usage | การใช้ RAM (%) | float | - | - | 45.2
+active_window_title | ชื่อหน้าต่างปัจจุบัน | text | - | - | VSCode - Exam.js
+exe_processes | รายการ Process | jsonb | - | - | [{"name":"chrome.exe", "pid":123}]
+
+ตารางที่ 9: violation_logs (ประวัติการทำผิดกฎ)
+ชื่อฟิลด์ | ความหมาย | ชนิด | ขนาด | หมายเหตุ | ตัวอย่างข้อมูล
+---|---|---|---|---|---
+id | รหัสรายการ | bigint | - | PK, Auto | 50
+session_id | รหัสเซสชัน | uuid | 36 | FK | s1t2u3v4-w5x6-y7z8-a9b0-c1d2e3f4g5h6
+violation_type | ประเภทความผิด | varchar | 50 | - | PROCESS_DETECTED
+detail | รายละเอียด | text | - | - | Found 'discord.exe' running
+evidence_url | ลิงก์รูปหลักฐาน | text | - | - | https://supa.../evi1.png
+timestamp | เวลาที่เกิดเหตุ | timestamp | - | - | 2024-03-20 10:05:00
+
+ตารางที่ 10: qr_authentication (ข้อมูล QR Login)
+ชื่อฟิลด์ | ความหมาย | ชนิด | ขนาด | หมายเหตุ | ตัวอย่างข้อมูล
+---|---|---|---|---|---
+id | รหัสรายการ | bigint | - | PK, Auto | 300
+user_id | รหัสผู้ใช้งาน | uuid | 36 | FK | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
+status | สถานะ | varchar | 20 | - | authenticated
+ip | IP มือถือ | varchar | 45 | - | 10.0.0.5
+authenticated_at | เวลายืนยันตัวตน | timestamp | - | - | 2024-03-20 08:55:00
+expires_at | เวลาหมดอายุ | timestamp | - | - | 2024-03-20 08:57:00
