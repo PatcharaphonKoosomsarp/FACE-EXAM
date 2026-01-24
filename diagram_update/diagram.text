@@ -197,7 +197,7 @@ Process 6.0: จัดการเซสชันการเข้าสอบ�
 - turn_right (URL)
 - created_at
 - updated_at
-*Relationship: Users (1) ---- (1) User_Photos
+*Relationship: Users (1) --<มีข้อมูล>-- (1) User_Photos
 
 [3. Entity: Room_Seat_Layouts] (ผังที่นั่งห้องสอบ)
 - id (PK, UUID)
@@ -208,7 +208,7 @@ Process 6.0: จัดการเซสชันการเข้าสอบ�
 - created_by (FK -> Users.id)
 - created_at
 - updated_at
-*Relationship: Users (1) ---- (N) Room_Seat_Layouts
+*Relationship: Users (1) --<สร้าง>-- (N) Room_Seat_Layouts
 
 [4. Entity: Room_Seat_Ip_Mappings] (การจับคู่ที่นั่งกับ IP Address)
 - id (PK)
@@ -216,7 +216,7 @@ Process 6.0: จัดการเซสชันการเข้าสอบ�
 - row_number
 - column_number
 - ip_address
-*Relationship: Room_Seat_Layouts (1) ---- (N) Room_Seat_Ip_Mappings
+*Relationship: Room_Seat_Layouts (1) --<ประกอบด้วย>-- (N) Room_Seat_Ip_Mappings
 
 [5. Entity: Exam_Rooms] (ตารางสอบ/การกำหนดวิชาสอบ)
 - id (PK, UUID)
@@ -228,15 +228,15 @@ Process 6.0: จัดการเซสชันการเข้าสอบ�
 - start_time
 - end_time
 - created_by (FK -> Users.id)
-*Relationship: Users (1) ---- (N) Exam_Rooms
-*Relationship: Room_Seat_Layouts (1) ---- (N) Exam_Rooms (Link via name)
+*Relationship: Users (1) --<สร้าง>-- (N) Exam_Rooms
+*Relationship: Room_Seat_Layouts (1) --<ถูกใช้ใน>-- (N) Exam_Rooms (Link via name)
 
 [6. Entity: Room_Blocked_Resources] (รายการโปรแกรมต้องห้าม)
 - id (PK)
 - room_id (FK -> Exam_Rooms.id)
 - pattern (ชื่อโปรแกรม/Process)
 - match_type (exact, contains)
-*Relationship: Exam_Rooms (1) ---- (N) Room_Blocked_Resources
+*Relationship: Exam_Rooms (1) --<มีรายการ>-- (N) Room_Blocked_Resources
 
 [7. Entity: Exam_Student_Sessions] (เซสชันการเข้าสอบของนักศึกษา)
 - id (PK)
@@ -248,8 +248,8 @@ Process 6.0: จัดการเซสชันการเข้าสอบ�
 - is_active
 - session_start_time
 - student_profile_url
-*Relationship: Room_Seat_Layouts (1) ---- (N) Exam_Student_Sessions
-*Relationship: Users (1) ---- (N) Exam_Student_Sessions
+*Relationship: Room_Seat_Layouts (1) --<รองรับ>-- (N) Exam_Student_Sessions
+*Relationship: Users (1) --<เข้าสอบใน>-- (N) Exam_Student_Sessions
 
 [8. Entity: Resource_Logs] (บันทึกทรัพยากรเครื่องของผู้เข้าสอบ)
 - id (PK)
@@ -258,7 +258,7 @@ Process 6.0: จัดการเซสชันการเข้าสอบ�
 - cpu_usage, cpu_model, ram_usage, ram_total_gb
 - active_window_title, all_open_windows
 - exe_processes, network_download_mb
-*Relationship: Exam_Student_Sessions (1) ---- (N) Resource_Logs
+*Relationship: Exam_Student_Sessions (1) --<สร้าง>-- (N) Resource_Logs
 
 [9. Entity: Violation_Logs] (บันทึกการละเมิดกฎ)
 - id (PK)
@@ -267,7 +267,7 @@ Process 6.0: จัดการเซสชันการเข้าสอบ�
 - detail
 - timestamp
 - evidence_url (รูปภาพหลักฐาน)
-*Relationship: Exam_Student_Sessions (1) ---- (N) Violation_Logs
+*Relationship: Exam_Student_Sessions (1) --<ตรวจพบ>-- (N) Violation_Logs
 
 [10. Entity: Qr_Authentication] (ระบบยืนยันตัวตนผ่านมือถือ)
 - id (PK)
@@ -276,7 +276,7 @@ Process 6.0: จัดการเซสชันการเข้าสอบ�
 - ip
 - authenticated_at
 - expires_at
-*Relationship: Users (1) ---- (1) Qr_Authentication
+*Relationship: Users (1) --<ทำรายการ>-- (1) Qr_Authentication
 
 --------------------------------------------------------------------------------
 6. Data Flow Description (รายละเอียดข้อมูลไหล)
