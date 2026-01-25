@@ -1,3 +1,12 @@
+############ พจนานุกรมข้อมูล (Data Flow Description) ############
+############ พจนานุกรมข้อมูล (Data Flow Description) ############
+############ พจนานุกรมข้อมูล (Data Flow Description) ############
+############ พจนานุกรมข้อมูล (Data Flow Description) ############
+############ พจนานุกรมข้อมูล (Data Flow Description) ############
+############ พจนานุกรมข้อมูล (Data Flow Description) ############
+############ พจนานุกรมข้อมูล (Data Flow Description) ############
+############ พจนานุกรมข้อมูล (Data Flow Description) ############
+############ พจนานุกรมข้อมูล (Data Flow Description) ############
 \begin{comment}
 \section{พจนานุกรมข้อมูล (Data Flow Description)}
 \begin{table}[h]
@@ -17,7 +26,6 @@
 \textbf{Data Structure :} & จัดการห้องสอบ = ชื่อห้องสอบ + จำนวนเเถว + จำนวนคอลัมน์ \\ \hline
 \end{tabular}
 \end{table}
-
 
 \begin{table}[h]
 \centering
@@ -505,3 +513,422 @@
 \end{tabular}
 \end{table}
 \end{comment}
+
+
+
+
+
+
+
+
+
+############ Diagram การทำงานหลัก ############
+############ Diagram การทำงานหลัก ############
+############ Diagram การทำงานหลัก ############
+############ Diagram การทำงานหลัก ############
+############ Diagram การทำงานหลัก ############
+############ Diagram การทำงานหลัก ############
+############ Diagram การทำงานหลัก ############
+############ Diagram การทำงานหลัก ############
+############ Diagram การทำงานหลัก ############
+############ Diagram การทำงานหลัก ############
+############ Diagram การทำงานหลัก ############
+############ Diagram การทำงานหลัก ############
+############ Diagram การทำงานหลัก ############
+############ Diagram การทำงานหลัก ############
+############ Diagram การทำงานหลัก ############
+############ Diagram การทำงานหลัก ############
+############ Diagram การทำงานหลัก ############
+############ Diagram การทำงานหลัก ############
+############ Diagram การทำงานหลัก ############
+############ Diagram การทำงานหลัก ############
+############ Diagram การทำงานหลัก ############
+############ Diagram การทำงานหลัก ############
+############ Diagram การทำงานหลัก ############
+############ Diagram การทำงานหลัก ############
+\begin{comment}
+\subsection{Diagram การทำงานหลัก}
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.45\textwidth]{Image/การทำงานหลัก.png}
+\caption{\fontSixTeen{Diagram การทำงานหลัก}}
+\label{fig3:MainDiagram} %ภายในวงเล็บ {ชื่อที่จะถูกเรียกใช้}
+\end{figure}
+\hspace*{1.3em} %ย่อหน้า
+จากภาพที่ \ref{fig3:MainDiagram} แสดงการทำงานหลักของระบบทั้งหมด ตั้งแต่การเริ่มต้น (Start) ไปจนถึงการสิ้นสุด (End) โดยแบ่งการทำงานออกเป็น 2 ส่วนหลักสำหรับผู้ใช้แต่ละประเภท ได้แก่ นักศึกษา และ อาจารย์ การทำงานจะเริ่มจากการเข้าสู่ระบบ ซึ่งเป็นขั้นตอนที่บังคับสำหรับผู้ใช้ทุกคน ในกรณีที่เป็นนักศึกษาจะสามารถเข้าถึงฟังก์ชันลงทะเบียนใบหน้า และเข้าห้องสอบ ในกรณีที่เป็นอาจารย์จะสามารถเข้าถึงฟังก์ชันสร้างห้องสอบ สร้างตารางสอบ และตรวจสอบที่นั่งของนักศึกษาได้
+
+\subsection{Diagram การเข้าสู่ระบบ}
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.36\textwidth]{Image/เข้าสู่ระบบ.png}
+\caption{\fontSixTeen{Diagram การเข้าสู่ระบบ}}
+\label{fig3:LoginDiagram}
+\end{figure}
+\hspace*{1.3em} %ย่อหน้า
+จากภาพที่ \ref{fig3:LoginDiagram} แสดงการตรวจสอบสิทธิ์ของผู้ใช้งาน โดยเริ่มต้นจากการที่ผู้ใช้เลือกเข้าสู่ระบบด้วยบัญชี Google ระบบจะทำการบันทึกข้อมูล และตรวจสอบโดเมนอีเมลเพื่อกำหนดสถานะผู้ใช้ หากอีเมลลงท้ายด้วย @itm.kmutnb.ac.th จะได้รับสิทธิ์เป็น อาจารย์ แต่ถ้าเป็น @email.kmutnb.ac.th จะได้รับสิทธิ์เป็น นักศึกษา ซึ่งเป็นวิธีที่ช่วยให้ระบบสามารถแยกบทบาทและกำหนดสิทธิ์การเข้าถึงได้อย่างถูกต้อง
+
+\newpage
+\subsection{Diagram การลงทะเบียนใบหน้า}
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.27\textwidth]{Image/ลงทะเบียนใบหน้า.png}
+\caption{\fontSixTeen{Diagram การลงทะเบียนใบหน้า}}
+\label{fig3:RegisterDiagram}
+\end{figure}
+\hspace*{1.3em} %ย่อหน้า
+จากภาพที่ \ref{fig3:RegisterDiagram} แสดงขั้นตอนที่นักศึกษาใช้ในการลงทะเบียนใบหน้าสำหรับการยืนยันตัวตน โดยนักศึกษาสามารถยืนยันตัวตนได้ 2 กรณี
+กรณีแรกถ้าเครื่องคอมพิวเตอร์ในห้องปฏิบัติการมีกล้อง Webcam นักศึกษาสามารถลงทะเบียนด้วยวิธีนี้ได้เลย แต่ถ้าหากว่าไม่มี นักศึกษาสามารถลงทะเบียนได้โดยการสแกน QR Code ผ่านกล้องโทรศัพท์มือถือเพื่อลงทะเบียนได้เช่นเดียวกัน ซึ่งขั้นตอนการยืนยันตัวตนจะให้นักศึกษาถ่ายภาพใบหน้าในหลาย ๆ มุม ได้แก่ ปิดตา เปิดตา เงยหน้า ก้มหน้า หันซ้าย หันขวา เเละให้ใบหน้าเข้าใกล้กล้อง เพื่อให้ได้ข้อมูลที่ครอบคลุมก่อนบันทึกภาพใบหน้าทั้งหมดลงใน Supabase
+
+\newpage
+\subsection{Diagram การเข้าห้องสอบ}
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.5\textwidth]{Image/เข้าห้องสอบ.png}
+\caption{\fontSixTeen{Diagram การเข้าห้องสอบ}}
+\label{fig3:EnterExamRoomDiagram}
+\end{figure}
+\hspace*{1.3em} %ย่อหน้า
+จากภาพที่ \ref{fig3:EnterExamRoomDiagram} แสดงขั้นตอนการเข้าห้องสอบของนักศึกษา โดยเริ่มต้นจากการที่นักศึกษาเลือกห้องสอบที่ต้องการ จากนั้นระบบจะใช้การสแกนใบหน้าเพื่อยืนยันตัวตนกับข้อมูลที่ลงทะเบียนไว้ก่อนหน้า และทำการตรวจสอบ IP Address ของเครื่องคอมพิวเตอร์ที่กำลังใช้งานอยู่ หากข้อมูลถูกต้องทั้งหมดการสอบเริ่มต้นขึ้น และระบบจะเริ่มเก็บข้อมูลการใช้ทรัพยากรลง Supabase
+
+\newpage
+\subsection{Diagram การสร้างตารางสอบ}
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.26\textwidth]{Image/สร้างตารางสอบ.png}
+\caption{\fontSixTeen{Diagram การสร้างตารางสอบ}}
+\label{fig3:CreateExamScheduleDiagram}
+\end{figure}
+\hspace*{1.3em} %ย่อหน้า
+จากภาพที่ \ref{fig3:CreateExamScheduleDiagram} แสดงรายละเอียดการจัดตารางสอบ โดยอาจารย์สามารถเลือกข้อมูลเบื้องต้น เช่น ห้องสอบ วันที่ และเวลาสอบ จากนั้นกรอกข้อมูล เช่น รหัสวิชา ชื่อวิชา เเละตอนเรียน ระบบจะทำการตรวจสอบเวลาที่ซ้ำซ้อน เพื่อป้องกันข้อผิดพลาดในการจัดตาราง เมื่อทุกอย่างถูกต้องข้อมูลตารางสอบจะถูกบันทึก ลงใน Supabase และสามารถแก้ไข หรือลบข้อมูลที่ไม่ต้องการได้ในภายหลัง
+
+\newpage
+\subsection{Diagram การสร้างห้องสอบ}
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.25\textwidth]{Image/สร้างห้องสอบ.png}
+\caption{\fontSixTeen{Diagram การสร้างห้องสอบ}}
+\label{fig3:CreateExamRoomDiagram}
+\end{figure}
+\hspace*{1.3em} %ย่อหน้า
+จากภาพที่ \ref{fig3:CreateExamRoomDiagram} แสดงขั้นตอนการเตรียมห้องสอบสำหรับอาจารย์ โดยอาจารย์สามารถกรอกข้อมูลเบื้องต้น เช่น ชื่อห้อง จำนวนแถว และคอลัมน์ จากนั้นกำหนด IP Address ให้กับที่นั่งแต่ละตำแหน่งเพื่อใช้ในการตรวจสอบระหว่างสอบข้อมูลทั้งหมดจะถูกบันทึกลงใน Supabase และหากจำเป็นอาจารย์ก็สามารถ แก้ไข IP Address หรือลบข้อมูลห้องสอบออกจากระบบได้
+
+\newpage
+\subsection{Diagram การตรวจสอบที่นั่ง}
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.32\textwidth]{Image/การตรวจสอบที่นั่ง.png}
+\caption{\fontSixTeen{Diagram การตรวจสอบที่นั่ง}}
+\label{fig3:CheckSeatDiagram}
+\end{figure}
+\hspace*{1.3em} %ย่อหน้า
+จากภาพที่ \ref{fig3:CheckSeatDiagram} แสดงฟังก์ชันสำหรับอาจารย์ในการควบคุม และดูแลการสอบในห้องปฏิบัติการ โดยอาจารย์สามารถเลือกตำแหน่งที่นั่งของนักศึกษาคนใดก็ได้เพื่อดูข้อมูลการสอบแบบเรียลไทม์ ระบบจะดึงข้อมูลนักศึกษา เช่น ชื่อ-นามสกุล รหัสนักศึกษา และข้อมูลการใช้ทรัพยากรคอมพิวเตอร์ เช่น การใช้งาน CPU, Memory และ Disk รวมทั้งแอปพลิเคชันจากฐานข้อมูล Supabase มาแสดงผล นอกจากนี้อาจารย์ยังสามารถลบนักศึกษาออกจากห้องสอบได้
+
+\newpage
+\subsection{Sequence diagram ระบบในส่วนของอาจารย์}
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.8\textwidth]{Image/teacher_sequencediagram.png}
+\caption{\fontSixTeen{Sequence diagram ระบบในส่วนของอาจารย์}}
+\label{fig3:sequenceteacher}
+\end{figure}
+\hspace*{1.3em} %ย่อหน้า
+จากภาพที่ \ref{fig3:sequenceteacher} แสดงขั้นตอนการสื่อสารระหว่าง อาจารย์, WebApp, Supabase และ Agent เมื่อผู้ใช้งานที่เป็นอาจารย์เข้าสู่ระบบ และ สร้างห้องสอบผ่าน WebApp ระบบจะทำการส่งข้อมูลห้องสอบไปยังฐานข้อมูล Supabase เพื่อบันทึกข้อมูล จากนั้นอาจารย์สามารถสร้างตารางสอบ และ ตรวจสอบที่นั่งได้ ข้อมูลจะถูกดึงจาก Supabase เพื่อแสดงผลบนหน้า WebAppn ในขั้นตอนการตรวจสอบที่นั่ง Supabase ส่งข้อมูลกลับของข้อมูลนักศึกษา เเละ ข้อมูลการใช้ทรัพยากรของเครื่องคอมพิวเตอร์ที่ Agent ส่งข้อมูลกลับไปยัง Supabase เพื่อจัดเก็บข้อมูลการใช้ทรัพยากรของเครื่องคอมพิวเตอร์
+
+\newpage
+\subsection{Sequence diagram ระบบในส่วนของการลงทะเบียนใบหน้าของนักศึกษา}
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.8\textwidth]{Image/student_sequencediagram_face_regis.png}
+\caption{\fontSixTeen{Sequence diagram ระบบในส่วนของการลงทะเบียนใบหน้าของนักศึกษา}}
+\label{fig3:sequencestudent}
+\end{figure}
+\hspace*{1.3em} %ย่อหน้า
+จากภาพที่ \ref{fig3:sequencestudent} แสดงขั้นตอนการสื่อสารระหว่าง WebApp, Mobile เเละ Supabase เมื่อผู้ใช้งานที่เป็นนักศึกษาลงทะเบียนใบหน้าผ่าน WebApp หรือ สเเกน QR code ลงทะเบียนใบหน้า เเละร้องขอสิทธิ์การใช้งานกล้องเว็บเเคม เพื่อทำการตรวจสอบและเปิดใช้งานกล้องเว็บเเคม หลังจากที่นักศึกษาอนุญาต ระบบจะทำการจับภาพใบหน้าในหลากหลายมุมมอง เช่น ปิดตา-เปิดตา หันซ้าย-หันขวา ก้มหน้า-เงยหน้า เเละเข้าใกล้ เพื่อให้ได้ข้อมูลใบหน้าที่ครบถ้วนสำหรับการยืนยันตัวตนในภายหลัง
+
+\newpage
+\subsection{Sequence diagram ระบบในส่วนของการสเเกนใบหน้ายืนยันตัวตนของนักศึกษา}
+
+\hspace*{1.3em} %ย่อหน้า
+ในขั้นตอนการสื่อสารระหว่าง WebApp, Mobile, Supabase เเละ Agent เมื่อผู้ใช้งานที่เป็นนักศึกษาเข้าสอบ WebApp จะแสดงหน้าจอสแกนใบหน้าเพื่อยืนยันตัวตน และร้องขอสิทธิ์การใช้งานกล้องจากอุปกรณ์ของนักศึกษา เพื่อทำการตรวจสอบและเปิดใช้งานกล้องถ่ายภาพ เมื่อนักศึกษาอนุญาต ระบบจะให้นักศึกษาทำการสแกนใบหน้าด้วยท่าทางต่าง ๆ จากนั้นระบบจะทำการตรวจสอบความถูกต้องของใบหน้า หากการสแกนใบหน้ายืนยันตัวตนสำเร็จ ระบบจะอนุญาตให้นักศึกษาเข้าสอบได้ พร้อมแสดงรายละเอียดข้อมูลนักศึกษาและตำแหน่งที่นั่งในห้องสอบ เมื่อเข้าสอบเรียบร้อยแล้ว WebApp จะส่งคำร้องไปยัง Agent เพื่อเริ่มต้นการเก็บข้อมูลการใช้งานทรัพยากรของเครื่องคอมพิวเตอร์ในระหว่างการสอบ และข้อมูลดังกล่าวจะถูกบันทึกไว้ในฐานข้อมูล Supabase ในกรณีที่นักศึกษาดำเนินการสแกนใบหน้ายืนยันตัวตนผ่านโทรศัพท์มือถือ ระบบจะดึงข้อมูล user\_id ของนักศึกษาจาก Supabase และข้อมูล ip\_address ของเครื่องคอมพิวเตอร์จาก Agent มาเป็นพารามิเตอร์ในการสร้าง QR Code สำหรับการสแกนใบหน้ายืนยันตัวตนผ่านโทรศัพท์มือถือ เมื่อนักศึกษาสแกน QR code และยืนยันตัวตนสำเร็จ ระบบจะอนุญาตให้เข้าสอบได้ทันที แสดงได้ดังภาพที่ \ref{fig3:sequencestudent_2} แสดง
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=1\textwidth]{Image/student_sequencediagram_face_authentication.png}
+\caption{\fontSixTeen{Sequence diagram ระบบในส่วนของการสเเกนใบหน้ายืนยันตัวตนของนักศึกษา}}
+\label{fig3:sequencestudent_2}
+\end{figure}
+
+\newpage
+\subsection{Sequence diagram ระบบในส่วนของการสื่อสารระหว่าง Agent กับ Supabase}
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.6\textwidth]{Image/supabase_agent.png}
+\caption{\fontSixTeen{Sequence diagram ระบบในส่วนของการสื่อสารระหว่าง Agent กับ Supabase}}
+\label{fig3:sequenceagentsupabase}
+\end{figure}
+\hspace*{1.3em} %ย่อหน้า
+จากภาพที่ \ref{fig3:sequenceagentsupabase} แสดงขั้นตอนการสื่อสารของ Agent กับ Supabase ซึ่งเป็นการสื่อสารแบบสองทางที่เน้นการร้องขอคำสั่ง และ ส่งข้อมูลบันทึก อย่างต่อเนื่อง เมื่อ Agent เริ่มทำงาน จะทำการ ตรวจสอบการเชื่อมต่อ กับ Supabase ก่อน เมื่อเชื่อมต่อสำเร็จ Agent จะเริ่มทำงานในเธรดสำหรับ การฟังคำสั่ง (Polling Loop) ซึ่งจะทำงานทุก ๆ 10 วินาที โดย Agent จะใช้กลไก \textquotedblleft ร้องขอคำสั่ง" (SELECT) ไปยัง Supabase เพื่อค้นหา Session ที่มีสถานะ Active และ ตรงกับ IP Address ของเครื่องอยู่เสมอ หาก Supabase ตรวจสอบแล้วพบ รายการ Session ที่ Active ที่ตรงกัน ก็จะถูกตีความว่าเป็น คำสั่ง \textquotedblleft เริ่ม" ซึ่งจะกระตุ้นให้ Agent ทำการ บันทึก (INSERT) Log การเริ่มต้น Session ลงในตาราง resource\_logs ก่อน จากนั้น Agent จะเริ่มต้น Monitor Loop ซึ่งเป็นเธรดที่ทำงานแบบคู่เพื่อ \textquotedblleft ส่ง" ข้อมูลทรัพยากร ในลูป 3 วินาทีนี้ Agent จะรวบรวมข้อมูลการใช้ทรัพยากรคอมพิวเตอร์ (เช่น CPU, RAM, ชื่อหน้าต่าง) แล้วทำการ บันทึก (INSERT) ข้อมูลทั้งหมดลงในตาราง resource\_logs อย่างต่อเนื่อง ในขณะเดียวกัน ลูปการฟังคำสั่ง (10 วินาที) ก็ยังคงทำงานอยู่ โดยจะร้องขอสถานะล่าสุดของ Session ที่กำลังรันอยู่จาก Supabase หาก Supabase ตอบกลับมาว่า Session นั้นมีสถานะ is\_active เปลี่ยนเป็น False หรือมีค่า session\_end\_time ถูกบันทึกไว้ Agent จะตีความเป็นการตอบกลับคำสั่ง \textquotedblleft หยุด" และจะยุติการ หยุดบันทึกการใช้ทรัพยากรคอมพิวเตอร์ ใน Monitor Loop ทันที ซึ่งเป็นการจบการสื่อสารเพื่อส่งข้อมูลสำหรับ Session นั้น ๆ
+\end{comment}
+
+
+############ การออกแบบตารางสำหรับเก็บข้อมูล ############
+############ การออกแบบตารางสำหรับเก็บข้อมูล ############
+############ การออกแบบตารางสำหรับเก็บข้อมูล ############
+############ การออกแบบตารางสำหรับเก็บข้อมูล ############
+############ การออกแบบตารางสำหรับเก็บข้อมูล ############
+############ การออกแบบตารางสำหรับเก็บข้อมูล ############
+############ การออกแบบตารางสำหรับเก็บข้อมูล ############
+############ การออกแบบตารางสำหรับเก็บข้อมูล ############
+############ การออกแบบตารางสำหรับเก็บข้อมูล ############
+############ การออกแบบตารางสำหรับเก็บข้อมูล ############
+############ การออกแบบตารางสำหรับเก็บข้อมูล ############
+############ การออกแบบตารางสำหรับเก็บข้อมูล ############
+############ การออกแบบตารางสำหรับเก็บข้อมูล ############
+############ การออกแบบตารางสำหรับเก็บข้อมูล ############
+\newpage
+\section{การออกแบบตารางสำหรับเก็บข้อมูล}
+\hspace*{1.3em} %ย่อหน้า
+ในการออกแบบตารางเก็บข้อมูลสำหรับเว็บแอปพลิเคชันระบบสแกนใบหน้าและติดตามการใช้ทรัพยากรคอมพิวเตอร์สำหรับการสอบในห้องปฏิบัติการ ได้มีการออกแบบไว้ทั้งหมด 8 ตาราง ได้แก่ 
+
+\begin{mycustomenum2}
+    \item ตารางเก็บข้อมูลโดยรวม (Table name : profiles)
+    \item ตารางเก็บข้อมูลภาพใบหน้า (Table name : user\_photos)
+    \item ตารางเก็บข้อมูลเซสชันการยืนยันตัวตนด้วย QR Code (Table name : qr\_authentication)
+    \item ตารางเก็บข้อมูลที่นั่งในห้องสอบ (Table name : room\_seat\_layouts)
+    \item ตารางเก็บข้อมูลเเผนผังที่นั่งในห้องสอบ (Table name : room\_seat\_ip\_mappings)
+    \item ตารางเก็บข้อมูลห้องสอบ (Table name : exam\_rooms)
+    \item ตารางเก็บข้อมูลนักศึกษาที่นั่งในห้องสอบ (Table name : exam\_student\_sessions)
+    \item ตารางเก็บข้อมูลการใช้ทรัพยากรคอมพิวเตอร์ (Table name : resource\_logs)
+\end{mycustomenum2}
+
+
+\begin{table}[h!]
+    \centering
+    \caption{\fontSixTeen ตารางเก็บข้อมูลโดยรวม (Table name : profiles)}
+    \label{tab3:profiles}
+    \fontSixTeen 
+    \begin{tabularx}{\textwidth}{| c | c | c | c | c | X |} 
+    \hline
+    \textbf{ชื่อฟิลด์} & \textbf{ความหมาย} & \textbf{ชนิด} & \textbf{ขนาด} & \textbf{หมายเหตุ} & \textbf{ตัวอย่างข้อมูล} \\
+    \hline
+    id & รหัส & uuid & - & PK & 0c8a9264-7642-468e-8d32-3be42f0ab00d \\
+    \hline
+    user\_id & รหัสผู้ใช้ & uuid & - & FK & 2cccc94a-8308-4f50-91de-3ebd4f98d31f \\
+    \hline
+    full\_name & ชื่อ-นามสกุล & text & - & - & PATCHARAPHON KOOSOMSARP \\
+    \hline
+    \end{tabularx}
+\end{table}
+
+
+\begin{table}[h!]
+    \centering
+    \caption{\fontSixTeen ตารางเก็บข้อมูลภาพใบหน้า (Table name : user\_photos)}
+    \label{tab3:userphotos1}
+    \fontSixTeen 
+    \begin{tabularx}{\textwidth}{| c | c | c | c | c | X |} 
+    \hline
+    \textbf{ชื่อฟิลด์} & \textbf{ความหมาย} & \textbf{ชนิด} & \textbf{ขนาด} & \textbf{หมายเหตุ} & \textbf{ตัวอย่างข้อมูล} \\
+    \hline
+    id & รหัส & uuid & - & PK & 4c4c0a9a-6f8c-407e-9a41-801060b7ca0a \\
+    \hline
+    user\_id & รหัสผู้ใช้ & uuid & - & FK & 2cccc94a-8308-4f50-91de-3ebd4f98d31f \\
+    \hline
+    closed\_eye & ปิดตา & text & - & - & https://degptapfdldfvqzzdzcm .supabase.co/storage/v1/object/public/user-photos/2cccc94a-8308-4f50-91de-3ebd4f98d31f/eyeClosed.png \\
+    \hline
+    open\_eye & เปิดตา & text & - & - & https://degptapfdldfvqzzdzcm .supabase.co/storage/v1/object/public/user-photos/2cccc94a-8308-4f50-91de-3ebd4f98d31f/eyeOpen.png \\
+    \hline
+    turn\_left & หันซ้าย & text & - & - & https://degptapfdldfvqzzdzcm .supabase.co/storage/v1/object/public/user-photos/2cccc94a-8308-4f50-91de-3ebd4f98d31f/left.png \\
+    \hline
+    turn\_right & หันขวา & text & - & - & https://degptapfdldfvqzzdzcm .supabase.co/storage/v1/object/public/user-photos/2cccc94a-8308-4f50-91de-3ebd4f98d31f/right.png \\
+    \hline
+    look\_up & เงยหน้า & text & - & - & https://degptapfdldfvqzzdzcm .supabase.co/storage/v1/object/public/user-photos/2cccc94a-8308-4f50-91de-3ebd4f98d31f/up.png \\
+    \hline
+    look\_down & ก้มหน้า & text & - & - & https://degptapfdldfvqzzdzcm .supabase.co/storage/v1/object/public/user-photos/2cccc94a-8308-4f50-91de-3ebd4f98d31f/down.png \\
+    \hline
+    move\_close & เข้าใกล้ & text & - & - & https://degptapfdldfvqzzdzcm .supabase.co/storage/v1/object/public/user-photos/2cccc94a-8308-4f50-91de-3ebd4f98d31f/close.png \\
+    \hline
+    \end{tabularx}
+\end{table}
+
+\begin{table}[h!]
+    \centering
+    \caption{\fontSixTeen ตารางเก็บข้อมูลเซสชันการยืนยันตัวตนด้วย QR Code (Table name : qr\_  authentication)} 
+    \label{tab3:qrauthentication}
+    \fontSixTeen
+    \begin{tabularx}{\textwidth}{| c | c | c | c | c | X |}    
+        \hline
+        \textbf{ชื่อฟิลด์} & \textbf{ความหมาย} & \textbf{ชนิด} & \textbf{ขนาด} & \textbf{หมายเหตุ} & \textbf{ตัวอย่างข้อมูล} \\
+        \hline
+        id & รหัส & uuid & - & PK & a34ad826-f15c-4532-bc4c-93c2278074b6 \\
+        \hline
+        user\_id & รหัสผู้ใช้ & uuid & - & FK & 9338735d-9958-4c7d-8e1e-63d5d5bcaca5 \\
+        \hline
+        ip & ที่อยู่ไอพี & inet & - & - & 10.110.6.193 \\
+        \hline
+        status & สถานะ & text & - & - & authenticated \\
+        \hline
+    \end{tabularx}
+\end{table}
+
+\begin{table}[h!]
+    \centering
+    \caption{\fontSixTeen ตารางเก็บข้อมูลที่นั่งในห้องสอบ (Table name : room\_seat\_layouts)}
+    \label{tab3:roomseatlayouts1}
+    \fontSixTeen 
+    \begin{tabularx}{\textwidth}{| c | c | c | c | c | X |} 
+    \hline
+    \textbf{ชื่อฟิลด์} & \textbf{ความหมาย} & \textbf{ชนิด} & \textbf{ขนาด} & \textbf{หมายเหตุ} & \textbf{ตัวอย่างข้อมูล} \\
+    \hline
+    id & รหัส & uuid & - & PK & 7597dd5d-e356-4a49-870e-4841f03a6ab0 \\
+    \hline
+    room\_name & ชื่อห้อง & varchar & 10 & - & B4-15 \\
+    \hline
+    rows & จำนวนเเถว & int4 & - & - & 12 \\
+    \hline
+    columns & จำนวนคอลัมน์ & int4 & - & - & 2 \\
+    \hline
+    total\_seats & จำนวนที่นั่งทั้งหมด & int4 & - & - & 24 \\
+    \hline
+    created\_by & สร้างโดย & uuid & - & - & 890b4d61-e464-40f2-8f66-5bc79697a846 \\
+    \hline
+    \end{tabularx}
+\end{table}
+
+
+\begin{table}[h!]
+    \centering
+    \caption{\fontSixTeen ตารางเก็บข้อมูลเเผนผังที่นั่งในห้องสอบ (Table name : room\_seat\_ip\_ mappings)}
+    \label{tab3:roomseatipmappings}
+    \fontSixTeen 
+    \begin{tabularx}{\textwidth}{| c | c | c | c | c | X |} 
+    \hline
+    \textbf{ชื่อฟิลด์} & \textbf{ความหมาย} & \textbf{ชนิด} & \textbf{ขนาด} & \textbf{หมายเหตุ} & \textbf{ตัวอย่างข้อมูล} \\
+    \hline
+    id & รหัส & uuid & - & PK & 94d08d64-1029-4336-a730-fc1bc9c49be9 \\
+    \hline
+    layout\_id & รหัสผัง & uuid & - & FK & 7597dd5d-e356-4a49-870e-4841f03a6ab0 \\
+    \hline
+    ip\_address & ที่อยู่ไอพี & inet & - & - & 10.110.5.36 \\
+    \hline
+    seat\_number & เลขที่นั่ง & int4 & - & - & 17 \\
+    \hline
+    row\_number & เลขเเถว & int4 & - & - & 9 \\
+    \hline
+    column\_number & เลขคอลัมน์ & int4 & - & - & 1 \\
+    \hline
+    \end{tabularx}
+\end{table}
+
+\begin{table}[h!]
+    \centering
+    \caption{\fontSixTeen ตารางเก็บข้อมูลห้องสอบ (Table name : exam\_rooms)} 
+    \label{tab3:examrooms}
+    \fontSixTeen
+    \begin{tabularx}{\textwidth}{| c | c | c | c | c | X |}    
+        \hline
+        \textbf{ชื่อฟิลด์} & \textbf{ความหมาย} & \textbf{ชนิด} & \textbf{ขนาด} & \textbf{หมายเหตุ} & \textbf{ตัวอย่างข้อมูล} \\
+        \hline
+        id & รหัส & uuid & - & PK & da3722f9-bb45-4135-959b-1306a58629a2 \\
+        \hline
+        room\_name & ชื่อห้อง & varchar & 10 & - & B4-15 \\
+        \hline
+        exam\_date & วันที่สอบ & date & 15 & - & 2025-09-29 \\
+        \hline
+        exam\_time & เวลาสอบ & varchar & - & - & 13:00-16:00 น. \\
+        \hline
+        course\_code & รหัสวิชา & varchar & 10 & - & 060233113 \\
+        \hline
+        course\_name & ชื่อวิชา & varchar & 50 & - & Advanced Computer Programming \\
+        \hline
+        section & ตอนเรียน & varchar & 10 & - & 1 \\
+        \hline
+        created\_by\_name & สร้างโดยชื่อ & text & - & - & Supaporn Simcharoen \\
+        \hline
+        created\_by & สร้างโดย & uuid & - & - & 890b4d61-e464-40f2-8f66-5bc79697a846 \\
+        \hline
+    \end{tabularx}
+\end{table}
+
+\begin{table}[h!]
+    \centering
+    \caption{\fontSixTeen ตารางเก็บข้อมูลนักศึกษาที่นั่งในห้องสอบ (Table name : exam\_student\_ sessions)} 
+    \label{tab3:examstudentsessions}
+    \fontSixTeen
+    \begin{tabularx}{\textwidth}{| c | c | c | c | c | X |}    
+        \hline
+        \textbf{ชื่อฟิลด์} & \textbf{ความหมาย} & \textbf{ชนิด} & \textbf{ขนาด} & \textbf{หมายเหตุ} & \textbf{ตัวอย่างข้อมูล} \\
+        \hline
+        id & รหัส & uuid & - & PK & b40032bd-d86f-49bc-a3f6-090edff5b507 \\
+        \hline
+        layout\_id & รหัสผัง & uuid & - & FK & 7597dd5d-e356-4a49-870e-4841f03a6ab0 \\
+        \hline
+        student\_name & ชื่อนักศึกษา & text & - & - & PATCHARAPHON KOOSOMSARP \\
+        \hline
+        student\_email & อีเมลนักศึกษา & text & - & - & s6506022620095@email .kmutnb.ac.th \\
+        \hline
+        seat\_number & เลขที่นั่ง & int4 & - & - & 17 \\
+        \hline
+        ip\_address & ที่อยู่ไอพี & inet & - & - & 10.110.5.36 \\
+        \hline
+    \end{tabularx}
+\end{table}
+
+
+\begin{table}[h!]
+    \centering
+    \caption{\fontSixTeen ตารางเก็บข้อมูลการใช้ทรัพยากรคอมพิวเตอร์ (Table name : resource\_ logs)}
+    \label{tab3:resourcelogs1}
+    \fontSixTeen
+    \begin{tabular}{| p{2.5cm} | >{\raggedright}p{2cm} | c | c | c | p{4.5cm} |}
+        \hline
+        \textbf{ชื่อฟิลด์} & \textbf{ความหมาย} & \textbf{ชนิด} & \textbf{ขนาด} & \textbf{หมายเหตุ} & \textbf{ตัวอย่างข้อมูล} \\
+        \hline
+        id & รหัส & uuid & - & PK & 00246e3e-7ac9-4686-b1a1-a99babbc7dd7 \\
+        \hline
+        session\_id & รหัสเซสซั่น & uuid & - & FK & f4b95d43-11ae-4954-8fb8-ddffad454f4b \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\begin{table}[h!]
+    \centering
+    \caption{\fontSixTeen ตารางเก็บข้อมูลการใช้ทรัพยากรคอมพิวเตอร์ (Table name : resource\_ logs) (ต่อ)}
+    \label{tab3:resourcelogs1}
+    \fontSixTeen
+    \begin{tabular}{| p{2cm} | >{\raggedright}p{2cm} | c | c | c | p{4.5cm} |}
+        \hline
+        \textbf{ชื่อฟิลด์} & \textbf{ความหมาย} & \textbf{ชนิด} & \textbf{ขนาด} & \textbf{หมายเหตุ} & \textbf{ตัวอย่างข้อมูล} \\
+        \hline
+        active\_ window\_ title & หน้าต่างที่ ใช้งานอยู่ & text & - & - & YouTube-Google Chrome \\
+        \hline
+        all\_open\_ windows & หน้าต่างที่ เปิดทั้งหมด & jsonb & - & - & ["Program Manager", "Settings", "Windows PowerShell", "YouTube - Google Chrome"] \\
+        \hline
+        cpu\_usage & การใช้งานซีพียู & int4 & - & - & 2 \\
+        \hline
+        ram\_usage & การใช้งานเเรม & int4 & - & - & 52 \\
+        \hline
+        ram\_used\_ gd & ขนาดเเรมที่ใช้งาน & numeric & 10 & - & 8.24 \\
+        \hline
+        ram\_ available\_gd & ขนาดเเรมที่เหลือ & numeric & 10 & - & 7.46 \\
+        \hline
+        ram\_total\_ gd & ขนาดเเรมทั้งหมด & numeric & 10 & - & 15.69 \\
+        \hline
+        disk\_parti- tions\_info & ข้อมูลพาร์ติชันของดิสก์ & jsonb & - & - &
+        \begin{tabular}[t]{@{}l@{}}
+        \{ 
+        \quad "device": "C:\\", "free\_gb": 125.74, \\"used\_gb": 109.98, \\"total\_gb": 235.72, \\"percent": 46.7 \}, \\
+        \{ 
+        \quad "device": "D:\\", "free\_gb": 1643.48, \\"used\_gb": 219.41, \\"total\_gb": 1862.89, \\"percent": 11.8 \} \\
+        \end{tabular} \\
+        \hline
+        exe\_ processes & ข้อมูลโปรเซส ที่กำลังทำงาน & jsonb & - & - &
+        \begin{tabular}[t]{@{}l@{}}
+        [ \\
+        \quad \{ "pid": 19648, \\"name": "python.exe", \\"cpu\_percent": 8.3, \\"memory\_percent": 0.51 \}, \\
+        \quad \{ "pid": 1868, \\"name": "chrome.exe", \\"cpu\_percent": 0.4, \\"memory\_percent": 0.30 \}, \\
+        ] \\
+        \end{tabular} \\
+        \hline
+    \end{tabular}
+\end{table}
