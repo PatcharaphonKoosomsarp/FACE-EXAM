@@ -1,0 +1,507 @@
+\begin{comment}
+\section{พจนานุกรมข้อมูล (Data Flow Description)}
+\begin{table}[h]
+\centering
+\caption{\fontSixTeen แสดง Data flow จัดการห้องสอบ}
+\label{tab3:DataFlow1}
+\renewcommand{\arraystretch}{1.5}
+\fontSixTeen 
+\begin{tabular}{l|p{11cm}}
+\hline
+\textbf{Data Flow ID :} & 0001 \\ \hline
+\textbf{Data Flow Name :} & จัดการห้องสอบ \\ \hline
+\textbf{Description :} & จัดการห้องสอบ \\ \hline
+\textbf{Source :} & Process 1.0 \\ \hline
+\textbf{Destination :} & อาจารย์ \\ \hline
+\textbf{Type Of Data Flow :} & หน้าจอ \\ \hline
+\textbf{Data Structure :} & จัดการห้องสอบ = ชื่อห้องสอบ + จำนวนเเถว + จำนวนคอลัมน์ \\ \hline
+\end{tabular}
+\end{table}
+
+
+\begin{table}[h]
+\centering
+\caption{\fontSixTeen แสดง Data flow จัดการตารางสอบ}
+\label{tab3:DataFlow2}
+\renewcommand{\arraystretch}{1.5}
+\fontSixTeen 
+\begin{tabular}{l|p{11cm}}
+\hline
+\textbf{Data Flow ID :} & 0002 \\ \hline
+\textbf{Data Flow Name :} & จัดการตารางสอบ \\ \hline
+\textbf{Description :} & จัดการตารางสอบ \\ \hline
+\textbf{Source :} & Process 2.0 \\ \hline
+\textbf{Destination :} & อาจารย์ \\ \hline
+\textbf{Type Of Data Flow :} & หน้าจอ \\ \hline
+\textbf{Data Structure :} & จัดการตารางสอบ = เลือกห้องสอบ + รหัสวิชา + ตอนเรียน + ชื่อวิชา + วันที่สอบ + เวลาสอบ + สร้างโดย \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{\fontSixTeen แสดง Data flow จัดการที่นั่งสอบของนักศึกษา}
+\label{tab3:DataFlow3}
+\renewcommand{\arraystretch}{1.5}
+\fontSixTeen 
+\begin{tabular}{l|p{11cm}}
+\hline
+\textbf{Data Flow ID :} & 0003 \\ \hline
+\textbf{Data Flow Name :} & จัดการที่นั่งสอบของนักศึกษา \\ \hline
+\textbf{Description :} & จัดการที่นั่งสอบของนักศึกษา \\ \hline
+\textbf{Source :} & Process 3.0 \\ \hline
+\textbf{Destination :} & อาจารย์ \\ \hline
+\textbf{Type Of Data Flow :} & หน้าจอ \\ \hline
+\textbf{Data Structure :} & จัดการที่นั่งสอบของนักศึกษา = เลือกที่นั่ง + กำหนด IP Address \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{\fontSixTeen แสดง Data flow จัดการการใช้งานทรัพยากรคอมพิวเตอร์ที่ไม่อนุญาต}
+\label{tab3:DataFlow4}
+\renewcommand{\arraystretch}{1.5}
+\fontSixTeen 
+\begin{tabular}{l|p{11cm}}
+\hline
+\textbf{Data Flow ID :} & 0004 \\ \hline
+\textbf{Data Flow Name :} & จัดการการใช้งานทรัพยากรคอมพิวเตอร์ที่ไม่อนุญาต \\ \hline
+\textbf{Description :} & จัดการการใช้งานทรัพยากรคอมพิวเตอร์ที่ไม่อนุญาต \\ \hline
+\textbf{Source :} & Process 4.0 \\ \hline
+\textbf{Destination :} & อาจารย์ \\ \hline
+\textbf{Type Of Data Flow :} & หน้าจอ \\ \hline
+\textbf{Data Structure :} & จัดการการใช้งานทรัพยากรคอมพิวเตอร์ที่ไม่อนุญาต = เลือกรายการที่ไม่อนุญาต + ระบุรายการที่ไม่อนุญาต \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{\fontSixTeen แสดง Data flow จัดการการใช้งานทรัพยากรคอมพิวเตอร์ที่ไม่อนุญาต}
+\label{tab3:DataFlow5}
+\renewcommand{\arraystretch}{1.5}
+\fontSixTeen 
+\begin{tabular}{l|p{11cm}}
+\hline
+\textbf{Data Flow ID :} & 0005 \\ \hline
+\textbf{Data Flow Name :} & ตรวจสอบการใช้งานทรัพยากรคอมพิวเตอร์ \\ \hline
+\textbf{Description :} & ตรวจสอบการใช้งานทรัพยากรคอมพิวเตอร์ \\ \hline
+\textbf{Source :} & Process 5.0 \\ \hline
+\textbf{Destination :} & Agent \\ \hline
+\textbf{Type Of Data Flow :} & ข้อมูลคำสั่ง \\ \hline
+\textbf{Data Structure :} & ตรวจสอบการใช้งานทรัพยากรคอมพิวเตอร์ = session\_id + active\_window\_title + all\_open\_windows + cpu\_usage + cpu\_model + ram\_usage + ram\_total\_gb + ram\_used\_gb + ram\_available\_gb + disk\_partitions\_info + network\_download\_mb + network\_upload\_mb + exe\_processes \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{\fontSixTeen แสดง Data flow จัดการการใช้งานทรัพยากรคอมพิวเตอร์ที่ไม่อนุญาต}
+\label{tab3:DataFlow6}
+\renewcommand{\arraystretch}{1.5}
+\fontSixTeen 
+\begin{tabular}{l|p{11cm}}
+\hline
+\textbf{Data Flow ID :} & 0006 \\ \hline
+\textbf{Data Flow Name :} & ตรวจสอบการใช้งานทรัพยากรคอมพิวเตอร์ที่ไม่อนุญาต \\ \hline
+\textbf{Description :} & ตรวจสอบการใช้งานทรัพยากรคอมพิวเตอร์ไม่อนุญาต \\ \hline
+\textbf{Source :} & Process 6.0 \\ \hline
+\textbf{Destination :} & Agent \\ \hline
+\textbf{Type Of Data Flow :} & ข้อมูลคำสั่ง \\ \hline
+\textbf{Data Structure :} & ตรวจสอบการใช้งานทรัพยากรคอมพิวเตอร์ไม่อนุญาต = session\_id + active\_window\_title + all\_open\_windows + cpu\_usage + cpu\_model + ram\_usage + ram\_total\_gb + ram\_used\_gb + ram\_available\_gb + disk\_partitions\_info + network\_download\_mb + network\_upload\_mb + exe\_processes \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{\fontSixTeen แสดง Data flow จัดการเข้าห้องสอบ}
+\label{tab3:DataFlow7}
+\renewcommand{\arraystretch}{1.5}
+\fontSixTeen 
+\begin{tabular}{l|p{11cm}}
+\hline
+\textbf{Data Flow ID :} & 0007 \\ \hline
+\textbf{Data Flow Name :} & จัดการเข้าห้องสอบ \\ \hline
+\textbf{Description :} & จัดการเข้าห้องสอบ \\ \hline
+\textbf{Source :} & Process 7.0 \\ \hline
+\textbf{Destination :} & นักศึกษา \\ \hline
+\textbf{Type Of Data Flow :} & หน้าจอ \\ \hline
+\textbf{Data Structure :} & จัดการเข้าห้องสอบ = เลือกห้องสอบ + ยืนยันตัวตน \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{\fontSixTeen แสดง Data flow ยืนยันตัวตนด้วยใบหน้า}
+\label{tab3:DataFlow8}
+\renewcommand{\arraystretch}{1.5}
+\fontSixTeen 
+\begin{tabular}{l|p{11cm}}
+\hline
+\textbf{Data Flow ID :} & 0008 \\ \hline
+\textbf{Data Flow Name :} & ยืนยันตัวตนด้วยใบหน้า \\ \hline
+\textbf{Description :} & ยืนยันตัวตนด้วยใบหน้า \\ \hline
+\textbf{Source :} & Process 8.0 \\ \hline
+\textbf{Destination :} & นักศึกษา \\ \hline
+\textbf{Type Of Data Flow :} & หน้าจอ \\ \hline
+\textbf{Data Structure :} & ยืนยันตัวตนด้วยใบหน้า = กล้องมือถือ + เว็บเเคม + คำเเนะนำ + ข้อความสถานะ \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{\fontSixTeen แสดง Data flow ลงทะเบียนใบหน้า}
+\label{tab3:DataFlow9}
+\renewcommand{\arraystretch}{1.5}
+\fontSixTeen 
+\begin{tabular}{l|p{11cm}}
+\hline
+\textbf{Data Flow ID :} & 0009 \\ \hline
+\textbf{Data Flow Name :} & ลงทะเบียนใบหน้า \\ \hline
+\textbf{Description :} & ยืนยันตัวตนด้วยใบหน้า \\ \hline
+\textbf{Source :} & Process 9.0 \\ \hline
+\textbf{Destination :} & นักศึกษา \\ \hline
+\textbf{Type Of Data Flow :} & หน้าจอ \\ \hline
+\textbf{Data Structure :} & ลงทะเบียนใบหน้า = กล้องมือถือ + เว็บเเคม + คำเเนะนำ + ข้อความสถานะ + ท่าทางใบหน้าต่างๆ \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{\fontSixTeen แสดง Data flow เพิ่มข้อมูลห้องสอบ}
+\label{tab3:DataFlow9}
+\renewcommand{\arraystretch}{1.5}
+\fontSixTeen 
+\begin{tabular}{l|p{11cm}}
+\hline
+\textbf{Data Flow ID :} & 0010 \\ \hline
+\textbf{Data Flow Name :} & เพิ่มข้อมูลห้องสอบ \\ \hline
+\textbf{Description :} & เพิ่มข้อมูลห้องสอบ \\ \hline
+\textbf{Source :} & Process 1.1 \\ \hline
+\textbf{Destination :} & อาจารย์ \\ \hline
+\textbf{Type Of Data Flow :} & หน้าจอ \\ \hline
+\textbf{Data Structure :} & เพิ่มข้อมูลห้องสอบ = ชื่อห้องสอบ + จำนวนเเถว + จำนวนคอลัมน์ \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{\fontSixTeen แสดง Data flow เเก้ไขข้อมูลห้องสอบ}
+\label{tab3:DataFlow9}
+\renewcommand{\arraystretch}{1.5}
+\fontSixTeen 
+\begin{tabular}{l|p{11cm}}
+\hline
+\textbf{Data Flow ID :} & 0011 \\ \hline
+\textbf{Data Flow Name :} & เเก้ไขข้อมูลห้องสอบ \\ \hline
+\textbf{Description :} & เเก้ไขข้อมูลห้องสอบ \\ \hline
+\textbf{Source :} & Process 1.2 \\ \hline
+\textbf{Destination :} & อาจารย์ \\ \hline
+\textbf{Type Of Data Flow :} & หน้าจอ \\ \hline
+\textbf{Data Structure :} & เเก้ไขข้อมูลห้องสอบ = ชื่อห้องสอบ + จำนวนเเถว + จำนวนคอลัมน์ \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{\fontSixTeen แสดง Data flow ลบข้อมูลห้องสอบ}
+\label{tab3:DataFlow9}
+\renewcommand{\arraystretch}{1.5}
+\fontSixTeen 
+\begin{tabular}{l|p{11cm}}
+\hline
+\textbf{Data Flow ID :} & 0012 \\ \hline
+\textbf{Data Flow Name :} & ลบข้อมูลห้องสอบ \\ \hline
+\textbf{Description :} & ลบข้อมูลห้องสอบ \\ \hline
+\textbf{Source :} & Process 1.3 \\ \hline
+\textbf{Destination :} & อาจารย์ \\ \hline
+\textbf{Type Of Data Flow :} & หน้าจอ \\ \hline
+\textbf{Data Structure :} & ลบข้อมูลห้องสอบ = ชื่อห้องสอบ + จำนวนเเถว + จำนวนคอลัมน์ \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{\fontSixTeen แสดง Data flow เพิ่มข้อมูลตารางสอบ}
+\label{tab3:DataFlow9}
+\renewcommand{\arraystretch}{1.5}
+\fontSixTeen 
+\begin{tabular}{l|p{11cm}}
+\hline
+\textbf{Data Flow ID :} & 0013 \\ \hline
+\textbf{Data Flow Name :} & เพิ่มข้อมูลตารางสอบ \\ \hline
+\textbf{Description :} & เพิ่มข้อมูลตารางสอบ \\ \hline
+\textbf{Source :} & Process 2.1 \\ \hline
+\textbf{Destination :} & อาจารย์ \\ \hline
+\textbf{Type Of Data Flow :} & หน้าจอ \\ \hline
+\textbf{Data Structure :} & เพิ่มข้อมูลตารางสอบ = เลือกห้องสอบ + รหัสวิชา + ตอนเรียน + ชื่อวิชา + วันที่สอบ + เวลาสอบ + สร้างโดย \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{\fontSixTeen แสดง Data flow เเก้ไขข้อมูลตารางสอบ}
+\label{tab3:DataFlow9}
+\renewcommand{\arraystretch}{1.5}
+\fontSixTeen 
+\begin{tabular}{l|p{11cm}}
+\hline
+\textbf{Data Flow ID :} & 0014 \\ \hline
+\textbf{Data Flow Name :} & เเก้ไขข้อมูลตารางสอบ \\ \hline
+\textbf{Description :} & เเก้ไขข้อมูลตารางสอบ \\ \hline
+\textbf{Source :} & Process 2.2 \\ \hline
+\textbf{Destination :} & อาจารย์ \\ \hline
+\textbf{Type Of Data Flow :} & หน้าจอ \\ \hline
+\textbf{Data Structure :} & เเก้ไขข้อมูลตารางสอบ = เลือกห้องสอบ + รหัสวิชา + ตอนเรียน + ชื่อวิชา + วันที่สอบ + เวลาสอบ + สร้างโดย \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{\fontSixTeen แสดง Data flow ลบข้อมูลตารางสอบ}
+\label{tab3:DataFlow9}
+\renewcommand{\arraystretch}{1.5}
+\fontSixTeen 
+\begin{tabular}{l|p{11cm}}
+\hline
+\textbf{Data Flow ID :} & 0015 \\ \hline
+\textbf{Data Flow Name :} & ลบข้อมูลตารางสอบ \\ \hline
+\textbf{Description :} & ลบข้อมูลตารางสอบ \\ \hline
+\textbf{Source :} & Process 2.3 \\ \hline
+\textbf{Destination :} & อาจารย์ \\ \hline
+\textbf{Type Of Data Flow :} & หน้าจอ \\ \hline
+\textbf{Data Structure :} & ลบข้อมูลตารางสอบ = เลือกห้องสอบ + รหัสวิชา + ตอนเรียน + ชื่อวิชา + วันที่สอบ + เวลาสอบ + สร้างโดย \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{\fontSixTeen แสดง Data flow ลบข้อมูลที่นั่งสอบของนักศึกษา}
+\label{tab3:DataFlow9}
+\renewcommand{\arraystretch}{1.5}
+\fontSixTeen 
+\begin{tabular}{l|p{11cm}}
+\hline
+\textbf{Data Flow ID :} & 0016 \\ \hline
+\textbf{Data Flow Name :} & ลบข้อมูลที่นั่งสอบของนักศึกษา \\ \hline
+\textbf{Description :} & ลบข้อมูลที่นั่งสอบของนักศึกษา \\ \hline
+\textbf{Source :} & Process 3.1 \\ \hline
+\textbf{Destination :} & อาจารย์ \\ \hline
+\textbf{Type Of Data Flow :} & หน้าจอ \\ \hline
+\textbf{Data Structure :} & ลบข้อมูลที่นั่งสอบของนักศึกษา = เลือกที่นั่งสอบของนักศึกษา + ปุ่มลบนักศึกษาออกจากที่นั่งสอบ \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{\fontSixTeen แสดง Data flow เพิ่มการใช้งานทรัพยากรคอมพิวเตอร์ที่ไม่อนุญาต}
+\label{tab3:DataFlow9}
+\renewcommand{\arraystretch}{1.5}
+\fontSixTeen 
+\begin{tabular}{l|p{11cm}}
+\hline
+\textbf{Data Flow ID :} & 0017 \\ \hline
+\textbf{Data Flow Name :} & เพิ่มการใช้งานทรัพยากรคอมพิวเตอร์ที่ไม่อนุญาต \\ \hline
+\textbf{Description :} & เพิ่มการใช้งานทรัพยากรคอมพิวเตอร์ที่ไม่อนุญาต \\ \hline
+\textbf{Source :} & Process 4.1 \\ \hline
+\textbf{Destination :} & อาจารย์ \\ \hline
+\textbf{Type Of Data Flow :} & หน้าจอ \\ \hline
+\textbf{Data Structure :} & เพิ่มการใช้งานทรัพยากรคอมพิวเตอร์ที่ไม่อนุญาต = เพิ่มรายการที่ไม่อนุญาต  \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{\fontSixTeen แสดง Data flow ลบการใช้งานทรัพยากรคอมพิวเตอร์ที่ไม่อนุญาต}
+\label{tab3:DataFlow9}
+\renewcommand{\arraystretch}{1.5}
+\fontSixTeen 
+\begin{tabular}{l|p{11cm}}
+\hline
+\textbf{Data Flow ID :} & 0018 \\ \hline
+\textbf{Data Flow Name :} & ลบการใช้งานทรัพยากรคอมพิวเตอร์ที่ไม่อนุญาต \\ \hline
+\textbf{Description :} & ลบการใช้งานทรัพยากรคอมพิวเตอร์ที่ไม่อนุญาต \\ \hline
+\textbf{Source :} & Process 4.2 \\ \hline
+\textbf{Destination :} & อาจารย์ \\ \hline
+\textbf{Type Of Data Flow :} & หน้าจอ \\ \hline
+\textbf{Data Structure :} & ลบการใช้งานทรัพยากรคอมพิวเตอร์ที่ไม่อนุญาต = ลบรายการที่ไม่อนุญาต  \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{\fontSixTeen แสดง Data flow ลบการใช้งานทรัพยากรคอมพิวเตอร์ที่ไม่อนุญาต}
+\label{tab3:DataFlow9}
+\renewcommand{\arraystretch}{1.5}
+\fontSixTeen 
+\begin{tabular}{l|p{11cm}}
+\hline
+\textbf{Data Flow ID :} & 0019 \\ \hline
+\textbf{Data Flow Name :} & ตรวจสอบการใช้ทรัพยากรคอมพิวเตอร์ที่ไม่อนุญาต \\ \hline
+\textbf{Description :} & ตรวจสอบการใช้ทรัพยากรคอมพิวเตอร์ที่ไม่อนุญาต \\ \hline
+\textbf{Source :} & Process 5.1 \\ \hline
+\textbf{Destination :} & อาจารย์ \\ \hline
+\textbf{Type Of Data Flow :} & หน้าจอ \\ \hline
+\textbf{Data Structure :} & ตรวจสอบการใช้ทรัพยากรคอมพิวเตอร์ที่ไม่อนุญาต = ข้อมูลการใช้ทรัพยากรคอมพิวเตอร์ที่ต้องตรวจสอบ + เเสดงข้อมูลการใช้งานทรัพยากรคอมพิวเตอร์  \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{\fontSixTeen แสดง Data flow ตรวจสอบการใช้งานทรัพยากรคอมพิวเตอร์ที่ไม่อนุญาต}
+\label{tab3:DataFlow9}
+\renewcommand{\arraystretch}{1.5}
+\fontSixTeen 
+\begin{tabular}{l|p{11cm}}
+\hline
+\textbf{Data Flow ID :} & 0020 \\ \hline
+\textbf{Data Flow Name :} & ตรวจสอบการใช้งานทรัพยากรคอมพิวเตอร์ที่ไม่อนุญาต \\ \hline
+\textbf{Description :} & ตรวจสอบการใช้งานทรัพยากรคอมพิวเตอร์ที่ไม่อนุญาต \\ \hline
+\textbf{Source :} & Process 6.1 \\ \hline
+\textbf{Destination :} & อาจารย์ \\ \hline
+\textbf{Type Of Data Flow :} & หน้าจอ \\ \hline
+\textbf{Data Structure :} & ตรวจสอบการใช้งานทรัพยากรคอมพิวเตอร์ที่ไม่อนุญาต = ข้อมูลการใช้งานทรัพยากรคอมพิวเตอร์ที่ไม่อนุญาตที่ต้องตรวจสอบ + เเสดงข้อมูลการใช้งานทรัพยากรคอมพิวเตอร์ที่ไม่อนุญาต   \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{\fontSixTeen แสดง Data flow ตรวจสอบการใช้งานทรัพยากรคอมพิวเตอร์ที่ไม่อนุญาต}
+\label{tab3:DataFlow9}
+\renewcommand{\arraystretch}{1.5}
+\fontSixTeen 
+\begin{tabular}{l|p{11cm}}
+\hline
+\textbf{Data Flow ID :} & 0021 \\ \hline
+\textbf{Data Flow Name :} & เข้าห้องสอบของนักศึกษา \\ \hline
+\textbf{Description :} & เข้าห้องสอบของนักศึกษา \\ \hline
+\textbf{Source :} & Process 7.1 \\ \hline
+\textbf{Destination :} & นักศึกษา \\ \hline
+\textbf{Type Of Data Flow :} & หน้าจอ \\ \hline
+\textbf{Data Structure :} & เข้าห้องสอบของนักศึกษา = เลือกห้องสอบ + กดปุ่มเพื่อเข้าห้องสอบ   \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{\fontSixTeen แสดง Data flow ออกจากห้องสอบของนักศึกษา}
+\label{tab3:DataFlow9}
+\renewcommand{\arraystretch}{1.5}
+\fontSixTeen 
+\begin{tabular}{l|p{11cm}}
+\hline
+\textbf{Data Flow ID :} & 0022 \\ \hline
+\textbf{Data Flow Name :} & ออกจากห้องสอบของนักศึกษา \\ \hline
+\textbf{Description :} & ออกจากห้องสอบของนักศึกษา \\ \hline
+\textbf{Source :} & Process 7.2 \\ \hline
+\textbf{Destination :} & นักศึกษา \\ \hline
+\textbf{Type Of Data Flow :} & หน้าจอ \\ \hline
+\textbf{Data Structure :} & ออกจากห้องสอบของนักศึกษา = กดปุ่มเพื่อออกจากห้องสอบ   \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{\fontSixTeen แสดง Data flow ออกจากห้องสอบของนักศึกษา}
+\label{tab3:DataFlow9}
+\renewcommand{\arraystretch}{1.5}
+\fontSixTeen 
+\begin{tabular}{l|p{11cm}}
+\hline
+\textbf{Data Flow ID :} & 0023 \\ \hline
+\textbf{Data Flow Name :} & ยืนยันตัวตนด้วยใบหน้า \\ \hline
+\textbf{Description :} & ยืนยันตัวตนด้วยใบหน้า \\ \hline
+\textbf{Source :} & Process 8.1 \\ \hline
+\textbf{Destination :} & นักศึกษา \\ \hline
+\textbf{Type Of Data Flow :} & หน้าจอ \\ \hline
+\textbf{Data Structure :} & ยืนยันตัวตนด้วยใบหน้า = ข้อมูลสเเกนใบหน้า + ข้อมูลภาพใบหน้าท่าทางต่างๆ ของนักศึกษา \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{\fontSixTeen แสดง Data flow เพิ่มข้อมูล "ปิดตา/เปิดตา"}
+\label{tab3:DataFlow9}
+\renewcommand{\arraystretch}{1.5}
+\fontSixTeen 
+\begin{tabular}{l|p{11cm}}
+\hline
+\textbf{Data Flow ID :} & 0024 \\ \hline
+\textbf{Data Flow Name :} & เพิ่มข้อมูล "ปิดตา/เปิดตา" \\ \hline
+\textbf{Description :} & เพิ่มข้อมูล "ปิดตา/เปิดตา" \\ \hline
+\textbf{Source :} & Process 9.1 \\ \hline
+\textbf{Destination :} & นักศึกษา \\ \hline
+\textbf{Type Of Data Flow :} & หน้าจอ \\ \hline
+\textbf{Data Structure :} & เพิ่มข้อมูล "ปิดตา/เปิดตา" = ปิด + เปิดตา \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{\fontSixTeen แสดง Data flow เพิ่มข้อมูล "หันซ้าย/หันขวา"}
+\label{tab3:DataFlow9}
+\renewcommand{\arraystretch}{1.5}
+\fontSixTeen 
+\begin{tabular}{l|p{11cm}}
+\hline
+\textbf{Data Flow ID :} & 0025 \\ \hline
+\textbf{Data Flow Name :} & เพิ่มข้อมูล "หันซ้าย/หันขวา" \\ \hline
+\textbf{Description :} & เพิ่มข้อมูล "หันซ้าย/หันขวา" \\ \hline
+\textbf{Source :} & Process 9.2 \\ \hline
+\textbf{Destination :} & นักศึกษา \\ \hline
+\textbf{Type Of Data Flow :} & หน้าจอ \\ \hline
+\textbf{Data Structure :} & เพิ่มข้อมูล "หันซ้าย/หันขวา" = หันซ้าย + หันขวา \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{\fontSixTeen แสดง Data flow เพิ่มข้อมูล "ก้มหน้า/เงยหน้า"}
+\label{tab3:DataFlow9}
+\renewcommand{\arraystretch}{1.5}
+\fontSixTeen 
+\begin{tabular}{l|p{11cm}}
+\hline
+\textbf{Data Flow ID :} & 0026 \\ \hline
+\textbf{Data Flow Name :} & เพิ่มข้อมูล "ก้มหน้า/เงยหน้า" \\ \hline
+\textbf{Description :} & เพิ่มข้อมูล "ก้มหน้า/เงยหน้า" \\ \hline
+\textbf{Source :} & Process 9.3 \\ \hline
+\textbf{Destination :} & นักศึกษา \\ \hline
+\textbf{Type Of Data Flow :} & หน้าจอ \\ \hline
+\textbf{Data Structure :} & เพิ่มข้อมูล "ก้มหน้า/เงยหน้า" = ก้มหน้า + เงยหน้า \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{\fontSixTeen แสดง Data flow เพิ่มข้อมูล "ใบหน้าเข้าใกล้"}
+\label{tab3:DataFlow9}
+\renewcommand{\arraystretch}{1.5}
+\fontSixTeen 
+\begin{tabular}{l|p{11cm}}
+\hline
+\textbf{Data Flow ID :} & 0027 \\ \hline
+\textbf{Data Flow Name :} & เพิ่มข้อมูล "ใบหน้าเข้าใกล้" \\ \hline
+\textbf{Description :} & เพิ่มข้อมูล "ใบหน้าเข้าใกล้" \\ \hline
+\textbf{Source :} & Process 9.4 \\ \hline
+\textbf{Destination :} & นักศึกษา \\ \hline
+\textbf{Type Of Data Flow :} & หน้าจอ \\ \hline
+\textbf{Data Structure :} & เพิ่มข้อมูล "ใบหน้าเข้าใกล้" = ใบหน้าเข้าใกล้ + ระยะการเข้าใกล้ \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{\fontSixTeen แสดง Data flow บันทึกภาพใบหน้าท่าทางต่าง ๆ}
+\label{tab3:DataFlow9}
+\renewcommand{\arraystretch}{1.5}
+\fontSixTeen 
+\begin{tabular}{l|p{11cm}}
+\hline
+\textbf{Data Flow ID :} & 0028 \\ \hline
+\textbf{Data Flow Name :} & บันทึกภาพใบหน้าท่าทางต่าง ๆ \\ \hline
+\textbf{Description :} & บันทึกภาพใบหน้าท่าทางต่าง ๆ \\ \hline
+\textbf{Source :} & Process 9.5 \\ \hline
+\textbf{Destination :} & นักศึกษา \\ \hline
+\textbf{Type Of Data Flow :} & หน้าจอ \\ \hline
+\textbf{Data Structure :} & บันทึกภาพใบหน้าท่าทางต่าง ๆ = ปิดตา + เปิดตา + หันซ้าย + หันขวา + ก้มหน้า + เงยหน้า + ใบหน้าเข้าใกล้ \\ \hline
+\end{tabular}
+\end{table}
+\end{comment}
