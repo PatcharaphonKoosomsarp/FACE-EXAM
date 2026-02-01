@@ -182,22 +182,29 @@ Process 6.0: จัดการเซสชันการเข้าสอบ�
 --------------------------------------------------------------------------------
 *หมายเหตุ: โครงสร้างฐานข้อมูลจาก Supabase (รวมทั้งหมด 10 Tables)
 
-[1. Entity: Users] (ข้อมูลผู้ใช้งาน - จาก Supabase Auth)
+[1. Entity: Profiles] (ข้อมูลผู้ใช้งาน - เชื่อมโยง Auth)
 - id (PK, UUID)
-- email
-- role (Teacher/Student - Derived from email)
-- created_at
-
-[2. Entity: User_Photos] (เก็บ URL รูปภาพใบหน้าสำหรับลงทะเบียน)
-- id (PK)
-- user_id (FK -> Users.id)
-- face_forward (URL)
-- open_eye (URL)
-- turn_left (URL)
-- turn_right (URL)
+- user_id (FK -> auth.users)
+- full_name
+- student_id
+- role
+- face_images (JSON)
 - created_at
 - updated_at
-*Relationship: Users (1) --<มีข้อมูล>-- (1) User_Photos
+
+[2. Entity: User_Photos] (เก็บ URL รูปภาพใบหน้าสำหรับลงทะเบียน)
+- id (PK, UUID)
+- user_id (FK -> auth.users)
+- face_forward (URL)
+- open_eye (URL)
+- closed_eye (URL)
+- turn_left (URL)
+- turn_right (URL)
+- look_up (URL)
+- look_down (URL)
+- move_close (URL)
+- updated_at
+*Relationship: Profiles (1) --<มีข้อมูล>-- (1) User_Photos (ผ่าน user_id)
 
 [3. Entity: Room_Seat_Layouts] (ผังที่นั่งห้องสอบ)
 - id (PK, UUID)
@@ -205,17 +212,17 @@ Process 6.0: จัดการเซสชันการเข้าสอบ�
 - rows
 - columns
 - total_seats
-- created_by (FK -> Users.id)
-- created_at
-- updated_at
-*Relationship: Users (1) --<สร้าง>-- (N) Room_Seat_Layouts
+- created_by (FK -> auth.users)
+*Relationship: Profiles (1) --<สร้าง>-- (N) Room_Seat_Layouts
 
 [4. Entity: Room_Seat_Ip_Mappings] (การจับคู่ที่นั่งกับ IP Address)
-- id (PK)
-- room_id (FK -> Room_Seat_Layouts.id)
+- id (PK, UUID)
+- layout_id (FK -> Room_Seat_Layouts.id)
 - row_number
 - column_number
+- seat_number
 - ip_address
+- mac_address
 *Relationship: Room_Seat_Layouts (1) --<ประกอบด้วย>-- (N) Room_Seat_Ip_Mappings
 
 [5. Entity: Exam_Rooms] (ตารางสอบ/การกำหนดวิชาสอบ)
@@ -225,170 +232,262 @@ Process 6.0: จัดการเซสชันการเข้าสอบ�
 - course_name
 - section
 - exam_date
+- exam_time
 - start_time
 - end_time
-- created_by (FK -> Users.id)
-*Relationship: Users (1) --<สร้าง>-- (N) Exam_Rooms
+- capacity
+- is_active
+- created_by (FK -> auth.users)
+- created_by_name
+*Relationship: Profiles (1) --<สร้าง>-- (N) Exam_Rooms
 *Relationship: Room_Seat_Layouts (1) --<ถูกใช้ใน>-- (N) Exam_Rooms (Link via name)
 
 [6. Entity: Room_Blocked_Resources] (รายการโปรแกรมต้องห้าม)
-- id (PK)
+- id (PK, UUID)
 - room_id (FK -> Exam_Rooms.id)
 - pattern (ชื่อโปรแกรม/Process)
 - match_type (exact, contains)
 *Relationship: Exam_Rooms (1) --<มีรายการ>-- (N) Room_Blocked_Resources
 
 [7. Entity: Exam_Student_Sessions] (เซสชันการเข้าสอบของนักศึกษา)
-- id (PK)
+- id (PK, UUID)
 - layout_id (FK -> Room_Seat_Layouts.id)
-- student_email (Ref -> Users.email)
+- student_email
+- student_name
 - seat_number
-- ip_address
-- face_descriptor (Text/JSON)
+- ip_address (Inet)
+- face_descriptor (Text)
 - is_active
 - session_start_time
+- session_end_time
 - student_profile_url
 *Relationship: Room_Seat_Layouts (1) --<รองรับ>-- (N) Exam_Student_Sessions
-*Relationship: Users (1) --<เข้าสอบใน>-- (N) Exam_Student_Sessions
+*Relationship: Profiles (1) --<เข้าสอบใน>-- (N) Exam_Student_Sessions (ผ่าน Email)
 
 [8. Entity: Resource_Logs] (บันทึกทรัพยากรเครื่องของผู้เข้าสอบ)
-- id (PK)
+- id (PK, UUID)
 - session_id (FK -> Exam_Student_Sessions.id)
 - timestamp
 - cpu_usage, cpu_model, ram_usage, ram_total_gb
+- ram_used_gb, ram_available_gb, disk_partitions_info
 - active_window_title, all_open_windows
-- exe_processes, network_download_mb
+- exe_processes, network_download_mb, network_upload_mb
 *Relationship: Exam_Student_Sessions (1) --<สร้าง>-- (N) Resource_Logs
 
 [9. Entity: Violation_Logs] (บันทึกการละเมิดกฎ)
-- id (PK)
+- id (PK, UUID)
 - session_id (FK -> Exam_Student_Sessions.id)
 - violation_type
-- detail
+- resource_name
+- action_taken
+- details
 - timestamp
-- evidence_url (รูปภาพหลักฐาน)
 *Relationship: Exam_Student_Sessions (1) --<ตรวจพบ>-- (N) Violation_Logs
 
 [10. Entity: Qr_Authentication] (ระบบยืนยันตัวตนผ่านมือถือ)
-- id (PK)
-- user_id (FK -> Users.id)
+- id (PK, UUID)
+- user_id (FK -> auth.users)
 - status (authenticated)
 - ip
 - authenticated_at
 - expires_at
-*Relationship: Users (1) --<ทำรายการ>-- (1) Qr_Authentication
+*Relationship: Profiles (1) --<ทำรายการ>-- (1) Qr_Authentication
 
 --------------------------------------------------------------------------------
 6. Data Flow Description (รายละเอียดข้อมูลไหล)
 --------------------------------------------------------------------------------
 
---- Process 1.0: จัดการการลงทะเบียนอัตลักษณ์ใบหน้า ---
-
-Data Flow ID : F001
+Data Flow ID : 0001
 Data Flow Name : ข้อมูลภาพใบหน้าสำหรับลงทะเบียน
-Description : ภาพใบหน้าของผู้ใช้งานที่ถ่ายจากกล้องเพื่อใช้ในการลงทะเบียน
-Source : นักศึกษา (Process 1.1)
-Destination : Process 1.2 ทดสอบความเป็นบุคคลจริง
-Type Of Data Flow : ภายใน
-Data Structrue : ข้อมูลภาพใบหน้า = Image Blob/File + Face Landmarks (Coordinates) + Quality Score
+Description : ข้อมูลภาพใบหน้าสำหรับลงทะเบียน
+Source : นักศึกษา
+Destination : Process 1.0
+Type Of Data Flow : หน้าจอ/กล้อง
+Data Structure : ข้อมูลภาพใบหน้าสำหรับลงทะเบียน = ภาพใบหน้า + จุดพิกัดใบหน้า + คะแนนคุณภาพ
 
-Data Flow ID : F002
-Data Flow Name : ข้อมูลภาพอัตลักษณ์ใบหน้าที่บันทึก
-Description : URL ของรูปภาพใบหน้าในท่วงท่าต่างๆ ที่ผ่านการตรวจสอบแล้วและบันทึกลงฐานข้อมูล
-Source : Process 1.3 บันทึกข้อมูลอัตลักษณ์ใบหน้า
-Destination : Data Store D3 (User_Photos)
+Data Flow ID : 0002
+Data Flow Name : ผลการลงทะเบียนสำเร็จ
+Description : ผลการลงทะเบียนสำเร็จ
+Source : Process 1.0
+Destination : นักศึกษา
+Type Of Data Flow : หน้าจอ
+Data Structure : ผลการลงทะเบียนสำเร็จ = สถานะความสำเร็จ + เวลาที่บันทึก + URL สำหรับเปลี่ยนหน้า
+
+Data Flow ID : 0003
+Data Flow Name : ข้อมูลอัตลักษณ์ใบหน้าที่บันทึก
+Description : ข้อมูลอัตลักษณ์ใบหน้าที่บันทึก
+Source : Process 1.0
+Destination : Data Store D3 (Face Data)
 Type Of Data Flow : ฐานข้อมูล
-Data Structrue : ข้อมูลภาพอัตลักษณ์ = รหัสผู้ใช้งาน + URL(หน้าตรง) + URL(ลืมตา) + URL(หันซ้าย) + URL(หันขวา) + วันเวลาที่บันทึก
+Data Structure : ข้อมูลอัตลักษณ์ใบหน้าที่บันทึก = รหัสผู้ใช้งาน + URL รูปหน้าตรง + URL รูปลืมตา + URL รูปหลับตา + URL รูปหันซ้าย + URL รูปหันขวา + วันที่แก้ไขล่าสุด
 
---- Process 2.0: จัดการการยืนยันตัวตนก่อนเข้าห้องสอบ ---
+Data Flow ID : 0004
+Data Flow Name : ข้อมูลภาพใบหน้าเพื่อเข้าห้องสอบ
+Description : ข้อมูลภาพใบหน้าเพื่อเข้าห้องสอบ
+Source : นักศึกษา
+Destination : Process 2.0
+Type Of Data Flow : หน้าจอ/กล้อง
+Data Structure : ข้อมูลภาพใบหน้าเพื่อเข้าห้องสอบ = ภาพใบหน้าปัจจุบัน + เวลาที่ถ่ายภาพ
 
-Data Flow ID : F003
-Data Flow Name : ข้อมูลรหัสลักษณะใบหน้า (Face Descriptor)
-Description : ค่าตัวเลขเวกเตอร์ที่แปลงจากภาพใบหน้าเพื่อใช้ในการเปรียบเทียบ
-Source : Process 2.1 ตรวจจับและแปลงข้อมูลใบหน้า
-Destination : Process 2.2 เปรียบเทียบใบหน้ากับฐานข้อมูล
-Type Of Data Flow : ภายใน
-Data Structrue : Face Descriptor = ชุดตัวเลขทศนิยม (Float32 Array 128 มิติ)
+Data Flow ID : 0005
+Data Flow Name : ข้อมูลใบหน้าต้นฉบับ
+Description : ข้อมูลใบหน้าต้นฉบับ
+Source : Data Store D3 (Face Data)
+Destination : Process 2.0
+Type Of Data Flow : ฐานข้อมูล
+Data Structure : ข้อมูลใบหน้าต้นฉบับ = รหัสผู้ใช้งาน + URL รูปภาพทั้งหมด
 
-Data Flow ID : F004
+Data Flow ID : 0006
 Data Flow Name : สถานะยืนยันตัวตนผ่าน
-Description : สถานะการตรวจสอบว่าเป็นบุคคลเดียวกับที่ลงทะเบียนไว้เสร็จสมบูรณ์
-Source : Process 2.3 ตรวจสอบสิทธิ์การเข้าสอบ
-Destination : Process 6.0 (6.2 จัดสรรที่นั่งสอบ)
+Description : สถานะยืนยันตัวตนผ่าน
+Source : Process 2.0
+Destination : Process 6.0
 Type Of Data Flow : ภายใน
-Data Structrue : สถานะยืนยันตัวตน = สถานะ (Verified) + รหัสผู้ใช้งาน + ค่าความเชื่อมั่น (Confidence Score)
+Data Structure : สถานะยืนยันตัวตนผ่าน = สถานะผ่านเกณฑ์ + รหัสผู้ใช้งาน + ค่าความมั่นใจ
 
---- Process 3.0: จัดการการตรวจสอบสภาพแวดล้อมและโปรแกรม ---
+Data Flow ID : 0007
+Data Flow Name : ข้อความแจ้งผลการตรวจสอบสิทธิ์
+Description : ข้อความแจ้งผลการตรวจสอบสิทธิ์
+Source : Process 2.0
+Destination : นักศึกษา
+Type Of Data Flow : หน้าจอ
+Data Structure : ข้อความแจ้งผลการตรวจสอบสิทธิ์ = ข้อความแจ้งเตือน + สาเหตุการปฏิเสธ
 
-Data Flow ID : F005
-Data Flow Name : ข้อมูลทรัพยากรระบบ (System Resources)
-Description : ข้อมูลการทำงานของคอมพิวเตอร์ที่ส่งมาจากโปรแกรม Agent
-Source : นักศึกษา (Agent Software)
-Destination : Process 3.1 ตรวจสอบรายการโปรแกรมที่ทำงานอยู่
-Type Of Data Flow : เครือข่าย (API/JSON)
-Data Structrue : ข้อมูลทรัพยากรระบบ = เปอร์เซ็นต์การใช้ CPU + เปอร์เซ็นต์การใช้ RAM + ชื่อหน้าต่างที่ใช้งานอยู่ + รายการโปรแกรมที่รันอยู่ + การใช้งานเครือข่าย
+Data Flow ID : 0008
+Data Flow Name : ข้อมูลทรัพยากรระบบ
+Description : ข้อมูลทรัพยากรระบบ
+Source : นักศึกษา
+Destination : Process 3.0
+Type Of Data Flow : เครือข่าย
+Data Structure : ข้อมูลทรัพยากรระบบ = การใช้งาน CPU + การใช้งาน RAM + รายชื่อ Process ที่ทำงาน + ชื่อหน้าต่างที่ใช้งานอยู่
 
-Data Flow ID : F006
+Data Flow ID : 0009
+Data Flow Name : กฎระเบียบและโปรแกรมต้องห้าม
+Description : กฎระเบียบและโปรแกรมต้องห้าม
+Source : Data Store D2 (Exams & Rules)
+Destination : Process 3.0
+Type Of Data Flow : ฐานข้อมูล
+Data Structure : กฎระเบียบและโปรแกรมต้องห้าม = ชื่อโปรแกรมต้องห้าม + รูปแบบการตรวจจับ
+
+Data Flow ID : 0010
+Data Flow Name : ข้อมูลการละเมิดกฎ
+Description : ข้อมูลการละเมิดกฎ
+Source : Process 3.0
+Destination : Process 6.0
+Type Of Data Flow : ภายใน
+Data Structure : ข้อมูลการละเมิดกฎ = รหัสห้องสอบ + รหัสผู้ใช้งาน + ประเภทการละเมิด + ชื่อโปรแกรมที่ละเมิด
+
+Data Flow ID : 0011
 Data Flow Name : บันทึกข้อมูลการละเมิดกฎ
-Description : รายละเอียดการทำผิดกฎที่ตรวจพบ เช่น การเปิดโปรแกรมต้องห้าม
-Source : Process 3.3 แจ้งเตือนและดำเนินการเมื่อพบการละเมิด
-Destination : Data Store D4 (Violation_Logs)
+Description : บันทึกข้อมูลการละเมิดกฎ
+Source : Process 3.0
+Destination : Data Store D4 (Sessions & Logs)
 Type Of Data Flow : ฐานข้อมูล
-Data Structrue : ข้อมูลการละเมิด = รหัสเซสชัน + ประเภทการละเมิด + รายละเอียด/ชื่อโปรแกรม + รูปหลักฐาน (URL) + เวลาที่เกิดเหตุ
+Data Structure : บันทึกข้อมูลการละเมิดกฎ = รหัสเซสชัน + ประเภทการละเมิด + ชื่อทรัพยากร + รายละเอียด + เวลาที่เกิดเหตุ
 
---- Process 4.0: จัดการข้อมูลผู้ใช้งานและการตรวจสอบสิทธิ์ ---
+Data Flow ID : 0012
+Data Flow Name : ข้อความเตือนและคำสั่งจัดการ
+Description : ข้อความเตือนและคำสั่งจัดการ
+Source : Process 3.0
+Destination : นักศึกษา
+Type Of Data Flow : เครือข่าย
+Data Structure : ข้อความเตือนและคำสั่งจัดการ = ข้อความแจ้งเตือน + เสียงเตือน
 
-Data Flow ID : F007
+Data Flow ID : 0013
 Data Flow Name : ข้อมูลบัญชีผู้ใช้
-Description : ข้อมูลอีเมลและรหัสผ่านสำหรับการยืนยันตัวตนเข้าสู่ระบบ
-Source : ผู้ใช้งาน (นักศึกษา/อาจารย์)
-Destination : Process 4.1 ตรวจสอบข้อมูลบัญชีผู้ใช้
-Type Of Data Flow : หน้าจอ (User Input)
-Data Structrue : ข้อมูลบัญชี = อีเมล (Email) + รหัสผ่าน (Password)
+Description : ข้อมูลบัญชีผู้ใช้
+Source : นักศึกษา, อาจารย์
+Destination : Process 4.0
+Type Of Data Flow : หน้าจอ
+Data Structure : ข้อมูลบัญชีผู้ใช้ = อีเมล + รหัสผ่าน
 
-Data Flow ID : F008
-Data Flow Name : ข้อมูลสิทธิ์การใช้งาน
-Description : ข้อมูลบทบาทและสิทธิ์ของผู้ใช้งานที่ดึงจากระบบ
+Data Flow ID : 0014
+Data Flow Name : ข้อมูลผู้ใช้งานและสิทธิ์
+Description : ข้อมูลผู้ใช้งานและสิทธิ์
 Source : Data Store D1 (Users)
-Destination : Process 4.2 ตรวจสอบระดับสิทธิ์ผู้ใช้งาน
+Destination : Process 4.0
 Type Of Data Flow : ฐานข้อมูล
-Data Structrue : ข้อมูลสิทธิ์ = รหัสผู้ใช้งาน + บทบาท (Teacher/Student) + สถานะการใช้งาน
+Data Structure : ข้อมูลผู้ใช้งานและสิทธิ์ = รหัสผู้ใช้งาน + ชื่อและนามสกุล + บทบาท + อีเมล
 
---- Process 5.0: จัดการข้อมูลการสอบและทรัพยากรต้องห้าม ---
+Data Flow ID : 0015
+Data Flow Name : ผลการเข้าสู่ระบบ
+Description : ผลการเข้าสู่ระบบ
+Source : Process 4.0
+Destination : นักศึกษา, อาจารย์
+Type Of Data Flow : หน้าจอ
+Data Structure : ผลการเข้าสู่ระบบ = Access Token + ข้อมูลผู้ใช้งาน + เส้นทาง Redirect
 
-Data Flow ID : F009
-Data Flow Name : ข้อมูลการสอบและห้องสอบ
-Description : รายละเอียดเวลาสอบ วิชาสอบ และผังที่นั่งที่อาจารย์สร้างขึ้น
-Source : Process 5.1/5.2 สร้างข้อมูลห้องและวิชาสอบ
-Destination : Data Store D2 (Exam_Rooms)
+Data Flow ID : 0016
+Data Flow Name : ข้อมูลการตั้งค่าการสอบ
+Description : ข้อมูลการตั้งค่าการสอบ
+Source : อาจารย์
+Destination : Process 5.0
+Type Of Data Flow : หน้าจอ
+Data Structure : ข้อมูลการตั้งค่าการสอบ = ชื่อห้องสอบ + ผังที่นั่ง + รหัสวิชา + ชื่อวิชา + วันเวลาสอบ + กฎระเบียบ
+
+Data Flow ID : 0017
+Data Flow Name : ข้อมูลห้องสอบและวิชาสอบ
+Description : ข้อมูลห้องสอบและวิชาสอบ
+Source : Process 5.0
+Destination : Data Store D2 (Exams & Rules)
 Type Of Data Flow : ฐานข้อมูล
-Data Structrue : ข้อมูลการสอบ = ชื่อห้องสอบ + รหัสวิชา + ชื่อวิชา + ตอนเรียน (Section) + วันที่สอบ + เวลาเริ่ม + เวลาสิ้นสุด + ผังที่นั่ง (Rows/Cols)
+Data Structure : ข้อมูลห้องสอบและวิชาสอบ = รหัสห้องสอบ + ชื่อห้อง + จำนวนที่นั่ง + รายละเอียดวิชา + สถานะ
 
-Data Flow ID : F010
-Data Flow Name : รายการสิ่งต้องห้าม (Blocked Config)
-Description : รายชื่อโปรแกรมเว็บไซต์ หรือชื่อหน้าต่างที่ห้ามเปิดระหว่างสอบ
-Source : Process 5.3 กำหนดรายการโปรแกรมต้องห้าม
-Destination : Data Store D2 (Room_Blocked_Resources)
+Data Flow ID : 0018
+Data Flow Name : รายการสิ่งต้องห้ามที่บันทึก
+Description : รายการสิ่งต้องห้ามที่บันทึก
+Source : Process 5.0
+Destination : Data Store D2 (Exams & Rules)
 Type Of Data Flow : ฐานข้อมูล
-Data Structrue : สิ่งต้องห้าม = ชื่อโปรแกรม/Keyword + รูปแบบการค้นหา (Exact/Contains) + รหัสห้องสอบ
+Data Structure : รายการสิ่งต้องห้ามที่บันทึก = ชื่อโปรแกรม + รูปแบบการค้นหา + รหัสห้องสอบ
 
---- Process 6.0: จัดการเซสชันการเข้าสอบและการรายงาน ---
+Data Flow ID : 0019
+Data Flow Name : คำสั่งควบคุมการสอบ
+Description : คำสั่งควบคุมการสอบ
+Source : อาจารย์
+Destination : Process 6.0
+Type Of Data Flow : หน้าจอ
+Data Structure : คำสั่งควบคุมการสอบ = รหัสห้องสอบ + คำสั่งเปิดหรือปิด
 
-Data Flow ID : F011
-Data Flow Name : ข้อมูลการลงทะเบียนเซสชัน
-Description : ข้อมูลการจับคู่ระหว่างนักเรียนกับที่นั่งสอบเมื่อเริ่มทำการสอบ
-Source : Process 6.2 จัดสรรที่นั่งสอบ
-Destination : Data Store D4 (Exam_Student_Sessions)
+Data Flow ID : 0020
+Data Flow Name : ข้อมูลผังที่นั่งสอบ
+Description : ข้อมูลผังที่นั่งสอบ
+Source : Data Store D2 (Exams & Rules)
+Destination : Process 6.0
 Type Of Data Flow : ฐานข้อมูล
-Data Structrue : ข้อมูลเซสชัน = รหัสเซสชัน + อีเมลนักศึกษา + รหัสห้องสอบ(Layout ID) + เลขที่นั่งสอบ + IP Address + รหัสใบหน้า + เวลาเริ่มสอบ
+Data Structure : ข้อมูลผังที่นั่งสอบ = จำนวนแถว + จำนวนคอลัมน์ + การจับคู่ IP Address
 
-Data Flow ID : F012
-Data Flow Name : ข้อมูล Dashboard ติดตามผล
-Description : ข้อมูลสถานะของผู้เข้าสอบทุกคนแบบ Real-time ที่ส่งแสดงผลให้อาจารย์
-Source : Process 6.3 ติดตามและรายงานผลการสอบ
+Data Flow ID : 0021
+Data Flow Name : ข้อมูลที่นั่งสอบที่จัดสรร
+Description : ข้อมูลที่นั่งสอบที่จัดสรร
+Source : Process 6.0
+Destination : นักศึกษา
+Type Of Data Flow : หน้าจอ
+Data Structure : ข้อมูลที่นั่งสอบที่จัดสรร = เลขที่นั่ง + แถว + คอลัมน์ + สถานะ IP
+
+Data Flow ID : 0022
+Data Flow Name : ข้อมูลเซสชันการเข้าสอบ
+Description : ข้อมูลเซสชันการเข้าสอบ
+Source : Process 6.0
+Destination : Data Store D4 (Sessions & Logs)
+Type Of Data Flow : ฐานข้อมูล
+Data Structure : ข้อมูลเซสชันการเข้าสอบ = รหัสเซสชัน + รหัสผู้ใช้งาน + รหัสห้องสอบ + ที่นั่ง + เวลาเริ่มสอบ
+
+Data Flow ID : 0023
+Data Flow Name : ข้อมูล Dashboard
+Description : ข้อมูล Dashboard
+Source : Process 6.0
 Destination : อาจารย์
-Type Of Data Flow : หน้าจอ (Dashboard)
-Data Structrue : ข้อมูล Dashboard = รายชื่อนักศึกษา + สถานะออนไลน์ + เลขที่นั่ง + การละเมิดกฎ(จำนวนครั้ง) + ข้อมูลเครื่อง(IP/Status)
+Type Of Data Flow : หน้าจอ
+Data Structure : ข้อมูล Dashboard = รายชื่อนักศึกษาที่เข้าสอบ + สถานะออนไลน์ + การละเมิดกฎ + ข้อมูลเครื่อง
+
+Data Flow ID : 0024
+Data Flow Name : รายงานสรุปผลการเข้าสอบ
+Description : รายงานสรุปผลการเข้าสอบ
+Source : Process 6.0
+Destination : อาจารย์
+Type Of Data Flow : หน้าจอ
+Data Structure : รายงานสรุปผลการเข้าสอบ = ประวัติการเข้าสอบ + สถิติการทุจริต + ไฟล์รายงาน
 
 --------------------------------------------------------------------------------
 7. Data Store Description (รายละเอียดแหล่งเก็บข้อมูล)
@@ -538,7 +637,7 @@ Process Type : Online Processing
 Process Logic :
 ดึงข้อมูล Face Descriptor ต้นฉบับของผู้ใช้ (จาก D3)
 คำนวณระยะห่าง (Euclidean Distance) ระหว่าง Descriptor ปัจจุบัน กับ ต้นฉบับ
-IF Distance < Threshold (เช่น 0.45) THEN
+IF Distance < Threshold (0.50) THEN
     ผลการเปรียบเทียบ = "MATCH"
 ELSE
     ผลการเปรียบเทียบ = "NOT MATCH"
@@ -609,8 +708,7 @@ Out put Data Flow : ข้อความแจ้งเตือน (Pop-up), �
 Process Type : Online Processing
 Process Logic :
 FOR EACH การละเมิด ใน รายการ THEN
-    สั่ง Terminate Process / Close Window นั้นๆ
-    แสดง Pop-up แจ้งเตือนนักศึกษา
+    แสดง Pop-up แจ้งเตือนนักศึกษา (MessageBox)
     บันทึก Log ลง D4 (ชื่อโปรแกรม, เวลา, รหัสผู้สอบ)
     ส่งข้อมูลไปแสดงผลที่ Dashboard อาจารย์ (Process 6.0)
 ENDLOOP
@@ -985,12 +1083,12 @@ Data format : 0.42, 0.35
 *หมายเหตุ: ชื่อไฟล์ในที่นี้คือชื่อ Table ในฐานข้อมูล Supabase
 
 ไฟล์ที่ : 1
-ชื่อไฟล์ : users
-ความหมาย : เก็บข้อมูลบัญชีผู้ใช้งาน สิทธิ์การเข้าถึง และข้อมูลส่วนตัวพื้นฐาน (Authentication)
+ชื่อไฟล์ : profiles
+ความหมาย : เก็บข้อมูลผู้ใช้งานเพิ่มเติม (ชื่อ, รหัสนักศึกษา, รูปใบหน้า JSON) เชื่อมโยงกับ auth.users
 
 ไฟล์ที่ : 2
 ชื่อไฟล์ : user_photos
-ความหมาย : เก็บข้อมูล URL ของรูปภาพใบหน้าทั้ง 4 อิริยาบถสำหรับใช้ลงทะเบียนและตรวจสอบ
+ความหมาย : เก็บข้อมูล URL ของรูปภาพใบหน้าแบบแยกคอลัมน์ (หน้าตรง, หันซ้าย, หันขวา ฯลฯ) สำหรับลงทะเบียน
 
 ไฟล์ที่ : 3
 ชื่อไฟล์ : room_seat_layouts
@@ -1028,105 +1126,140 @@ Data format : 0.42, 0.35
 11. Table Layout (การออกแบบตารางข้อมูล)
 --------------------------------------------------------------------------------
 
-ตารางที่ 1: users (ข้อมูลผู้ใช้งาน)
+ตารางที่ 1: profiles (ข้อมูลผู้ใช้งาน)
 ชื่อฟิลด์ | ความหมาย | ชนิด | ขนาด | หมายเหตุ | ตัวอย่างข้อมูล
 ---|---|---|---|---|---
-id | รหัสผู้ใช้งาน | uuid | 36 | PK | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
-email | อีเมล | varchar | 255 | - | student@email.kmutnb.ac.th
-role | บทบาทผู้ใช้งาน | varchar | 20 | Derived | STUDENT
-full_name | ชื่อ-นามสกุล | varchar | 255 | Metadata | สมชาย รักเรียน
-created_at | วันที่สมัครสมาชิก | timestamp | - | - | 2024-02-15 09:30:00
+id | รหัสรายการ | uuid | 36 | PK, Def | a0eebc99-9c0b-4ef8...
+user_id | รหัสผู้ใช้งาน (Auth) | uuid | 36 | FK, Unique | b1ffc000-8d1a-2be9...
+full_name | ชื่อ-นามสกุล | text | - | - | สมชาย รักเรียน
+student_id | รหัสนักศึกษา | text | - | - | 6401012345678
+role | บทบาทผู้ใช้งาน | text | - | Default 'student' | student
+face_images | รูปภาพใบหน้า (JSON) | jsonb | - | - | {"front": "url...", "left": "url..."}
+created_at | วันที่สร้าง | timestamptz | - | - | 2024-02-15 09:30:00+07
+updated_at | วันที่แก้ไข | timestamptz | - | - | 2024-02-15 09:30:00+07
 
-ตารางที่ 2: user_photos (ข้อมูลรูปภาพใบหน้า)
+ตารางที่ 2: user_photos (ข้อมูลรูปภาพใบหน้า - แบบแยกคอลัมน์)
 ชื่อฟิลด์ | ความหมาย | ชนิด | ขนาด | หมายเหตุ | ตัวอย่างข้อมูล
 ---|---|---|---|---|---
-id | รหัสรายการ | bigint | - | PK, Auto | 15
-user_id | รหัสผู้ใช้งาน | uuid | 36 | FK | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
+id | รหัสรายการ | uuid | 36 | PK, Def | c2d3e4f5-g6h7-8i9j...
+user_id | รหัสผู้ใช้งาน | uuid | 36 | FK | a0eebc99-9c0b-4ef8...
 face_forward | URL รูปหน้าตรง | text | - | - | https://supa.../face.jpg
 open_eye | URL รูปลืมตา | text | - | - | https://supa.../eye.jpg
+closed_eye | URL รูปหลับตา | text | - | - | https://supa.../closed.jpg
 turn_left | URL รูปหันซ้าย | text | - | - | https://supa.../left.jpg
 turn_right | URL รูปหันขวา | text | - | - | https://supa.../right.jpg
-updated_at | วันที่อัปเดตล่าสุด | timestamp | - | - | 2024-02-15 10:00:00
+look_up | URL รูปเงยหน้า | text | - | - | https://supa.../up.jpg
+look_down | URL รูปก้มหน้า | text | - | - | https://supa.../down.jpg
+move_close | URL รูปใกล้ | text | - | - | https://supa.../close.jpg
+created_at | วันที่สร้าง | timestamptz | - | - | 2024-02-15 10:00:00+07
+updated_at | วันที่แก้ไข | timestamptz | - | - | 2024-02-15 10:00:00+07
 
 ตารางที่ 3: room_seat_layouts (ข้อมูลผังห้องสอบ)
 ชื่อฟิลด์ | ความหมาย | ชนิด | ขนาด | หมายเหตุ | ตัวอย่างข้อมูล
 ---|---|---|---|---|---
-id | รหัสผังห้องสอบ | uuid | 36 | PK | b2f4g5h6-1a2b-3c4d-5e6f-7g8h9i0j1k2l
+id | รหัสผังห้องสอบ | uuid | 36 | PK, Def | b2f4g5h6-1a2b-3c4d...
 room_name | ชื่อห้องปฏิบัติการ | varchar | 100 | - | Lab-Com-702
-rows | จำนวนแถว | int | - | - | 5
-columns | จำนวนคอลัมน์ | int | - | - | 6
+rows | จำนวนแถว | int | - | Check > 0 | 5
+columns | จำนวนคอลัมน์ | int | - | Check > 0 | 6
 total_seats | จำนวนที่นั่งรวม | int | - | - | 30
-created_by | ผู้สร้าง (อาจารย์) | uuid | 36 | FK | c1d2e3f4-g5h6-7i8j-9k0l-m1n2o3p4q5r6
+created_by | ผู้สร้าง (UUID) | uuid | 36 | FK | c1d2e3f4-g5h6-7i8j...
+created_at | วันที่สร้าง | timestamptz | - | - | 2024-02-20 08:00:00+07
+updated_at | วันที่แก้ไข | timestamptz | - | - | 2024-02-20 08:00:00+07
 
 ตารางที่ 4: room_seat_ip_mappings (ข้อมูล Mapping IP)
 ชื่อฟิลด์ | ความหมาย | ชนิด | ขนาด | หมายเหตุ | ตัวอย่างข้อมูล
 ---|---|---|---|---|---
-id | รหัสรายการ | bigint | - | PK, Auto | 102
-room_id | รหัสผังห้องสอบ | uuid | 36 | FK | b2f4g5h6-1a2b-3c4d-5e6f-7g8h9i0j1k2l
+id | รหัสรายการ | uuid | 36 | PK, Def | d3e4f5g6-h7i8-9j0k...
+layout_id | รหัสผังห้องสอบ | uuid | 36 | FK | b2f4g5h6-1a2b-3c4d...
+seat_number | หมายเลขที่นั่ง | int | - | - | 15
 row_number | หมายเลขแถว | int | - | - | 1
 column_number | หมายเลขคอลัมน์ | int | - | - | 3
-ip_address | หมายเลข IP | varchar | 45 | - | 192.168.10.15
+ip_address | หมายเลข IP | inet | - | - | 192.168.10.15
+mac_address | หมายเลข MAC | text | - | - | AA:BB:CC:DD:EE:FF
+created_at | วันที่สร้าง | timestamptz | - | - | 2024-02-20 08:00:00+07
+updated_at | วันที่แก้ไข | timestamptz | - | - | 2024-02-20 08:00:00+07
 
 ตารางที่ 5: exam_rooms (ข้อมูลวิชาสอบและตารางสอบ)
 ชื่อฟิลด์ | ความหมาย | ชนิด | ขนาด | หมายเหตุ | ตัวอย่างข้อมูล
 ---|---|---|---|---|---
-id | รหัสการสอบ | uuid | 36 | PK | x1y2z3a4-b5c6-d7e8-f9g0-h1i2j3k4l5m6
-room_name | ชื่อห้องสอบ | varchar | 100 | Ref | Lab-Com-702
-course_code | รหัสวิชา | varchar | 20 | - | 040613405
-course_name | ชื่อวิชา | varchar | 255 | - | Computer Programming
-section | ตอนเรียน | varchar | 10 | - | 01
+id | รหัสการสอบ | uuid | 36 | PK, Def | x1y2z3a4-b5c6-d7e8...
+room_name | ชื่อห้องสอบ | varchar | 100 | - | Lab-Com-702
+course_code | รหัสวิชา | varchar | 50 | - | 040613405
+course_name | ชื่อวิชา | varchar | 200 | - | Computer Programming
+section | ตอนเรียน | varchar | 50 | - | 01
 exam_date | วันที่สอบ | date | - | - | 2024-03-20
+exam_time | เวลาสอบ (ข้อความ) | varchar | 50 | - | 09:00 - 12:00
 start_time | เวลาเริ่ม | time | - | - | 09:00:00
 end_time | เวลาสิ้นสุด | time | - | - | 12:00:00
-status | สถานะการสอบ | varchar | 20 | - | STARTED
+capacity | ความจุ | int | - | - | 40
+is_active | สถานะเปิดใช้งาน | boolean | - | Default true | true
+created_by | ผู้สร้าง (UUID) | uuid | 36 | - | c1d2e3f4-g5h6-7i8j...
+created_by_name | ผู้สร้าง (ชื่อ) | text | - | - | อาจารย์ใจดี
+created_at | วันที่สร้าง | timestamptz | - | - | 2024-03-01 10:00:00+07
+updated_at | วันที่แก้ไข | timestamptz | - | - | 2024-03-01 10:00:00+07
 
 ตารางที่ 6: room_blocked_resources (รายการโปรแกรมต้องห้าม)
 ชื่อฟิลด์ | ความหมาย | ชนิด | ขนาด | หมายเหตุ | ตัวอย่างข้อมูล
 ---|---|---|---|---|---
-id | รหัสรายการ | bigint | - | PK, Auto | 55
-room_id | รหัสการสอบ | uuid | 36 | FK | x1y2z3a4-b5c6-d7e8-f9g0-h1i2j3k4l5m6
-pattern | ชื่อโปรแกรม/คำค้น | varchar | 255 | - | discord
-match_type | รูปแบบการค้นหา | varchar | 20 | - | contains
+id | รหัสรายการ | uuid | 36 | PK, Def | e4f5g6h7-i8j9-0k1l...
+room_id | รหัสการสอบ | uuid | 36 | FK | x1y2z3a4-b5c6-d7e8...
+pattern | ชื่อโปรแกรม/คำค้น | text | - | - | discord
+match_type | รูปแบบการค้นหา | text | - | Default 'contains' | contains
+created_at | วันที่สร้าง | timestamptz | - | - | 2024-03-01 10:00:00+07
 
 ตารางที่ 7: exam_student_sessions (ข้อมูลเซสชันผู้เข้าสอบ)
 ชื่อฟิลด์ | ความหมาย | ชนิด | ขนาด | หมายเหตุ | ตัวอย่างข้อมูล
 ---|---|---|---|---|---
-id | รหัสเซสชัน | uuid | 36 | PK | s1t2u3v4-w5x6-y7z8-a9b0-c1d2e3f4g5h6
-layout_id | รหัสผังห้องสอบ | uuid | 36 | FK | b2f4g5h6-1a2b-3c4d-5e6f-7g8h9i0j1k2l
-student_email | อีเมลนักศึกษา | varchar | 255 | FK (Ref) | student1@email.kmutnb.ac.th
+id | รหัสเซสชัน | uuid | 36 | PK, Def | s1t2u3v4-w5x6-y7z8...
+layout_id | รหัสผังห้องสอบ | uuid | 36 | FK | b2f4g5h6-1a2b-3c4d...
+student_email | อีเมลนักศึกษา | text | - | - | student1@email.kmutnb.ac.th
+student_name | ชื่อ-นามสกุล นศ. | text | - | - | สมชาย รักเรียน
 seat_number | เลขที่นั่งสอบ | int | - | - | 15
-ip_address | หมายเลข IP | varchar | 45 | - | 192.168.10.15
-face_descriptor | รหัสลักษณะใบหน้า | text | - | JSON | [-0.123, 0.456, ...]
-is_active | สถานะออนไลน์ | boolean | - | - | true
-student_id | รหัสนักศึกษา | varchar | 20 | - | 640000000000
+ip_address | หมายเลข IP | inet | - | - | 192.168.10.15
+face_descriptor | รหัสลักษณะใบหน้า | text | - | - | [-0.123, 0.456, ...]
+student_profile_url | URL รูปโปรไฟล์ | text | - | - | https://ui-avatars.com/...
+is_active | สถานะออนไลน์ | boolean | - | Default true | true
+session_start_time | เวลาเริ่มสอบ | timestamptz | - | - | 2024-03-20 09:00:00+07
+session_end_time | เวลาจบสอบ | timestamptz | - | - | 2024-03-20 12:00:00+07
+created_at | วันที่สร้าง | timestamptz | - | - | 2024-03-20 09:00:00+07
+updated_at | วันที่แก้ไข | timestamptz | - | - | 2024-03-20 09:05:00+07
 
 ตารางที่ 8: resource_logs (ประวัติทรัพยากรเครื่อง)
 ชื่อฟิลด์ | ความหมาย | ชนิด | ขนาด | หมายเหตุ | ตัวอย่างข้อมูล
 ---|---|---|---|---|---
-id | รหัส Log | bigint | - | PK, Auto | 9999
-session_id | รหัสเซสชัน | uuid | 36 | FK | s1t2u3v4-w5x6-y7z8-a9b0-c1d2e3f4g5h6
-timestamp | เวลาที่บันทึก | timestamp | - | - | 2024-03-20 09:15:30
-cpu_usage | การใช้ CPU (%) | float | - | - | 15.5
-ram_usage | การใช้ RAM (%) | float | - | - | 45.2
+id | รหัส Log | uuid | 36 | PK, Def | f5g6h7i8-j9k0-1l2m...
+session_id | รหัสเซสชัน | uuid | 36 | FK | s1t2u3v4-w5x6-y7z8...
+timestamp | เวลาที่บันทึก | timestamptz | - | Default NOW() | 2024-03-20 09:15:30+07
 active_window_title | ชื่อหน้าต่างปัจจุบัน | text | - | - | VSCode - Exam.js
-exe_processes | รายการ Process | jsonb | - | - | [{"name":"chrome.exe", "pid":123}]
+all_open_windows | รายการหน้าต่างทั้งหมด | jsonb | - | - | ["Chrome", "Line"]
+cpu_usage | การใช้ CPU (%) | int | - | - | 15
+cpu_model | รุ่น CPU | text | - | - | Intel Core i7
+ram_usage | การใช้ RAM (%) | int | - | - | 45
+ram_total_gb | RAM ทั้งหมด (GB) | numeric | 10,2 | - | 16.00
+ram_used_gb | RAM ที่ใช้ (GB) | numeric | 10,2 | - | 7.25
+ram_available_gb | RAM คงเหลือ (GB) | numeric | 10,2 | - | 8.75
+disk_partitions_info | ข้อมูล Disk | jsonb | - | - | [{"device": "C:", ...}]
+network_download_mb | ดาวน์โหลด (MB) | numeric | 10,2 | - | 120.50
+network_upload_mb | อัปโหลด (MB) | numeric | 10,2 | - | 15.20
+exe_processes | รายการ Process | jsonb | - | - | [{"name":"chrome.exe"}]
 
 ตารางที่ 9: violation_logs (ประวัติการทำผิดกฎ)
 ชื่อฟิลด์ | ความหมาย | ชนิด | ขนาด | หมายเหตุ | ตัวอย่างข้อมูล
 ---|---|---|---|---|---
-id | รหัสรายการ | bigint | - | PK, Auto | 50
-session_id | รหัสเซสชัน | uuid | 36 | FK | s1t2u3v4-w5x6-y7z8-a9b0-c1d2e3f4g5h6
-violation_type | ประเภทความผิด | varchar | 50 | - | PROCESS_DETECTED
-detail | รายละเอียด | text | - | - | Found 'discord.exe' running
-evidence_url | ลิงก์รูปหลักฐาน | text | - | - | https://supa.../evi1.png
-timestamp | เวลาที่เกิดเหตุ | timestamp | - | - | 2024-03-20 10:05:00
+id | รหัสรายการ | uuid | 36 | PK, Def | g6h7i8j9-k0l1-2m3n...
+session_id | รหัสเซสชัน | uuid | 36 | FK | s1t2u3v4-w5x6-y7z8...
+timestamp | เวลาที่เกิดเหตุ | timestamptz | - | Default NOW() | 2024-03-20 10:05:00+07
+violation_type | ประเภทความผิด | text | - | - | PROCESS_DETECTED
+resource_name | แหล่งที่ตรวจพบ | text | - | - | Process: discord.exe
+action_taken | การดำเนินการของระบบ | text | - | - | Terminated
+details | รายละเอียด | text | - | - | Matched Rule: discord
 
 ตารางที่ 10: qr_authentication (ข้อมูล QR Login)
 ชื่อฟิลด์ | ความหมาย | ชนิด | ขนาด | หมายเหตุ | ตัวอย่างข้อมูล
 ---|---|---|---|---|---
-id | รหัสรายการ | bigint | - | PK, Auto | 300
-user_id | รหัสผู้ใช้งาน | uuid | 36 | FK | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
-status | สถานะ | varchar | 20 | - | authenticated
-ip | IP มือถือ | varchar | 45 | - | 10.0.0.5
-authenticated_at | เวลายืนยันตัวตน | timestamp | - | - | 2024-03-20 08:55:00
-expires_at | เวลาหมดอายุ | timestamp | - | - | 2024-03-20 08:57:00
+id | รหัสรายการ | uuid | 36 | PK, Def | h7i8j9k0-l1m2-3n4o...
+user_id | รหัสผู้ใช้งาน | uuid | 36 | FK | a0eebc99-9c0b-4ef8...
+ip | IP มือถือ | inet | - | - | 10.0.0.5
+status | สถานะ | text | - | Check Constraint | authenticated
+authenticated_at | เวลายืนยันตัวตน | timestamptz | - | - | 2024-03-20 08:55:00+07
+expires_at | เวลาหมดอายุ | timestamptz | - | - | 2024-03-20 08:57:00+07

@@ -1,0 +1,232 @@
+create table public.exam_rooms (
+  id uuid not null default gen_random_uuid (),
+  room_name character varying(100) not null,
+  exam_date date null,
+  exam_time character varying(50) null,
+  course_code character varying(50) null,
+  course_name character varying(200) null,
+  section character varying(50) null,
+  created_by uuid not null,
+  created_by_name text null,
+  created_at timestamp with time zone null default CURRENT_TIMESTAMP,
+  updated_at timestamp with time zone null default CURRENT_TIMESTAMP,
+  capacity integer null,
+  is_active boolean null default true,
+  start_time time without time zone null,
+  end_time time without time zone null,
+  constraint exam_rooms_pkey primary key (id)
+) TABLESPACE pg_default;
+
+create index IF not exists idx_exam_rooms_created_at on public.exam_rooms using btree (created_at) TABLESPACE pg_default;
+
+create index IF not exists idx_exam_rooms_created_by on public.exam_rooms using btree (created_by) TABLESPACE pg_default;
+
+create index IF not exists idx_exam_rooms_room_name on public.exam_rooms using btree (room_name) TABLESPACE pg_default;
+
+create index IF not exists idx_exam_rooms_name on public.exam_rooms using btree (room_name) TABLESPACE pg_default;
+
+create index IF not exists idx_exam_rooms_exam_date on public.exam_rooms using btree (exam_date) TABLESPACE pg_default;
+
+
+
+create table public.exam_student_sessions (
+  id uuid not null default gen_random_uuid (),
+  layout_id uuid not null,
+  student_email text not null,
+  student_name text null,
+  seat_number integer not null,
+  ip_address inet null,
+  session_start_time timestamp with time zone null default now(),
+  session_end_time timestamp with time zone null,
+  is_active boolean null default true,
+  face_descriptor text null,
+  created_at timestamp with time zone null default now(),
+  updated_at timestamp with time zone null default now(),
+  student_profile_url text null,
+  constraint exam_student_sessions_pkey primary key (id),
+  constraint fk_exam_student_sessions_layout foreign KEY (layout_id) references room_seat_layouts (id) on delete CASCADE
+) TABLESPACE pg_default;
+
+create index IF not exists idx_exam_student_sessions_layout on public.exam_student_sessions using btree (layout_id) TABLESPACE pg_default;
+
+create index IF not exists idx_exam_student_sessions_student on public.exam_student_sessions using btree (student_email) TABLESPACE pg_default;
+
+create index IF not exists idx_exam_student_sessions_active on public.exam_student_sessions using btree (is_active) TABLESPACE pg_default;
+
+
+
+create table public.profiles (
+  id uuid not null default gen_random_uuid (),
+  user_id uuid not null,
+  full_name text null,
+  student_id text null,
+  role text null default 'student'::text,
+  face_images jsonb null,
+  created_at timestamp with time zone not null default now(),
+  updated_at timestamp with time zone not null default now(),
+  constraint profiles_pkey primary key (id),
+  constraint profiles_user_id_key unique (user_id),
+  constraint profiles_user_id_fkey foreign KEY (user_id) references auth.users (id) on delete CASCADE
+) TABLESPACE pg_default;
+
+create trigger update_profiles_updated_at BEFORE
+update on profiles for EACH row
+execute FUNCTION update_updated_at_column ();
+
+
+create table public.qr_authentication (
+  id uuid not null default gen_random_uuid (),
+  user_id uuid not null,
+  ip inet not null,
+  status text not null default 'pending'::text,
+  authenticated_at timestamp with time zone null,
+  expires_at timestamp with time zone null default (now() + '00:01:00'::interval),
+  constraint qr_authentication_pkey primary key (id),
+  constraint qr_authentication_user_id_fkey foreign KEY (user_id) references auth.users (id) on delete CASCADE,
+  constraint qr_authentication_status_check check (
+    (
+      status = any (
+        array[
+          'pending'::text,
+          'authenticated'::text,
+          'failed'::text,
+          'expired'::text
+        ]
+      )
+    )
+  ),
+  constraint valid_ip_address check ((ip is not null))
+) TABLESPACE pg_default;
+
+create index IF not exists idx_qr_authentication_user_id on public.qr_authentication using btree (user_id) TABLESPACE pg_default;
+
+create index IF not exists idx_qr_authentication_ip on public.qr_authentication using btree (ip) TABLESPACE pg_default;
+
+create index IF not exists idx_qr_authentication_status on public.qr_authentication using btree (status) TABLESPACE pg_default;
+
+create index IF not exists idx_qr_authentication_authenticated_at on public.qr_authentication using btree (authenticated_at) TABLESPACE pg_default;
+
+create index IF not exists idx_qr_authentication_expires_at on public.qr_authentication using btree (expires_at) TABLESPACE pg_default;
+
+create index IF not exists idx_qr_authentication_user_status on public.qr_authentication using btree (user_id, status) TABLESPACE pg_default;
+
+create index IF not exists idx_qr_authentication_user_ip on public.qr_authentication using btree (user_id, ip) TABLESPACE pg_default;
+
+
+
+create table public.resource_logs (
+  id uuid not null default gen_random_uuid (),
+  session_id uuid not null,
+  timestamp timestamp with time zone not null default CURRENT_TIMESTAMP,
+  active_window_title text null,
+  all_open_windows jsonb null,
+  cpu_usage integer null,
+  cpu_model text null,
+  ram_usage integer null,
+  ram_total_gb numeric(10, 2) null,
+  ram_used_gb numeric(10, 2) null,
+  ram_available_gb numeric(10, 2) null,
+  disk_partitions_info jsonb null,
+  network_download_mb numeric(10, 2) null,
+  network_upload_mb numeric(10, 2) null,
+  exe_processes jsonb null,
+  constraint resource_logs_pkey primary key (id),
+  constraint fk_session foreign KEY (session_id) references exam_student_sessions (id) on delete CASCADE
+) TABLESPACE pg_default;
+
+
+create table public.room_blocked_resources (
+  id uuid not null default gen_random_uuid (),
+  room_id uuid not null,
+  pattern text not null,
+  match_type text null default 'contains'::text,
+  created_at timestamp with time zone null default now(),
+  constraint room_blocked_resources_pkey primary key (id),
+  constraint fk_room_blocked_resources_room foreign KEY (room_id) references exam_rooms (id) on delete CASCADE
+) TABLESPACE pg_default;
+
+create index IF not exists idx_room_blocked_resources_room_id on public.room_blocked_resources using btree (room_id) TABLESPACE pg_default;
+
+
+create table public.room_seat_ip_mappings (
+  id uuid not null default gen_random_uuid (),
+  layout_id uuid not null,
+  seat_number integer not null,
+  row_number integer not null,
+  column_number integer not null,
+  ip_address inet not null,
+  created_at timestamp with time zone null default CURRENT_TIMESTAMP,
+  updated_at timestamp with time zone null default CURRENT_TIMESTAMP,
+  mac_address text null,
+  constraint room_seat_ip_mappings_pkey primary key (id),
+  constraint fk_room_seat_ip_mappings_layout foreign KEY (layout_id) references room_seat_layouts (id) on delete CASCADE
+) TABLESPACE pg_default;
+
+create index IF not exists idx_room_seat_ip_mappings_mac on public.room_seat_ip_mappings using btree (mac_address) TABLESPACE pg_default;
+
+create index IF not exists idx_room_seat_ip_mappings_layout_id on public.room_seat_ip_mappings using btree (layout_id) TABLESPACE pg_default;
+
+create index IF not exists idx_room_seat_ip_mappings_ip on public.room_seat_ip_mappings using btree (ip_address) TABLESPACE pg_default;
+
+create index IF not exists idx_room_seat_ip_mappings_seat on public.room_seat_ip_mappings using btree (seat_number) TABLESPACE pg_default;
+
+
+create table public.room_seat_layouts (
+  id uuid not null default gen_random_uuid (),
+  room_name character varying(100) not null,
+  rows integer not null,
+  columns integer not null,
+  total_seats integer not null,
+  created_by uuid not null,
+  created_at timestamp with time zone null default CURRENT_TIMESTAMP,
+  updated_at timestamp with time zone null default CURRENT_TIMESTAMP,
+  constraint room_seat_layouts_pkey primary key (id),
+  constraint room_seat_layouts_columns_check check (
+    (
+      (columns > 0)
+      and (columns <= 20)
+    )
+  ),
+  constraint room_seat_layouts_rows_check check (
+    (
+      (rows > 0)
+      and (rows <= 20)
+    )
+  )
+) TABLESPACE pg_default;
+
+create index IF not exists idx_room_seat_layouts_created_by on public.room_seat_layouts using btree (created_by) TABLESPACE pg_default;
+
+create index IF not exists idx_room_seat_layouts_room_name on public.room_seat_layouts using btree (room_name) TABLESPACE pg_default;
+
+
+create table public.user_photos (
+  id uuid not null default gen_random_uuid (),
+  user_id uuid not null,
+  closed_eye text null,
+  open_eye text null,
+  turn_left text null,
+  turn_right text null,
+  look_up text null,
+  look_down text null,
+  move_close text null,
+  created_at timestamp with time zone null default now(),
+  updated_at timestamp with time zone null default now(),
+  face_forward text null,
+  constraint user_photos_pkey primary key (id),
+  constraint user_photos_user_id_fkey foreign KEY (user_id) references auth.users (id) on delete CASCADE
+) TABLESPACE pg_default;
+
+
+
+create table public.violation_logs (
+  id uuid not null default gen_random_uuid (),
+  session_id uuid not null,
+  timestamp timestamp with time zone not null default CURRENT_TIMESTAMP,
+  violation_type text not null,
+  resource_name text not null,
+  action_taken text null,
+  details text null,
+  constraint violation_logs_pkey primary key (id),
+  constraint fk_violation_session foreign KEY (session_id) references exam_student_sessions (id) on delete CASCADE
+) TABLESPACE pg_default;
