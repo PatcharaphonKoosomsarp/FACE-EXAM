@@ -249,6 +249,8 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   const [recentViolations, setRecentViolations] = useState<any[]>([]);
   const [currentTime, setCurrentTime] = useState(Date.now());
   const [onlineSessionIds, setOnlineSessionIds] = useState<Set<string>>(new Set());
+  
+  const prevSelectedExamId = React.useRef<string | null>(null);
 
   // Effect to update current time every second (for violation alerts)
   useEffect(() => {
@@ -260,6 +262,20 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
   // Effect to fetch all active sessions for the room when exam is selected
   useEffect(() => {
+     // Reset state when switching exams to avoid data leak
+     if (prevSelectedExamId.current !== selectedExamId) {
+        setRealtimeSessions([]);
+        setRecentViolations([]);
+        setOnlineSessionIds(new Set());
+        
+        isFirstFetch.current = true;
+        violationReceivedTimes.current.clear();
+        notifiedViolationIds.current.clear();
+        notifiedThrottleMap.current.clear();
+        
+        prevSelectedExamId.current = selectedExamId;
+     }
+
       if (!selectedExamId) return;
       const exam = exams.find(e => e.id === selectedExamId);
       if (!exam) return;
@@ -348,13 +364,23 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
       const fetchViolations = async () => {
           let sessionsMap: Record<string, any> = {};
           let sessionIds: string[] = [];
+          
+          let usedRealtime = false;
+          const currentExam = exams.find(e => e.id === selectedExamId);
 
-          if (realtimeSessions.length > 0) {
-              sessionIds = realtimeSessions.map(s => s.id);
-              realtimeSessions.forEach(s => sessionsMap[s.id] = s);
-          } else {
-              // Fallback: fetch all sessions for this exam if realtime list is empty
-              const exam = exams.find(e => e.id === selectedExamId);
+          if (realtimeSessions.length > 0 && currentExam) {
+              // Verify these sessions belong to the current room to prevent cross-exam data leak (stale data check)
+              const firstSession = realtimeSessions[0];
+              if (firstSession.layout_id === currentExam.roomId) {
+                  sessionIds = realtimeSessions.map(s => s.id);
+                  realtimeSessions.forEach(s => sessionsMap[s.id] = s);
+                  usedRealtime = true;
+              }
+          }
+
+          if (!usedRealtime) {
+              // Fallback: fetch all sessions for this exam if realtime list is empty or stale
+              const exam = currentExam;
               if (exam) {
                   const { data: sessions } = await supabase
                       .from('exam_student_sessions')
