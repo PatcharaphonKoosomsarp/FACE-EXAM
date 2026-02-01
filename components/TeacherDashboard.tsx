@@ -704,9 +704,17 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         })) as ResourceConstraint[];
     };
 
+    const addUniqueResources = (newItems: ResourceConstraint[]) => {
+        setBlockedResources(prev => {
+            const existingNames = new Set(prev.map(r => r.name.toLowerCase()));
+            const uniqueItems = newItems.filter(item => !existingNames.has(item.name.toLowerCase()));
+            return [...prev, ...uniqueItems];
+        });
+    };
+
     if (!process.env.API_KEY) {
         // ถ้าไม่มี API Key ให้ใช้รายการที่ตั้งค่าไว้ในโค้ด (PRESET_BLOCKED_APPS)
-        setBlockedResources(prev => [...prev, ...getPresets()]);
+        addUniqueResources(getPresets());
         return;
     }
     
@@ -741,12 +749,12 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
              suggested = getPresets();
         }
        
-        setBlockedResources(prev => [...prev, ...suggested]);
+        addUniqueResources(suggested);
 
     } catch (error) {
         console.error("AI Error", error);
         // ถ้าเกิดข้อผิดพลาดในการเชื่อมต่อ AI ให้ใช้รายการที่ตั้งค่าไว้ในโค้ด
-        setBlockedResources(prev => [...prev, ...getPresets()]);
+        addUniqueResources(getPresets());
     } finally {
         setIsSuggesting(false);
     }
@@ -818,9 +826,15 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
   const handleAddResource = () => {
     if (!newResourceName) return;
+
+    if (blockedResources.some(r => r.name.toLowerCase() === newResourceName.trim().toLowerCase())) {
+        alert('เพิ่มรายการนี้ไปแล้ว');
+        return;
+    }
+
     const res: ResourceConstraint = {
       id: Date.now().toString(),
-      name: newResourceName,
+      name: newResourceName.trim(),
       type: newResourceType
     };
     setBlockedResources([...blockedResources, res]);
@@ -2015,7 +2029,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                         </h4>
                                         <div className="flex flex-wrap gap-2">
                                             {category.items.map((app, idx) => {
-                                                const isAdded = blockedResources.some(r => r.name === app.name);
+                                                const isAdded = blockedResources.some(r => r.name.toLowerCase() === app.name.toLowerCase());
                                                 return (
                                                     <button
                                                         key={idx}
