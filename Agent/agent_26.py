@@ -1,15 +1,72 @@
-import psutil
-import pygetwindow as gw
+import sys
+import subprocess
+import os
+import importlib.util
+
+# === Auto-Setup & Requirement Check ===
+def setup_environment():
+    # 1. Check Python Version (Warn if not 3.11)
+    current_ver = sys.version_info
+    print(f"[Setup] Checking Python version... Current: {sys.version.split()[0]}")
+    if not (current_ver.major == 3 and current_ver.minor == 11):
+        # User requested specifically to check for 3.11.0, but usually minor version match is enough. 
+        # I will warn if it's not 3.11.x
+        print(f"[Warning] This application is designed for Python 3.11. You are running {sys.version.split()[0]}.")
+        print("         Some features might not work as expected.")
+
+    # 2. Check & Install Required Libraries
+    # Mapping: import_name -> pip_package_name
+    requirements = {
+        'psutil': 'psutil',
+        'pygetwindow': 'PyGetWindow',
+        'requests': 'requests',
+        'supabase': 'supabase',
+        'flask': 'flask',
+        'flask_cors': 'flask-cors',
+        'GPUtil': 'gputil',
+        'wmi': 'wmi',
+        'win32com': 'pywin32'  # Often needed for WMI/System interaction
+    }
+    
+    missing = []
+    print("[Setup] Checking required libraries...")
+    for import_name, package_name in requirements.items():
+        if importlib.util.find_spec(import_name) is None:
+            missing.append(package_name)
+    
+    if missing:
+        print(f"[Setup] Missing libraries found: {', '.join(missing)}")
+        print("[Setup] Installing missing libraries...")
+        try:
+            # Install all missing packages
+            subprocess.check_call([sys.executable, '-m', 'pip', 'install'] + missing)
+            print("[Setup] Installation complete!")
+            print("[Setup] Restarting application to apply changes...")
+            # Restart the script
+            os.execv(sys.executable, [sys.executable] + sys.argv)
+        except subprocess.CalledProcessError as e:
+            print(f"[Error] Failed to install libraries: {e}")
+            print("Please install them manually using: pip install " + " ".join(missing))
+            input("Press Enter to exit...")
+            sys.exit(1)
+    else:
+        print("[Setup] All required libraries are installed.")
+
+# Run setup before importing other modules
+setup_environment()
+
+# === Standard Imports ===
 import time
 import json
-import requests
 import threading
 import ctypes  # For MessageBox
 from datetime import datetime
-import os
 import socket
-import sys
-import subprocess
+
+# === Third-Party Imports ===
+import psutil
+import pygetwindow as gw
+import requests
 from supabase import create_client, Client
 from flask import Flask, jsonify
 from flask_cors import CORS
@@ -1150,6 +1207,7 @@ def debug_check_blocked_resources():
         print(f"[DEBUG] Error fetching blocked resources: {e}\n")
 
 if __name__ == "__main__":
+    """ = ถ้าอยากให้ปิดหน้าต่างเเละรันอยู่ background ให้เอา comment ออก
     # === Auto-Relaunch with pythonw.exe (Background Mode) ===
     # ตรวจสอบว่ารันด้วย python.exe (มีหน้าต่าง) หรือไม่ ถ้าใช่ให้ Relaunch ด้วย pythonw.exe
     if os.name == 'nt' and sys.executable.lower().endswith('python.exe'):
@@ -1165,7 +1223,7 @@ if __name__ == "__main__":
                 sys.exit() # ปิดโปรแกรมตัวปัจจุบัน (ที่มีหน้าต่าง)
         except Exception as e:
             print(f"Warning: Could not relaunch in background mode: {e}")
-
+    """
     # === เริ่มบริการ Agent ===
     
     # ทดสอบดึงข้อมูล Blocked Resources ทันทีที่รัน
