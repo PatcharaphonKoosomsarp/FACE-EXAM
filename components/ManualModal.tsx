@@ -91,7 +91,7 @@ const ManualModal: React.FC<ManualModalProps> = ({ isOpen, onClose }) => {
                   </div>
                   <div className="space-y-3">
                     <img src="/manual_picture/3.png" alt="Run Agent" className="rounded-lg shadow-md border border-gray-200 max-w-full h-auto" />
-                    <p className="text-gray-700 font-medium">3. รัน agent_26.py ดับเบิ้ลคลิก agent_26.py หรือ ใช้คำสั่ง <code className="bg-gray-100 px-2 py-1 rounded text-sm font-mono text-red-500">python agent_26.py</code></p>
+                    <p className="text-gray-700 font-medium">3. รัน agent_26.py ดับเบิ้ลคลิกที่ agent_26.py หรือ ใช้คำสั่ง <code className="bg-gray-100 px-2 py-1 rounded text-sm font-mono text-red-500">python agent_26.py</code></p>
                   </div>
                 </div>
               </section>
