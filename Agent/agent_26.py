@@ -1207,7 +1207,6 @@ def debug_check_blocked_resources():
         print(f"[DEBUG] Error fetching blocked resources: {e}\n")
 
 if __name__ == "__main__":
-    """ = ถ้าอยากให้ปิดหน้าต่างเเละรันอยู่ background ให้เอา comment ออก
     # === Auto-Relaunch with pythonw.exe (Background Mode) ===
     # ตรวจสอบว่ารันด้วย python.exe (มีหน้าต่าง) หรือไม่ ถ้าใช่ให้ Relaunch ด้วย pythonw.exe
     if os.name == 'nt' and sys.executable.lower().endswith('python.exe'):
@@ -1223,7 +1222,6 @@ if __name__ == "__main__":
                 sys.exit() # ปิดโปรแกรมตัวปัจจุบัน (ที่มีหน้าต่าง)
         except Exception as e:
             print(f"Warning: Could not relaunch in background mode: {e}")
-    """
     # === เริ่มบริการ Agent ===
     
     # ทดสอบดึงข้อมูล Blocked Resources ทันทีที่รัน
