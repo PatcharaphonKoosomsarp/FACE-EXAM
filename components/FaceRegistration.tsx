@@ -32,6 +32,9 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
   const [isCapturing, setIsCapturing] = useState(false);
   const [qrUrl, setQrUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  
+  // เพิ่ม state สำหรับเก็บ User Profile ที่ดึงมา (กรณีเปิดหน้าเว็บ Mobile)
+  const [mobileUser, setMobileUser] = useState<any>(null);
   const [errorType, setErrorType] = useState<'PERMISSION' | 'NOT_FOUND' | 'IN_USE' | 'GENERIC' | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const [isReviewing, setIsReviewing] = useState(false);

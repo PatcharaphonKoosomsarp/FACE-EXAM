@@ -30,11 +30,31 @@ const ExamRoomView: React.FC<ExamRoomViewProps> = ({ user, exam, onExit }) => {
     useEffect(() => {
         const fetchSession = async () => {
             try {
-                const data = await sessionService.fetchActiveSession(user.email);
-                // Ensure it matches the current exam room
-                if (data && data.layout_id === exam.roomId) {
-                    setSession(data);
+                // 1. Fetch current IP
+                let clientIp = '0.0.0.0';
+                try {
+                    const ipRes = await fetch('https://api.ipify.org?format=json').then(r => r.json());
+                    clientIp = ipRes.ip;
+                } catch (e) { console.warn("Cannot resolve public IP, utilizing internal logic"); }
+
+                // 2. Resolve Seat from DB Mapping (using Agent's logic: IP -> Seat)
+                // Note: In real production with Agent, Agent updates DB with local IP.
+                // Here frontend tries to find "My Seat" by checking if any seat mapping has "My IP" 
+                // BUT: Client IP (browser) and Agent IP (python) might differ if NAT/Proxy used.
+                // BEST PRACTICE: Trust DB session if exists. If not, wait for Agent to Check-in.
+                
+                // Let's rely on what Session Service returns first
+                const activeSession = await sessionService.fetchActiveSession(user.email);
+                
+                if (activeSession && activeSession.layout_id === exam.roomId) {
+                     setSession(activeSession);
+                } else {
+                     // If no session, maybe Agent just registered the seat?
+                     // We need a mechanism to "Claim" the seat if Agent is active.
+                     // For now, let's auto-refresh every few seconds to see if session appears
+                     // OR: We implement "Auto-Checkin" here if we knew the seat.
                 }
+
             } catch (err) {
                 console.error("Error fetching session:", err);
             } finally {
@@ -42,7 +62,10 @@ const ExamRoomView: React.FC<ExamRoomViewProps> = ({ user, exam, onExit }) => {
             }
         };
 
-        fetchSession();
+        const interval = setInterval(fetchSession, 5000); // Polling for session updates
+        fetchSession(); // Initial call
+
+        return () => clearInterval(interval);
     }, [exam.roomId, user.email]);
 
     const handleExit = async () => {
