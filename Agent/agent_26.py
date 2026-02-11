@@ -144,8 +144,10 @@ def get_hw_metrics():
                 u = psutil.disk_usage(p.mountpoint)
                 disk_parts.append({
                     "device": p.device,
+                    "mountpoint": p.mountpoint,
                     "total_gb": round(u.total / (1024**3), 2),
-                    "free_gb": round(u.free / (1024**3), 2)
+                    "free_gb": round(u.free / (1024**3), 2),
+                    "percent": u.percent
                 })
             except: pass
     except: pass
