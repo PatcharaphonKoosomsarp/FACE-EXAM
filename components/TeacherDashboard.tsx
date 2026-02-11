@@ -1172,7 +1172,8 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                                             {log.violation_type.replace(/_/g, ' ')}
                                                         </span>
                                                         <span className="text-sm text-gray-500 font-mono bg-white px-2 py-1 rounded border border-gray-200">
-                                                            {new Date(log.timestamp).toLocaleTimeString()}
+                                                            {/* Force Thai Time & Fix UTC conversion */}
+                                                            {new Date(log.timestamp.endsWith('Z') || log.timestamp.includes('+') ? log.timestamp : log.timestamp + 'Z').toLocaleTimeString('th-TH', { hour12: false })}
                                                         </span>
                                                     </div>
                                                     <div className="text-gray-800 text-base mb-3 font-medium break-words leading-relaxed pl-2">
@@ -1319,7 +1320,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                   </div>
                                   
                                   <div className="text-right text-sm text-gray-400">
-                                      Last updated: {new Date(studentResourceData.timestamp).toLocaleTimeString()}
+                                      Last updated: {new Date(studentResourceData.timestamp.endsWith('Z') || studentResourceData.timestamp.includes('+') ? studentResourceData.timestamp : studentResourceData.timestamp + 'Z').toLocaleTimeString('th-TH', { hour12: false })}
                                   </div>
                               </div>
                           ) : (
