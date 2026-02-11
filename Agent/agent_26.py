@@ -417,12 +417,13 @@ class ExamAgent:
         room_cb.grid(row=0, column=1, sticky="ew", pady=5)
         
         # Load Rooms
-        room_map = {} # name -> id
+        room_data_map = {} # name -> {id, rows, columns}
         try:
-            res = supabase.table('room_seat_layouts').select('id, room_name').execute()
+            # Fetch dimensions to validate seat limits
+            res = supabase.table('room_seat_layouts').select('id, room_name, rows, columns').execute()
             for r in res.data:
-                room_map[r['room_name']] = r['id']
-            room_cb['values'] = list(room_map.keys())
+                room_data_map[r['room_name']] = r
+            room_cb['values'] = list(room_data_map.keys())
         except:
             room_cb['values'] = ["Error loading rooms"]
 
@@ -449,9 +450,27 @@ class ExamAgent:
 
             try:
                 parts = s_num.split('-')
-                row_n = int(parts[0])
-                col_n = int(parts[1])
-                layout_id = room_map[r_name]
+                try:
+                    row_n = int(parts[0])
+                    col_n = int(parts[1])
+                except ValueError:
+                    msg_lbl.config(text="ที่นั่งต้องเป็นตัวเลข (เช่น 1-1)")
+                    return
+
+                # Validate Bounds
+                room_info = room_data_map.get(r_name)
+                if not room_info:
+                    msg_lbl.config(text="ไม่พบข้อมูลห้อง")
+                    return
+
+                max_rows = room_info.get('rows', 99)
+                max_cols = room_info.get('columns', 99)
+                
+                if row_n < 1 or col_n < 1 or row_n > max_rows or col_n > max_cols:
+                    msg_lbl.config(text=f"ที่นั่งเกินขอบเขต! ห้อง '{r_name}' มีขนาด {max_rows}x{max_cols}")
+                    return
+
+                layout_id = room_info['id']
 
                 # Prepare Data - Send list of MACs properly as JSON array compatible list
                 new_mapping = {
