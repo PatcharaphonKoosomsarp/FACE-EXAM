@@ -180,20 +180,26 @@ def get_hw_metrics():
             data["all_open_windows"] = [w.title for w in gw.getAllWindows() if w.title and w.visible]
         except: pass
 
-    # Top Processes (CPU heavy)
+    # Top Processes (Sorted by CPU then Memory)
     procs = []
     try:
-        for p in psutil.process_iter(['pid', 'name', 'exe', 'cpu_percent']):
+        # Fetch 'memory_percent' as well for better sorting
+        for p in psutil.process_iter(['pid', 'name', 'exe', 'cpu_percent', 'memory_percent']):
             try:
-                if p.info['cpu_percent'] > 0:
+                # Filter: Include if using CPU OR significant Memory (> 0.1%)
+                # This ensures idle apps (like Calculator) don't disappear
+                if p.info['cpu_percent'] > 0 or (p.info['memory_percent'] or 0) > 0.1:
                     procs.append({
                         'pid': p.info['pid'],
                         'name': p.info['name'],
-                        'cpu_percent': p.info['cpu_percent']
+                        'cpu_percent': p.info['cpu_percent'] or 0, # Handle None
+                        'memory_percent': p.info['memory_percent'] or 0
                     })
             except: pass
     except: pass
-    data["exe_processes"] = sorted(procs, key=lambda x: x['cpu_percent'], reverse=True)[:15]
+    
+    # Sort by CPU usage first, then Memory usage
+    data["exe_processes"] = sorted(procs, key=lambda x: (x['cpu_percent'], x.get('memory_percent', 0)), reverse=True)[:20]
 
     return data
 
