@@ -121,7 +121,11 @@ def get_all_macs():
         pass
     return list(set(macs))
 
+# Global Process Cache to maintain state for CPU calculation
+process_cache = {}
+
 def get_hw_metrics():
+    global process_cache
     """Gather full system metrics (CPU, RAM, Disk, GPU, Network, Processes)"""
     data = {"timestamp": datetime.now().astimezone().isoformat()}
 
@@ -129,6 +133,7 @@ def get_hw_metrics():
     data["cpu_usage"] = psutil.cpu_percent(interval=None)
     data["cpu_cores"] = psutil.cpu_count()
     
+    # ... (Rest of RAM/Disk/GPU/Network code is fine) ...
     # RAM
     mem = psutil.virtual_memory()
     data["ram_usage"] = mem.percent
@@ -180,26 +185,58 @@ def get_hw_metrics():
             data["all_open_windows"] = [w.title for w in gw.getAllWindows() if w.title and w.visible]
         except: pass
 
-    # Top Processes (Sorted by CPU then Memory)
+    # Top Processes (Cached & Stable)
     procs = []
-    try:
-        # Fetch 'memory_percent' as well for better sorting
-        for p in psutil.process_iter(['pid', 'name', 'exe', 'cpu_percent', 'memory_percent']):
-            try:
-                # Filter: Include if using CPU OR significant Memory (> 0.1%)
-                # This ensures idle apps (like Calculator) don't disappear
-                if p.info['cpu_percent'] > 0 or (p.info['memory_percent'] or 0) > 0.1:
-                    procs.append({
-                        'pid': p.info['pid'],
-                        'name': p.info['name'],
-                        'cpu_percent': p.info['cpu_percent'] or 0, # Handle None
-                        'memory_percent': p.info['memory_percent'] or 0
-                    })
-            except: pass
-    except: pass
+    current_pids = set()
     
-    # Sort by CPU usage first, then Memory usage
-    data["exe_processes"] = sorted(procs, key=lambda x: (x['cpu_percent'], x.get('memory_percent', 0)), reverse=True)[:20]
+    try:
+        # Iterate over all running processes
+        for p in psutil.process_iter(['pid', 'name', 'exe', 'memory_percent']):
+            try:
+                pid = p.info['pid']
+                current_pids.add(pid)
+                
+                # Retrieve or initialize cached process object
+                if pid in process_cache:
+                    cached_p = process_cache[pid]
+                else:
+                    cached_p = p
+                    # First call always returns 0.0, we just init it here
+                    try: cached_p.cpu_percent(interval=None) 
+                    except: pass
+                    process_cache[pid] = cached_p
+                
+                # Get CPU percent (non-blocking) using the cached object
+                # This compares against the last call on this specific object instance
+                try:
+                    cpu_pct = cached_p.cpu_percent(interval=None)
+                except:
+                    cpu_pct = 0.0
+
+                mem_pct = p.info['memory_percent'] or 0
+                
+                # Filter: CPU > 0 OR Memory > 0.1% (Keep application alive in list)
+                if cpu_pct > 0 or mem_pct > 0.1:
+                    procs.append({
+                        'pid': pid,
+                        'name': p.info['name'],
+                        'cpu_percent': round(cpu_pct, 1),
+                        'memory_percent': round(mem_pct, 1)
+                    })
+            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                pass
+                
+    except Exception as e:
+        print(f"Process Error: {e}")
+
+    # Clean up cache (remove terminated processes)
+    # Using list(keys) to avoid runtime error during iteration
+    for pid in list(process_cache.keys()):
+        if pid not in current_pids:
+            del process_cache[pid]
+
+    # Sort: High CPU first, then High Memory
+    data["exe_processes"] = sorted(procs, key=lambda x: (x['cpu_percent'], x['memory_percent']), reverse=True)[:20]
 
     return data
 
