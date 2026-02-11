@@ -18,14 +18,40 @@ const ExamRoomView: React.FC<ExamRoomViewProps> = ({ user, exam, onExit }) => {
     const [session, setSession] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [roomName, setRoomName] = useState<string>('');
+    const [roomInfo, setRoomInfo] = useState<any>(null);
 
     useEffect(() => {
-        const fetchRoomName = async () => {
-            const name = await examService.fetchRoomName(exam.roomId);
-            setRoomName(name);
+        const fetchRoomData = async () => {
+            try {
+                // Fetch basic room info
+                const name = await examService.fetchRoomName(exam.roomId);
+                setRoomName(name);
+                
+                // Fetch full room details for calculating seat index
+                const { data: roomData } = await supabase
+                    .from('room_seat_layouts')
+                    .select('rows, columns')
+                    .eq('id', exam.roomId)
+                    .single();
+                
+                if (roomData) setRoomInfo(roomData);
+            } catch(e) { console.error(e); }
         };
-        fetchRoomName();
+        fetchRoomData();
     }, [exam.roomId]);
+
+    // Helper to calculate seat index (No. X) from Row-Col string
+    const getSeatIndex = (seatStr: string) => {
+        if (!seatStr || !roomInfo) return seatStr;
+        if (typeof seatStr === 'string' && seatStr.includes('-')) {
+            const [r, c] = seatStr.split('-').map(Number);
+            if (!isNaN(r) && !isNaN(c)) {
+                // Formula: (Row-1) * Cols + Col
+                return `No. ${(r - 1) * roomInfo.columns + c}`;
+            }
+        }
+        return seatStr; // Fallback
+    };
 
     useEffect(() => {
         const fetchSession = async () => {
@@ -153,7 +179,7 @@ const ExamRoomView: React.FC<ExamRoomViewProps> = ({ user, exam, onExit }) => {
                                             String(session?.seat_number || '').length > 2 ? 'text-6xl' : 
                                             String(session?.seat_number || '').length > 1 ? 'text-7xl' : 'text-8xl'
                                         }`}>
-                                            {session?.seat_number || '-'}
+                                            {getSeatIndex(session?.seat_number) || '-'}
                                         </div>
                                         <div className="flex items-center gap-2 text-sm text-gray-500 bg-gray-50 py-2 px-4 rounded-lg">
                                             <div className={`w-2 h-2 rounded-full ${session?.ip_address ? 'bg-green-500' : 'bg-red-500'}`}></div>
