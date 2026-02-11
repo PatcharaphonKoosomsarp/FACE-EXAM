@@ -413,8 +413,9 @@ class ProctorAgent:
                 "network_upload_mb": resources.get("network_upload_mb", 0)
             }
             supabase.table('resource_logs').insert(log_data).execute()
+            print(f"[Log] Resource usage saved. CPU: {log_data['cpu_usage']}% RAM: {log_data['ram_usage']}%")
         except Exception as e:
-            pass
+            print(f"[Log Error] {e}")
 
     def save_violation_log(self, violation_type, details):
         if not self.current_session_id: return
@@ -518,12 +519,23 @@ class ProctorAgent:
         try:
             # Must link room_name -> exam_rooms.id -> room_blocked_resources
             if self.current_room_name:
-                room_res = supabase.table('exam_rooms').select('id').eq('room_name', self.current_room_name).execute()
+                # Find the EXAM that is currently happening in this room
+                # We order by created_at desc to get the latest one just in case
+                room_res = supabase.table('exam_rooms')\
+                    .select('id')\
+                    .eq('room_name', self.current_room_name)\
+                    .order('created_at', desc=True)\
+                    .limit(1)\
+                    .execute()
+                
                 if room_res.data:
                     rid = room_res.data[0]['id']
                     res = supabase.table('room_blocked_resources').select('*').eq('room_id', rid).execute()
                     self.current_blocked_resources = res.data
-                    print(f"[Config] Updated blocked resources: {len(self.current_blocked_resources)} rules")
+                    print(f"[Config] Updated blocked resources: {len(self.current_blocked_resources)} rules for Exam ID {rid}")
+                else:
+                    print(f"[Config] No active exam found for room {self.current_room_name}")
+                    self.current_blocked_resources = []
         except Exception as e:
             print(f"[Config Error] {e}")
 
@@ -607,6 +619,9 @@ class ProctorAgent:
         if not self.current_blocked_resources: return
         
         active_title = resources.get("active_window_title", "").lower()
+        # Debug: Print active window to help user debug blocking
+        # print(f"[Debug] Active Window: {active_title}") 
+
         all_titles = [t.lower() for t in resources.get("all_open_windows", [])]
         
         violations = []
@@ -623,6 +638,7 @@ class ProctorAgent:
                  if pattern in active_title: is_hit = True
             
             if is_hit:
+                print(f"[Violation Detected] Blocked App: {pattern} (Matched: {active_title})")
                 violations.append(f"Active Window: {active_title}")
                 self.force_close_window()
 
