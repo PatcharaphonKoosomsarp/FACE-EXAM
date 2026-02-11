@@ -318,7 +318,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
   const sendViolationEmail = async (violation: any, studentName: string, examTitle: string) => {
       const teacherEmail = user.email || 'teacher@example.com';
-      const violationTime = new Date(violation.timestamp).toLocaleString();
+      const violationTime = new Date(violation.timestamp).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' });
 
       // Prepare email parameters (Must match variables in your EmailJS template)
       const templateParams = {
@@ -1173,7 +1173,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                                         </span>
                                                         <span className="text-sm text-gray-500 font-mono bg-white px-2 py-1 rounded border border-gray-200">
                                                             {/* Force Thai Time & Fix UTC conversion */}
-                                                            {new Date(log.timestamp.endsWith('Z') || log.timestamp.includes('+') ? log.timestamp : log.timestamp + 'Z').toLocaleTimeString('th-TH', { hour12: false })}
+                                                            {new Date(log.timestamp.endsWith('Z') || log.timestamp.includes('+') ? log.timestamp : log.timestamp + 'Z').toLocaleTimeString('th-TH', { hour12: false, timeZone: 'Asia/Bangkok' })}
                                                         </span>
                                                     </div>
                                                     <div className="text-gray-800 text-base mb-3 font-medium break-words leading-relaxed pl-2">
@@ -1320,7 +1320,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                   </div>
                                   
                                   <div className="text-right text-sm text-gray-400">
-                                      Last updated: {new Date(studentResourceData.timestamp.endsWith('Z') || studentResourceData.timestamp.includes('+') ? studentResourceData.timestamp : studentResourceData.timestamp + 'Z').toLocaleTimeString('th-TH', { hour12: false })}
+                                      Last updated: {new Date(studentResourceData.timestamp.endsWith('Z') || studentResourceData.timestamp.includes('+') ? studentResourceData.timestamp : studentResourceData.timestamp + 'Z').toLocaleTimeString('th-TH', { hour12: false, timeZone: 'Asia/Bangkok' })}
                                   </div>
                               </div>
                           ) : (
@@ -1583,7 +1583,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                             <div className="flex justify-between items-start">
                                                 <p className="text-sm font-bold text-gray-800 line-clamp-2 leading-tight" title={log.student_name}>{log.student_name}</p>
                                                 <span className="text-[10px] text-gray-500 bg-white px-1.5 py-0.5 rounded border border-gray-200 whitespace-nowrap ml-2 shrink-0">
-                                                    {new Date(log.timestamp.replace(/Z$|[+-]\d{2}:?\d{2}$/, '')).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                                    {new Date(log.timestamp.endsWith('Z') || log.timestamp.includes('+') ? log.timestamp : log.timestamp + 'Z').toLocaleTimeString('th-TH', { hour: '2-digit', minute:'2-digit', hour12: false, timeZone: 'Asia/Bangkok' })}
                                                 </span>
                                             </div>
                                             <p className="text-xs text-red-600 font-medium mt-0.5 flex items-center">
