@@ -1627,8 +1627,8 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         </div>
       )}
 
-      <header className="mb-8 mt-4">
-         <h1 className="text-3xl font-bold text-gray-800 mb-2">จัดการการสอบ (อาจารย์)</h1>
+      <header className="mb-8 mt-4 text-center">
+         <h1 className="text-3xl font-bold text-gray-800 mb-2">จัดการการสอบ</h1>
          <p className="text-gray-500">เลือกเมนูที่ต้องการทำรายการ</p>
       </header>
       
