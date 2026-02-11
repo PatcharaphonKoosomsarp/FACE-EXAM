@@ -87,7 +87,7 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user, exams, rooms,
     <div className="container mx-auto p-4 max-w-5xl">
             <header className="mb-8 flex justify-center items-center border-b pb-4">
                 <div className="text-center">
-                        <h1 className="text-3xl font-bold text-gray-800">แผงควบคุมนักศึกษา</h1>
+                        <h1 className="text-3xl font-bold text-gray-800">เมนูหลัก</h1>
                         <p className="text-gray-500">สวัสดี, {user.name}</p>
                 </div>
             </header>
