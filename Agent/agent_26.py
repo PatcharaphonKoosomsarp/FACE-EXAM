@@ -294,52 +294,59 @@ class ExamAgent:
 
     def check_existing_registration(self):
         """
-        Check if any of our MAC addresses are already bound to a seat.
-        If found, update the IP address to our current IP.
+        Smart Check using Supabase RPC `handle_smart_registration`
+        Returns True if registered/recovered, False otherwise
         """
         try:
-            # We must search manually because we have a list of MACs
-            # Note: A stored procedure would be better, but we'll do client-side filtering for compatibility
-            # Fetch all mappings (Warning: If DB is huge, this is bad, but for a school exam system it's fine)
-            response = supabase.table('room_seat_ip_mappings').select('*').execute()
+            print("[Auth] Contacting server for smart registration...")
+            # Call the Smart RPC function
+            # Note: supabase-py calls RPC via .rpc(name, params)
+            response = supabase.rpc('handle_smart_registration', {
+                'p_macs': self.macs,
+                'p_current_ip': self.ip
+            }).execute()
+
+            result = response.data
             
-            for row in response.data:
-                db_macs = row.get('current_macs', [])
-                if not db_macs: continue
+            if not result:
+                return False
+
+            status = result.get('status')
+            
+            if status in ['SUCCESS', 'RECOVERED']:
+                # Bind Identity from returned data
+                self.room_name = result.get('room_name')
+                self.seat_number = result.get('seat_number')
                 
-                # Check intersection between our MACs and DB MACs
-                common = set(self.macs) & set(db_macs)
-                if common:
-                    # MATCH FOUND!
-                    self.bind_identity(row)
-                    
-                    # Update IP if changed
-                    if row.get('ip_address') != self.ip:
-                        print(f"[Auth] Updating IP for Seat {row['seat_number']}: {row['ip_address']} -> {self.ip}")
-                        supabase.table('room_seat_ip_mappings').update({
-                            'ip_address': self.ip,
-                            'updated_at': datetime.now().astimezone().isoformat()
-                        }).eq('id', row['id']).execute()
-                    
-                    return True
-            return False
+                # Fetch detailed IDs for internal use
+                self.fetch_layout_details()
+                
+                print(f"[Auth] {status}! Connected to {self.room_name} - Seat {self.seat_number}")
+                return True
+            else:
+                return False
+
         except Exception as e:
-            print(f"[Error] Check registration failed: {e}")
+            print(f"[Error] Smart registration failed: {e}")
             return False
 
-    def bind_identity(self, row_data):
-        self.layout_id = row_data['layout_id']
-        self.seat_number = row_data['seat_number']
-        self.row_number = row_data['row_number']
-        self.col_number = row_data['column_number']
-        
-        # Fetch Room Name for display
+    def fetch_layout_details(self):
+        """Helper to get layout_id and other hidden fields after quick login"""
         try:
-            r = supabase.table('room_seat_layouts').select('room_name').eq('id', self.layout_id).single().execute()
+            # Get Layout ID
+            r = supabase.table('room_seat_layouts').select('id, rows, columns').eq('room_name', self.room_name).single().execute()
             if r.data:
-                self.room_name = r.data['room_name']
-        except:
-            self.room_name = "Unknown Room"
+                self.layout_id = r.data['id']
+                # Parse seat number back to row/col if needed
+                if self.seat_number and '-' in self.seat_number:
+                    parts = self.seat_number.split('-')
+                    self.row_number = int(parts[0])
+                    self.col_number = int(parts[1])
+        except: pass
+
+    def bind_identity(self, row_data):
+        # Legacy method kept for fallback compatibility, but mostly unused now
+        pass
 
     # ----------------------------------------
     # GUI Registration (Fallback)
@@ -404,30 +411,29 @@ class ExamAgent:
                 col_n = int(parts[1])
                 layout_id = room_map[r_name]
 
-                # Prepare Data
+                # Prepare Data - Send list of MACs properly as JSON array compatible list
                 new_mapping = {
                     "layout_id": layout_id,
                     "seat_number": s_num,
                     "row_number": row_n,
                     "column_number": col_n,
                     "ip_address": self.ip,
-                    "current_macs": self.macs, # IMPORTANT: Bind MACs here
+                    "current_macs": self.macs, # DB Trigger will pick this up for History Log
                     "updated_at": datetime.now().astimezone().isoformat()
                 }
 
                 # UPSERT based on unique conflict (layout_id, seat_number)
-                # Note: Requires constraint on DB. If fails, we might toggle strategy.
-                # Use upsert to handle overwritten seats
                 supabase.table('room_seat_ip_mappings').upsert(new_mapping, on_conflict='layout_id, seat_number').execute()
                 
                 messagebox.showinfo("สำเร็จ", "ลงทะเบียนเรียบร้อย!")
                 root.destroy()
                 
-                # Update Self & Start
-                self.bind_identity({**new_mapping, 'id': 'temp'}) # ID doesn't matter for local state
+                # Update Self Identity
                 self.room_name = r_name
+                self.seat_number = s_num
+                self.layout_id = layout_id
                 
-                # Use thread to avoid blocking GUI exit logic
+                # Start Loop
                 threading.Thread(target=self.run_monitoring_loop).start()
 
             except Exception as e:
@@ -466,6 +472,12 @@ class ExamAgent:
 
         while True:
             try:
+                # 0. Check Identity (Admin Unbind Check)
+                if not self.check_identity_validity():
+                    print("\n[Auth] Identity lost (Unbound by Admin). resetting...")
+                    self.reset_to_registration()
+                    return # Exit this loop thread
+
                 # 1. Check for Active Session
                 session = self.poll_active_session()
                 
@@ -494,6 +506,55 @@ class ExamAgent:
             except Exception as e:
                 print(f"[Loop Error] {e}")
                 time.sleep(5)
+
+    def check_identity_validity(self):
+        """Checks if we are still assigned to the seat in DB"""
+        if not self.layout_id or not self.seat_number: return False
+        try:
+            # Query the mapping for my seat
+            res = supabase.table('room_seat_ip_mappings')\
+                .select('current_macs')\
+                .eq('layout_id', self.layout_id)\
+                .eq('seat_number', self.seat_number)\
+                .single().execute()
+            
+            if res.data:
+                db_macs = res.data.get('current_macs', [])
+                # If DB macs is empty or I am not in it -> Unbound
+                if not db_macs: return False
+                
+                # Check intersection (Any of my MACs present?)
+                # Note: db_macs is list from JSONB
+                return bool(set(self.macs) & set(db_macs))
+            else:
+                return False # Seat row deleted?
+        except:
+            return True # Network error, assume valid to keep running
+            
+    def reset_to_registration(self):
+        """Stop monitoring and reopen GUI"""
+        self.current_session_id = None
+        self.layout_id = None
+        self.seat_number = None
+        self.room_name = None
+        
+        # Unhide Console if hidden (Optional, hard to do reliability without hWnd)
+        try:
+            hwnd = ctypes.windll.kernel32.GetConsoleWindow()
+            if hwnd != 0: ctypes.windll.user32.ShowWindow(hwnd, 5) # SW_SHOW
+        except: pass
+        
+        print("[System] Launching Registration GUI...")
+        # Must run GUI in main thread or safe way. 
+        # Since run_monitoring_loop is in a thread, we can just call show_registration_gui directly?
+        # Tkinter requires main thread usually. This is tricky.
+        # Ideally, we signal the main thread. But here we are simple.
+        # We will try to launch it here.
+        self.get_gui_in_thread()
+
+    def get_gui_in_thread(self):
+        # Wrapper to run GUI
+        self.show_registration_gui()
 
     def poll_active_session(self):
         try:
