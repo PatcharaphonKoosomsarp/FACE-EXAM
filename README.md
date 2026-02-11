@@ -40,16 +40,16 @@
 
 ```mermaid
 graph TD
-    subgraph Student PC
-        A[Agent V2.0 (Python)] -->|UUID/Mac Address| B{Process Monitor}
-        B -->|Block List Check| C(Auto-Kill)
-        A -->|Flask API :5001| D[Exam Web Page (React)]
+    subgraph Student_PC ["Student PC"]
+        A["Agent V2.0 (Python)"] -->|UUID/Mac Address| B{"Process Monitor"}
+        B -->|Block List Check| C("Auto-Kill")
+        A -->|Flask API :5001| D["Exam Web Page (React)"]
     end
     
-    subgraph Cloud Infrastructure
-        A -->|RPC: handle_smart_registration| E[(Supabase DB)]
+    subgraph Cloud_Infrastructure ["Cloud Infrastructure"]
+        A -->|RPC: handle_smart_registration| E[("Supabase DB")]
         A -->|Resources Log| E
-        F[Teacher Dashboard] <-->|Real-time Subscribe| E
+        F["Teacher Dashboard"] <-->|Real-time Subscribe| E
         E -->|Trigger Logic| E
     end
 ```
