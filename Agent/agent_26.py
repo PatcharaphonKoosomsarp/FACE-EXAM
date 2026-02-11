@@ -136,6 +136,31 @@ class ProctorAgent:
         api_thread.start()
         print("[System] Local API Server started on port 5001")
 
+    def manual_binding_update(self):
+        """Update binding based on MAC (Backup logic for robustness)"""
+        print("[System] Checking IP bindings...")
+        try:
+            # 1. Update existing binding for any known MAC to current IP
+            for mac in self.macs:
+                try:
+                    res = supabase.table('room_seat_ip_mappings').select('*').eq('mac_address', mac).execute()
+                    if res.data:
+                        # Found binding for this MAC, update IP
+                        for row in res.data:
+                            if row['ip_address'] != self.ip:
+                                supabase.table('room_seat_ip_mappings').update({
+                                    'ip_address': self.ip,
+                                    'updated_at': datetime.now().isoformat()
+                                }).eq('id', row['id']).execute()
+                                print(f"[System] Updated existing binding for MAC {mac} -> New IP {self.ip}")
+                            else:
+                                print(f"[System] Binding verified for MAC {mac} (IP: {self.ip})")
+                except Exception as e:
+                    pass
+
+        except Exception as e:
+            print(f"[System] Manual binding update failed: {e}")
+
     def auto_setup_dependencies(self):
         """
         Auto-check and install required libraries (from backup)
@@ -181,9 +206,15 @@ class ProctorAgent:
     def start(self):
         """Entry point"""
         self.auto_setup_dependencies() 
+        print(f"[Agent] Starting on IP: {self.ip}")
+        print(f"[Agent] MAC Addresses: {self.macs}")
+
+        # 1. Try Manual Binding Update (Like Backup) - reliable fallback if RPC fails logic
+        self.manual_binding_update()
+
         print("[Agent] Checking Smart Registration...")
         try:
-            # Call the Supabase RPC function for Smart Registration
+            # 2. Call RPC for logic (creation/lookup)
             response = supabase.rpc('handle_smart_registration', {
                 'p_macs': self.macs,
                 'p_current_ip': self.ip
@@ -373,9 +404,9 @@ class ProctorAgent:
             # Find session that is ongoing
             # Change: Query 'layout_id' and 'is_active' instead of 'room_id' and 'status'
             res = supabase.table('exam_student_sessions')\
-                .select('id, student_email, student_name')\
+                .select('id, student_email, student_name, seat_number')\
                 .eq('layout_id', self.current_layout_id)\
-                .eq('seat_number', self.current_seat)\
+                .eq('seat_number', str(self.current_seat))\
                 .eq('is_active', True)\
                 .order('created_at', desc=True)\
                 .limit(1)\
@@ -386,6 +417,8 @@ class ProctorAgent:
                 if self.current_session_id != sess['id']:
                     print(f"[Session] Found new session: {sess['student_name']} ({sess['id']})")
                     self.current_session_id = sess['id']
+                    # Backup logic: Log explicit start message
+                    self.log_start_message(sess)
             else:
                 if self.current_session_id:
                     print("[Session] Session ended or no active session.")
@@ -393,6 +426,18 @@ class ProctorAgent:
                     
         except Exception as e:
             print(f"[Session Check Error] {e}")
+
+    def log_start_message(self, sess):
+        try:
+             msg = f"Session Started - {sess.get('student_name')} ({sess.get('student_email')}) - Seat {sess.get('seat_number')} - IP {self.ip}"
+             data = {
+                "session_id": sess['id'],
+                "timestamp": datetime.now().isoformat(),
+                "active_window_title": msg,
+                "cpu_usage": 0, "ram_usage": 0
+             }
+             supabase.table('resource_logs').insert(data).execute()
+        except: pass
 
     def save_resource_log(self, resources):
         if not self.current_session_id: return
