@@ -366,15 +366,17 @@ class ProctorAgent:
     # === Session & Logging ===
     def check_active_session(self):
         """Find active session for this seat"""
-        if not self.current_room_id or not self.current_seat: return
+        # Change: Check layout_id instead of room_id (DB schema match)
+        if not self.current_layout_id or not self.current_seat: return
 
         try:
             # Find session that is ongoing
+            # Change: Query 'layout_id' and 'is_active' instead of 'room_id' and 'status'
             res = supabase.table('exam_student_sessions')\
                 .select('id, student_email, student_name')\
-                .eq('room_id', self.current_room_id)\
+                .eq('layout_id', self.current_layout_id)\
                 .eq('seat_number', self.current_seat)\
-                .eq('status', 'ongoing')\
+                .eq('is_active', True)\
                 .order('created_at', desc=True)\
                 .limit(1)\
                 .execute()
