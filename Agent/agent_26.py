@@ -300,35 +300,77 @@ class ExamAgent:
         try:
             print("[Auth] Contacting server for smart registration...")
             # Call the Smart RPC function
-            # Note: supabase-py calls RPC via .rpc(name, params)
             response = supabase.rpc('handle_smart_registration', {
                 'p_macs': self.macs,
                 'p_current_ip': self.ip
             }).execute()
 
             result = response.data
-            
-            if not result:
-                return False
-
-            status = result.get('status')
-            
-            if status in ['SUCCESS', 'RECOVERED']:
-                # Bind Identity from returned data
-                self.room_name = result.get('room_name')
-                self.seat_number = result.get('seat_number')
-                
-                # Fetch detailed IDs for internal use
-                self.fetch_layout_details()
-                
-                print(f"[Auth] {status}! Connected to {self.room_name} - Seat {self.seat_number}")
-                return True
-            else:
-                return False
+            return self._handle_reg_result(result)
 
         except Exception as e:
-            print(f"[Error] Smart registration failed: {e}")
+            # FIX: Handle Postgrest/Supabase "200 OK" Validation Errors
+            # The library can throw an error even when the RPC returns valid JSON, especially with code 200
+            
+            json_data = None
+            err_str = str(e)
+            
+            # Strategy 1: Check Object Attributes (if it's a real APIError object)
+            if hasattr(e, 'details') and e.details:
+                raw_details = str(e.details) # might be "b'{...}'"
+                # Strip python bytes notation if present in string
+                if raw_details.startswith("b'") and raw_details.endswith("'"):
+                     raw_details = raw_details[2:-1]
+                try: 
+                    json_data = json.loads(raw_details)
+                except: pass
+            
+            # Strategy 2: Regex extraction from string representation (Backup)
+            if not json_data:
+                import re
+                # Find JSON specifically starting with "status" inside the messed up string
+                # Looks for: {"status" ... } inside the 'details': 'b\'...\''
+                # We match the inner braces
+                match = re.search(r'({[^{]*?"status"[^}]*?})', err_str)
+                if match:
+                    try:
+                        clean_json = match.group(1).replace("\\'", "'").replace('\\"', '"') 
+                        # The string might have double escaped quotes from the exception repr
+                        # Let's try raw load first, if fail, try manual key check
+                        json_data = json.loads(clean_json)
+                    except:
+                        # Manual Fallback for specific known statuses
+                        if '"status" : "NOT_FOUND"' in match.group(1): 
+                            json_data = {"status": "NOT_FOUND"}
+                        elif '"status" : "SUCCESS"' in match.group(1):
+                            # Harder to parse, but let's try
+                            pass
+
+            if json_data:
+                 return self._handle_reg_result(json_data)
+
+            print(f"[Smart Auth Error] Could not parse response: {e}")
             return False
+
+    def _handle_reg_result(self, result):
+        if not result: return False
+        status = result.get('status')
+        
+        if status == 'NOT_FOUND':
+            # Explicitly return False so GUI opens
+            return False
+            
+        if status in ['SUCCESS', 'RECOVERED']:
+            # Bind Identity from returned data
+            self.room_name = result.get('room_name')
+            self.seat_number = result.get('seat_number')
+            
+            # Fetch detailed IDs for internal use
+            self.fetch_layout_details()
+            
+            print(f"[Auth] {status}! Connected to {self.room_name} - Seat {self.seat_number}")
+            return True
+        return False
 
     def fetch_layout_details(self):
         """Helper to get layout_id and other hidden fields after quick login"""

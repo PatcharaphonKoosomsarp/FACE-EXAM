@@ -289,11 +289,11 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
               // Check online status (Heartbeat check)
               const sessionIds = data.map(s => s.id);
               if (sessionIds.length > 0) {
-                  // Check for logs in the last 30 seconds
+                  // Check for logs in the last 60 seconds (Increased threshold to reduce false offline)
                   // Fix: Use standard UTC ISO string for comparison. 
                   // Supabase handles timestamptz correctly with UTC.
-                  const thirtySecondsAgoDate = new Date(Date.now() - 30000);
-                  const isoTime = thirtySecondsAgoDate.toISOString();
+                  const oneMinuteAgoDate = new Date(Date.now() - 60000);
+                  const isoTime = oneMinuteAgoDate.toISOString();
                   
                   const { data: logs } = await supabase
                       .from('resource_logs')
