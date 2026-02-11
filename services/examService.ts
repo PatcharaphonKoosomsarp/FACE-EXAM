@@ -115,7 +115,8 @@ export const examService = {
   },
 
   async updateIpMapping(roomId: string, row: number, col: number, ip: string, roomCols: number): Promise<void> {
-      const seatNumber = ((row - 1) * roomCols) + col;
+      // Changed to use Row-Col format to match Agent's behavior (e.g. "1-1")
+      const seatNumber = `${row}-${col}`;
 
       // Check if mapping exists
       const { data: existing } = await supabase

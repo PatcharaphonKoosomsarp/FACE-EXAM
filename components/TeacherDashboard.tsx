@@ -509,8 +509,8 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         if (fetchedSeatNumber) {
             setCurrentSeatNumber(fetchedSeatNumber.toString());
         } else {
-            // Fallback to calculated seat number if not found in DB
-            setCurrentSeatNumber(seatNumber.toString());
+            // Updated to use Row-Col format by default
+            setCurrentSeatNumber(`${row}-${col}`);
         }
 
         // Try to find active student session first
