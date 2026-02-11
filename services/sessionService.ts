@@ -5,7 +5,7 @@ export const sessionService = {
   async registerSession(
       roomId: string,
       user: User,
-      seatNumber: number,
+      seatNumber: number | string,
       ip: string,
       descriptorStr: string
   ): Promise<void> {
@@ -68,9 +68,21 @@ export const sessionService = {
               let col = 0;
               
               if (room && s.seat_number) {
-                  row = Math.ceil(s.seat_number / room.cols);
-                  col = s.seat_number % room.cols;
-                  if (col === 0) col = room.cols;
+                  // Handle "Row-Col" string format (e.g., "3-1")
+                  if (typeof s.seat_number === 'string' && s.seat_number.includes('-')) {
+                      const parts = s.seat_number.split('-');
+                      if (parts.length >= 2) {
+                          row = parseInt(parts[0]);
+                          col = parseInt(parts[1]);
+                      }
+                  } 
+                  // Handle Numeric format (Standard Index)
+                  else if (!isNaN(Number(s.seat_number))) {
+                      const seatNum = Number(s.seat_number);
+                      row = Math.ceil(seatNum / room.cols);
+                      col = seatNum % room.cols;
+                      if (col === 0) col = room.cols;
+                  }
               }
 
               return {

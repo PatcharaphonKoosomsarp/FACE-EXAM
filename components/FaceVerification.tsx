@@ -56,7 +56,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
             setStatus('SUCCESS');
             
             // Calculate Seat (Reuse logic from handleSuccess)
-            let seatNumber = 0;
+            let seatNumber: number | string = 0;
             try {
                 const { data: mapping } = await supabase
                     .from('room_seat_ip_mappings')
@@ -186,7 +186,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
         };
     }, [method, exam.id, user.id]); // Removed handleMobileSuccess from deps
 
-    const createSession = async (ip: string, seatNumber: number, descriptorStr: string) => {
+    const createSession = async (ip: string, seatNumber: number | string, descriptorStr: string) => {
         try {
             await sessionService.registerSession(exam.roomId, user, seatNumber, ip, descriptorStr);
         } catch (error) {
