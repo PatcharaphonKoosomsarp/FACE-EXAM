@@ -412,7 +412,6 @@ class ExamAgent:
                     "column_number": col_n,
                     "ip_address": self.ip,
                     "current_macs": self.macs, # IMPORTANT: Bind MACs here
-                    "is_active": True,
                     "updated_at": datetime.now().astimezone().isoformat()
                 }
 
