@@ -562,7 +562,8 @@ class ExamAgent:
                         print("\n[Session ENDED]")
                         self.current_session_id = None
                 
-                time.sleep(2)
+                # OPTIMIZATION: Check status every 5 seconds to prevent UI flickering from PyGetWindow polling
+                time.sleep(5)
                 
             except Exception as e:
                 print(f"[Loop Error] {e}")
