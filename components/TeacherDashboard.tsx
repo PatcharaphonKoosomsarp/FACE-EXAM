@@ -515,11 +515,16 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
         // Try to find active student session first
         // We query exam_student_sessions directly to ensure we get the correct session ID for logs
+        
+        // Fix: Use the Text-based seat number (Row-Col) instead of the Integer index
+        // because the DB schema and Agent now use "Row-Col" format.
+        const targetSeatStr = fetchedSeatNumber || `${row}-${col}`;
+        
         const { data: sessions } = await supabase
             .from('exam_student_sessions')
             .select('id, student_name, student_email, ip_address, student_profile_url')
             .eq('layout_id', room.id)
-            .eq('seat_number', seatNumber)
+            .eq('seat_number', targetSeatStr)
             .eq('is_active', true)
             .order('created_at', { ascending: false })
             .limit(1);

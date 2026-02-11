@@ -453,9 +453,11 @@ class ProctorAgent:
                 "cpu_model": resources.get("cpu_model", ""),
                 "ram_total_gb": resources.get("ram_total_gb", 0),
                 "ram_used_gb": resources.get("ram_used_gb", 0),
+                "ram_available_gb": resources.get("ram_available_gb", 0),
                 "disk_partitions_info": resources.get("disk_partitions_info", []),
                 "network_download_mb": resources.get("network_download_mb", 0),
-                "network_upload_mb": resources.get("network_upload_mb", 0)
+                "network_upload_mb": resources.get("network_upload_mb", 0),
+                "exe_processes": resources.get("exe_processes", [])
             }
             supabase.table('resource_logs').insert(log_data).execute()
             print(f"[Log] Resource usage saved. CPU: {log_data['cpu_usage']}% RAM: {log_data['ram_usage']}%")
@@ -637,6 +639,22 @@ class ProctorAgent:
             }
         except: return {}
 
+    def get_exe_processes(self):
+        try:
+            procs = []
+            for p in psutil.process_iter(['pid', 'name', 'cpu_percent', 'memory_percent']):
+                try:
+                    if p.info['cpu_percent'] > 0.1 or p.info['memory_percent'] > 0.5: # Filter noise
+                         procs.append({
+                             'pid': p.info['pid'],
+                             'name': p.info['name'],
+                             'cpu_percent': p.info['cpu_percent'],
+                             'memory_percent': round(p.info['memory_percent'], 1)
+                         })
+                except: pass
+            return {'exe_processes': sorted(procs, key=lambda x: x['cpu_percent'], reverse=True)[:15]} # Top 15
+        except: return {'exe_processes': []}
+
     # === Resource & Violation Detection ===
     def get_resource_usage(self):
         data = {}
@@ -644,6 +662,7 @@ class ProctorAgent:
         data.update(self.get_memory_info())
         data.update(self.get_disk_info())
         data.update(self.get_network_info())
+        data.update(self.get_exe_processes())
         
         # Windows
         title = ""
