@@ -1431,14 +1431,15 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                                 {Array.from({ length: room.rows * room.cols }).map((_, i) => {
                                     const row = Math.floor(i / room.cols) + 1;
                                     const col = (i % room.cols) + 1;
-                                    const seatKey = `${row}-${col}`;
+                                    const seatKey = `${row}-${col}`; // "Row-Col" format (e.g., "3-1")
                                     const assignedIp = room.ipMapping?.[seatKey];
                                     const isConfigured = !!assignedIp;
-                                    const seatNum = (row - 1) * room.cols + col;
+                                    // const seatNum = (row - 1) * room.cols + col; // Deprecated: Integer format
 
                                     // Check for active violation (within last 1 minute)
                                     const hasActiveViolation = recentViolations.some(v => {
-                                        if (v.seat_number !== seatNum) return false;
+                                        // Match by seatKey string ("3-1")
+                                        if (v.seat_number !== seatKey) return false;
                                         const triggerTime = v.clientTimestamp;
                                         if (!triggerTime) return false;
                                         return (currentTime - triggerTime) < 60000; // 1 minute from detection
@@ -1452,7 +1453,8 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
                                     // Fallback to realtime sessions if not found in activeStudents
                                     if (!student) {
-                                        const session = realtimeSessions.find(s => s.seat_number === seatNum);
+                                        // Fix: Match against seatKey ("3-1") instead of integer seatNum
+                                        const session = realtimeSessions.find(s => s.seat_number === seatKey);
                                         if (session) {
                                             const isOnline = onlineSessionIds.has(session.id);
                                             student = {
