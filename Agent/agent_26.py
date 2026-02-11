@@ -84,6 +84,9 @@ except ImportError:
 SUPABASE_URL = 'https://degptapfdldfvqzzdzcm.supabase.co'
 SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRlZ3B0YXBmZGxkZnZxenpkemNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzODQxODcsImV4cCI6MjA2OTk2MDE4N30.4WuPEggkHpLZT9ZSYvKHImQtcSzfUDpddGsB3M__HG0'
 
+# Configuration
+RUN_IN_BACKGROUND = True  # Set to True to hide the console window automatically
+
 # Connectivity
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 app = Flask(__name__)
@@ -441,10 +444,27 @@ class ExamAgent:
     # ----------------------------------------
     # Monitoring Loop
     # ----------------------------------------
+    def hide_console(self):
+        """Hides the console window if configured to run in background."""
+        if RUN_IN_BACKGROUND:
+            print("[Agent] Background Mode Enabled. Hiding console in 3 seconds...")
+            # We use a timer to let the user read the message
+            def _hide():
+                time.sleep(3)
+                try:
+                    hwnd = ctypes.windll.kernel32.GetConsoleWindow()
+                    if hwnd != 0:
+                        ctypes.windll.user32.ShowWindow(hwnd, 0) # SW_HIDE
+                except: pass
+            threading.Thread(target=_hide, daemon=True).start()
+
     def run_monitoring_loop(self):
         print(f"\n[Agent] READY - Monitoring Room: {self.room_name} | Seat: {self.seat_number}")
         print("[Agent] Waiting for Exam Session...")
         
+        # Try to hide console now that we are running
+        self.hide_console()
+
         while True:
             try:
                 # 1. Check for Active Session
