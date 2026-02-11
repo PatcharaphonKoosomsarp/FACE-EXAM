@@ -1044,7 +1044,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                           <div>
                               <h3 className="font-bold text-lg flex items-center gap-2">
                                 Seat {row}-{col}
-                                {currentSeatNumber && <span className="text-orange-400 bg-white/10 px-2 py-0.5 rounded text-sm">No. {currentSeatNumber}</span>}
+                                {viewingSeat !== null && <span className="text-orange-400 bg-white/10 px-2 py-0.5 rounded text-sm">No. {viewingSeat + 1}</span>}
                               </h3>
                               <p className="text-xs text-gray-400">Resource & Connection Status (v1.1)</p>
                           </div>
