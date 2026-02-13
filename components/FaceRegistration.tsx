@@ -875,7 +875,7 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
                 <span className="text-xs text-gray-500 mt-1">เปิดกล้องผ่านมือถือ</span>
             </button>
           </div>
-          <button onClick={onCancel} className="mt-8 text-gray-500 hover:text-gray-800 underline text-sm transition">ยกเลิกการลงทะเบียน</button>
+          <button onClick={onCancel} className="mt-8 text-gray-500 hover:text-gray-800 underline text-sm transition">ย้อนกลับ</button>
         </div>
       </div>
     );
@@ -1062,7 +1062,7 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
                 ))}
             </div>
             <button onClick={onCancel} className="mt-8 w-full py-3 text-gray-500 text-sm border border-gray-200 bg-white rounded-xl hover:bg-gray-50 hover:text-red-500 font-medium transition shadow-sm">
-                ยกเลิก
+                ย้อนกลับ
             </button>
         </div>
       </div>

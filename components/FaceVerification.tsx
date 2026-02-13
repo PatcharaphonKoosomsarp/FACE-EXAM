@@ -676,7 +676,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                             <span className="text-xs text-gray-500 mt-1">เปิดกล้องผ่านมือถือ</span>
                         </button>
                     </div>
-                    <button onClick={onCancel} className="mt-8 text-gray-500 hover:text-gray-800 underline text-sm transition">ยกเลิก</button>
+                    <button onClick={onCancel} className="mt-8 text-gray-500 hover:text-gray-800 underline text-sm transition">ย้อนกลับ</button>
                 </div>
             </div>
         );
@@ -868,7 +868,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                                     onClick={onCancel} 
                                     className="flex-1 bg-gray-700 text-white px-4 py-2.5 rounded-lg font-medium hover:bg-gray-600 transition"
                                 >
-                                    ยกเลิก
+                                    ย้อนกลับ
                                 </button>
                                 <button 
                                     onClick={() => window.location.reload()} 
