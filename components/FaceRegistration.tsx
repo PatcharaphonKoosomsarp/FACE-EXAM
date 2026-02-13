@@ -56,6 +56,7 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
   const [distanceRatio, setDistanceRatio] = useState<number>(0);
     const [qualityWarning, setQualityWarning] = useState<string | null>(null);
     const [qualityModelReady, setQualityModelReady] = useState(false);
+        const captureFrameRef = useRef<{ width: number; height: number } | null>(null);
     const qualityStateRef = useRef({
             isValid: false,
             score: 0,
@@ -104,19 +105,41 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
       if (!videoRef.current) return;
       
       const video = videoRef.current;
+      const captureFrame = captureFrameRef.current;
+      const sourceWidth = video.videoWidth || captureFrame?.width || 640;
+      const sourceHeight = video.videoHeight || captureFrame?.height || 480;
+
+      // Orientation lock: when browser reports transposed video dimensions,
+      // align capture canvas orientation with real track settings.
+      let canvasWidth = sourceWidth;
+      let canvasHeight = sourceHeight;
+      if (captureFrame) {
+          const streamLandscape = captureFrame.width >= captureFrame.height;
+          const frameLandscape = sourceWidth >= sourceHeight;
+          if (streamLandscape !== frameLandscape) {
+              canvasWidth = sourceHeight;
+              canvasHeight = sourceWidth;
+          }
+      }
+
       const canvas = document.createElement('canvas');
-      const sourceWidth = video.videoWidth || 640;
-      const sourceHeight = video.videoHeight || 480;
-      canvas.width = sourceWidth;
-      canvas.height = sourceHeight;
+      canvas.width = canvasWidth;
+      canvas.height = canvasHeight;
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
 
       // 1. Draw Mirrored Video (Flip Horizontal) to match user view
       ctx.save();
-      ctx.translate(canvas.width, 0);
-      ctx.scale(-1, 1);
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      if (canvasWidth === sourceWidth && canvasHeight === sourceHeight) {
+          ctx.translate(canvas.width, 0);
+          ctx.scale(-1, 1);
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      } else {
+          ctx.translate(canvas.width / 2, canvas.height / 2);
+          ctx.rotate(Math.PI / 2);
+          ctx.scale(-1, 1);
+          ctx.drawImage(video, -sourceWidth / 2, -sourceHeight / 2, sourceWidth, sourceHeight);
+      }
       ctx.restore();
 
       // Crop logic if landmarks exist
@@ -589,6 +612,16 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
                                 height: isMobileRegistration && window.innerHeight > window.innerWidth ? 640 : 480
               });
               await camera.start();
+
+              if (videoRef.current?.srcObject) {
+                  const stream = videoRef.current.srcObject as MediaStream;
+                  const track = stream.getVideoTracks()[0];
+                  const settings = track?.getSettings?.();
+                  if (settings?.width && settings?.height) {
+                      captureFrameRef.current = { width: settings.width, height: settings.height };
+                  }
+              }
+
               setIsCapturing(true);
           }
 
