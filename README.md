@@ -108,6 +108,10 @@ Agent รุ่นใหม่ต้องใช้ Store Procedure (RPC) ใน
 > ทางเลือกแนะนำ (ครั้งเดียวจบ):
 > รันไฟล์ `diagram_now/qr_auth_bootstrap.sql` แทนข้อ 4-5 เพื่อสร้างทั้ง migration + maintenance + ตัวอย่าง scheduler ในสคริปต์เดียว
 
+6. ตรวจผลหลังรันด้วยไฟล์ `diagram_now/qr_auth_verify_checklist.sql`
+  - ได้รายงาน `PASS / WARN / FAIL` สำหรับ column, index, function, permission และ pg_cron job
+  - ใช้ยืนยันความครบถ้วนก่อนใช้งานจริงหรือก่อน deploy
+
 ### 2. Frontend Setup
 ```bash
 # ติดตั้ง Dependencies
