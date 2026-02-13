@@ -9,6 +9,11 @@ import { supabase } from '../supabaseClient';
 import { authService } from '../services/authService';
 import { storageService } from '../services/storageService';
 
+declare const faceapi: any;
+
+const QUALITY_MIN_DETECTION_SCORE = 0.9;
+const QUALITY_MIN_FACE_WIDTH = 150;
+
 const stepsData: FaceRegistrationStep[] = [
   { id: '1', instruction: 'หน้าตรง', description: 'มองตรงไปที่กล้อง', isCompleted: false },
   { id: '2', instruction: 'หลับตา-ลืมตา', description: 'หลับตาลงช้าๆ แล้วลืมตา', isCompleted: false },
@@ -44,6 +49,14 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
   const [capturedPhotos, setCapturedPhotos] = useState<any[]>([]);
   const [feedback, setFeedback] = useState<string>('กำลังเตรียมกล้อง...');
   const [distanceRatio, setDistanceRatio] = useState<number>(0);
+    const [qualityWarning, setQualityWarning] = useState<string | null>(null);
+    const [qualityModelReady, setQualityModelReady] = useState(false);
+    const qualityStateRef = useRef({
+            isValid: false,
+            score: 0,
+            faceWidth: 0,
+            warning: 'Face not clear'
+    });
   
   // Internal Logic State
   const internalState = useRef({
@@ -164,6 +177,12 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
       if (!results.multiFaceLandmarks || results.multiFaceLandmarks.length === 0) {
           setFeedback("ไม่พบใบหน้า");
           setDistanceRatio(0);
+          return;
+      }
+
+      if (!qualityStateRef.current.isValid) {
+          internalState.current.holdStartTime = 0;
+          setFeedback(qualityStateRef.current.warning || "Face not clear");
           return;
       }
 
@@ -313,6 +332,76 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
       }
 
   }, [capturePhoto]);
+
+    useEffect(() => {
+        if (method !== 'WEBCAM') return;
+
+        let isMounted = true;
+        const loadQualityModel = async () => {
+            try {
+                const MODEL_URL = '/models';
+                await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+                if (isMounted) setQualityModelReady(true);
+            } catch (error) {
+                console.warn('Quality model load failed:', error);
+            }
+        };
+
+        loadQualityModel();
+        return () => {
+            isMounted = false;
+        };
+    }, [method]);
+
+    useEffect(() => {
+        if (method !== 'WEBCAM' || !isCapturing || !qualityModelReady || !videoRef.current) return;
+
+        let isMounted = true;
+        let isChecking = false;
+
+        const qualityCheckLoop = async () => {
+            if (!isMounted || isChecking || !videoRef.current) return;
+            isChecking = true;
+
+            try {
+                const detection = await faceapi
+                    .detectSingleFace(videoRef.current, new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.5 }));
+
+                if (!isMounted) return;
+
+                if (!detection) {
+                    qualityStateRef.current = { isValid: false, score: 0, faceWidth: 0, warning: 'Face not clear' };
+                    setQualityWarning('Face not clear');
+                    return;
+                }
+
+                const score = detection.score || 0;
+                const faceWidth = detection.box?.width || 0;
+
+                if (score < QUALITY_MIN_DETECTION_SCORE) {
+                    qualityStateRef.current = { isValid: false, score, faceWidth, warning: 'Face not clear' };
+                    setQualityWarning('Face not clear');
+                } else if (faceWidth < QUALITY_MIN_FACE_WIDTH) {
+                    qualityStateRef.current = { isValid: false, score, faceWidth, warning: 'Please move closer' };
+                    setQualityWarning('Please move closer');
+                } else {
+                    qualityStateRef.current = { isValid: true, score, faceWidth, warning: '' };
+                    setQualityWarning(null);
+                }
+            } catch (error) {
+                qualityStateRef.current = { isValid: false, score: 0, faceWidth: 0, warning: 'Face not clear' };
+                setQualityWarning('Face not clear');
+            } finally {
+                isChecking = false;
+            }
+        };
+
+        const interval = setInterval(qualityCheckLoop, 250);
+        return () => {
+            isMounted = false;
+            clearInterval(interval);
+        };
+    }, [method, isCapturing, qualityModelReady]);
 
   const completeUIStep = (index: number) => {
       setSteps(prev => {
@@ -802,6 +891,12 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
                     <div className="bg-black/70 text-white px-6 py-2 rounded-full text-lg font-semibold backdrop-blur-sm border border-white/10 whitespace-nowrap shadow-lg">
                         {feedback}
                     </div>
+
+                    {qualityWarning && (
+                        <div className="bg-red-500/80 text-white px-4 py-1.5 rounded-full text-sm font-semibold border border-red-300/50 shadow-lg animate-pulse">
+                            {qualityWarning}
+                        </div>
+                    )}
 
                     {/* Distance Meter */}
                     {distanceRatio > 0 && (

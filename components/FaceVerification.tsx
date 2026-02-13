@@ -17,6 +17,32 @@ interface FaceVerificationProps {
     onCancel: () => void;
 }
 
+const VERY_MATCH_DISTANCE = 0.35;
+const MATCH_DISTANCE = 0.40;
+const PENALTY_DISTANCE = 0.50;
+const CONFIDENCE_TARGET = 100;
+const MIN_DETECTION_SCORE = 0.9;
+const MIN_CONSECUTIVE_MATCH = 3;
+
+const buildMeanDescriptor = (descriptors: Float32Array[]) => {
+    if (!descriptors.length) return null;
+
+    const dimension = descriptors[0].length;
+    const mean = new Float32Array(dimension);
+
+    for (const descriptor of descriptors) {
+        for (let index = 0; index < dimension; index++) {
+            mean[index] += descriptor[index];
+        }
+    }
+
+    for (let index = 0; index < dimension; index++) {
+        mean[index] = mean[index] / descriptors.length;
+    }
+
+    return mean;
+};
+
 const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerified, onCancel }) => {
     const videoRef = useRef<HTMLVideoElement>(null);
     const [method, setMethod] = useState<'WEBCAM' | 'QR' | null>(null);
@@ -25,11 +51,14 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [errorType, setErrorType] = useState<'PERMISSION' | 'NOT_FOUND' | 'IN_USE' | 'GENERIC' | null>(null);
     const [modelsLoaded, setModelsLoaded] = useState(false);
-    const [labeledDescriptors, setLabeledDescriptors] = useState<any[]>([]);
-    const [faceMatcher, setFaceMatcher] = useState<any | null>(null);
     const [detectedSeat, setDetectedSeat] = useState<number | null>(null);
     const [currentDistance, setCurrentDistance] = useState<number | null>(null);
+    const [confidenceScore, setConfidenceScore] = useState(0);
+    const [scanHint, setScanHint] = useState('มองตรงไปที่กล้อง');
     const isVerifyingRef = useRef(false);
+    const meanDescriptorRef = useRef<Float32Array | null>(null);
+    const confidenceScoreRef = useRef(0);
+    const consecutiveMatchRef = useRef(0);
 
     const handleMobileSuccess = useCallback(async (mobileIp: string) => {
         if (isVerifyingRef.current) return;
@@ -339,11 +368,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                 }
 
                 console.log(`Computed ${descriptors.length} reference descriptors`);
-                const labeledDescriptor = new faceapi.LabeledFaceDescriptors(user.id, descriptors);
-                setLabeledDescriptors([labeledDescriptor]);
-                // Use high threshold (2.0) to ensure we get distance feedback even if not yet verified
-                // The actual verification check is done manually with < 0.45
-                setFaceMatcher(new faceapi.FaceMatcher([labeledDescriptor], 2.0));
+                meanDescriptorRef.current = buildMeanDescriptor(descriptors);
                 setStatus('SCANNING');
                 startCamera();
 
@@ -356,6 +381,14 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
 
         loadUserDescriptors();
     }, [method, modelsLoaded, user.id]);
+
+    useEffect(() => {
+        if (method !== 'WEBCAM' || status !== 'SCANNING') return;
+        confidenceScoreRef.current = 0;
+        consecutiveMatchRef.current = 0;
+        setConfidenceScore(0);
+        setScanHint('มองตรงไปที่กล้อง');
+    }, [method, status]);
 
     const startCamera = useCallback(async () => {
         setErrorMessage(null);
@@ -399,7 +432,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
         let interval: NodeJS.Timeout;
 
         const detect = async () => {
-            if (status !== 'SCANNING' || !videoRef.current || !faceMatcher) return;
+            if (status !== 'SCANNING' || !videoRef.current || !meanDescriptorRef.current) return;
 
             if (videoRef.current.paused || videoRef.current.ended) return;
 
@@ -414,34 +447,72 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                 const dims = faceapi.matchDimensions(videoRef.current, videoRef.current, true);
                 const resizedDetections = faceapi.resizeResults(detections, dims);
 
+                if (resizedDetections.length !== 1) {
+                    const nextScore = Math.max(0, confidenceScoreRef.current - 15);
+                    confidenceScoreRef.current = nextScore;
+                    consecutiveMatchRef.current = 0;
+                    setConfidenceScore(nextScore);
+                    setCurrentDistance(null);
+                    setScanHint(resizedDetections.length > 1 ? 'พบหลายใบหน้า กรุณาอยู่คนเดียวในกรอบ' : 'ไม่พบใบหน้า');
+                    return;
+                }
+
                 if (resizedDetections.length > 0) {
-                    // Find best match among all faces
-                    let bestMatch: any | null = null;
-                    
-                    for (const detection of resizedDetections) {
-                        // Check if it's a real face (score > 0.5) as per original logic
-                        if (detection.detection.score > 0.5) {
-                            const match = faceMatcher.findBestMatch(detection.descriptor);
-                            console.log(`Live Detection -> Score: ${detection.detection.score.toFixed(2)} | Match: ${match.label} | Distance: ${match.distance.toFixed(3)} (Threshold: 0.50)`);
-                            
-                            if (match.label === user.id) {
-                                if (!bestMatch || match.distance < bestMatch.distance) {
-                                    bestMatch = match;
-                                }
-                            }
-                        }
+                    const detection = resizedDetections[0];
+                    if ((detection.detection.score || 0) < MIN_DETECTION_SCORE) {
+                        const nextScore = Math.max(0, confidenceScoreRef.current - 10);
+                        confidenceScoreRef.current = nextScore;
+                        consecutiveMatchRef.current = 0;
+                        setConfidenceScore(nextScore);
+                        setCurrentDistance(null);
+                        setScanHint('Face not clear');
+                        return;
                     }
 
-                    if (bestMatch) {
-                        setCurrentDistance(bestMatch.distance);
+                    const bestCandidate: { descriptor: Float32Array; distance: number } = {
+                        descriptor: detection.descriptor,
+                        distance: faceapi.euclideanDistance(detection.descriptor, meanDescriptorRef.current)
+                    };
+
+                    if (bestCandidate) {
+                        setCurrentDistance(bestCandidate.distance);
+
+                        let nextScore = confidenceScoreRef.current;
+                        if (bestCandidate.distance < VERY_MATCH_DISTANCE) {
+                            nextScore += 20;
+                        } else if (bestCandidate.distance < MATCH_DISTANCE) {
+                            nextScore += 10;
+                        } else if (bestCandidate.distance > PENALTY_DISTANCE) {
+                            nextScore -= 10;
+                            consecutiveMatchRef.current = 0;
+                        } else {
+                            consecutiveMatchRef.current = 0;
+                        }
+
+                        if (bestCandidate.distance < MATCH_DISTANCE) {
+                            consecutiveMatchRef.current += 1;
+                            setScanHint('กำลังยืนยันตัวตน...');
+                        } else if (bestCandidate.distance > PENALTY_DISTANCE) {
+                            setScanHint('ไม่ตรงกับข้อมูลที่ลงทะเบียน');
+                        } else {
+                            setScanHint('ปรับมุมหน้าและแสงอีกเล็กน้อย');
+                        }
+
+                        nextScore = Math.max(0, Math.min(CONFIDENCE_TARGET, nextScore));
+                        confidenceScoreRef.current = nextScore;
+                        setConfidenceScore(nextScore);
+
+                        console.log(
+                            `Live Detection -> MeanDistance: ${bestCandidate.distance.toFixed(3)} | ConfidenceScore: ${nextScore}`
+                        );
+
+                        if (nextScore >= CONFIDENCE_TARGET && consecutiveMatchRef.current >= MIN_CONSECUTIVE_MATCH) {
+                            clearInterval(interval);
+                            handleSuccess(bestCandidate.descriptor);
+                        }
                     } else {
                         setCurrentDistance(null);
-                    }
-
-                    // Threshold 0.50 (Balanced)
-                    if (bestMatch && bestMatch.distance < 0.50) { 
-                        clearInterval(interval);
-                        handleSuccess(resizedDetections[0].descriptor); // Use the descriptor of the detected face
+                        setScanHint('ไม่พบใบหน้าที่ชัดเจน');
                     }
                 }
             } catch (err) {
@@ -450,11 +521,11 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
         };
 
         if (status === 'SCANNING') {
-            interval = setInterval(detect, 100); // Check every 100ms (as per original)
+            interval = setInterval(detect, 120);
         }
 
         return () => clearInterval(interval);
-    }, [method, status, faceMatcher, user.id]);
+    }, [method, status, user.id]);
 
     const handleSuccess = async (descriptor: Float32Array) => {
         if (isVerifyingRef.current) return;
@@ -650,33 +721,49 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                             <div className="absolute bottom-8 left-0 right-0 flex flex-col items-center z-20 gap-3">
                                 {/* Status Pill */}
                                 <div className="bg-black/70 text-white px-6 py-2 rounded-full text-lg font-semibold backdrop-blur-sm border border-white/10 whitespace-nowrap shadow-lg animate-in slide-in-from-bottom-4">
-                                    <span>มองตรงไปที่กล้อง</span>
+                                    <span>{scanHint}</span>
                                 </div>
 
                                 {/* Real-time Distance Feedback */}
                                 {currentDistance !== null && (
                                     <div className="bg-black/60 backdrop-blur-md px-8 py-4 rounded-2xl border border-white/10 flex flex-col items-center animate-in slide-in-from-bottom-2 mb-2 min-w-[320px]">
                                         <div className="flex items-center justify-between w-full gap-6 mb-2">
-                                            <span className="text-sm text-gray-300">ความเหมือน</span>
-                                            <span className={`text-2xl font-bold font-mono ${currentDistance < 0.45 ? 'text-green-400' : currentDistance < 0.6 ? 'text-yellow-400' : 'text-red-400'}`}>
+                                            <span className="text-sm text-gray-300">Mean Match</span>
+                                            <span className={`text-2xl font-bold font-mono ${currentDistance < 0.40 ? 'text-green-400' : currentDistance < 0.50 ? 'text-yellow-400' : 'text-red-400'}`}>
                                                 {((1 - currentDistance) * 100).toFixed(0)}%
                                             </span>
                                         </div>
                                         
                                         {/* Visual Bar */}
                                         <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative">
-                                            {/* Threshold Marker at 55% */}
-                                            <div className="absolute top-0 bottom-0 w-0.5 bg-white/50 left-[55%] z-10"></div>
+                                            {/* Threshold Marker at distance 0.40 */}
+                                            <div className="absolute top-0 bottom-0 w-0.5 bg-white/50 left-[60%] z-10"></div>
                                             
                                             <div 
-                                                className={`h-full transition-all duration-300 ${currentDistance < 0.45 ? 'bg-green-500' : currentDistance < 0.6 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                                                className={`h-full transition-all duration-300 ${currentDistance < 0.40 ? 'bg-green-500' : currentDistance < 0.50 ? 'bg-yellow-500' : 'bg-red-500'}`}
                                                 style={{ width: `${Math.min(100, Math.max(5, (1 - currentDistance) * 100))}%` }}
                                             />
                                         </div>
                                         <div className="flex justify-between w-full text-[10px] text-gray-500 mt-1">
                                             <span>0%</span>
-                                            <span>เป้าหมาย &gt; 55%</span>
+                                            <span>Strict &lt; 0.40</span>
                                             <span>100%</span>
+                                        </div>
+
+                                        <div className="w-full mt-4">
+                                            <div className="flex items-center justify-between text-xs text-gray-300 mb-1">
+                                                <span>Confidence Score</span>
+                                                <span className="font-bold text-white">{confidenceScore}/100</span>
+                                            </div>
+                                            <div className="w-full h-2.5 bg-gray-700 rounded-full overflow-hidden">
+                                                <div
+                                                    className="h-full bg-green-500 transition-all duration-300"
+                                                    style={{ width: `${confidenceScore}%` }}
+                                                />
+                                            </div>
+                                            <div className="text-[10px] text-gray-400 mt-1">
+                                                &lt; 0.35 = +20 | &lt; 0.40 = +10 | &gt; 0.50 = -10
+                                            </div>
                                         </div>
                                     </div>
                                 )}
