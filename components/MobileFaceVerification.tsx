@@ -23,9 +23,11 @@ const FAST_PASS_DISTANCE = 0.33;
 const FAST_PASS_FRAMES = 2;
 const CONSENSUS_DISTANCE = 0.45;
 const MIN_REFERENCE_DESCRIPTORS = 3;
-const BLINK_CLOSED_EAR = 0.19;
-const BLINK_OPEN_EAR = 0.24;
+const BLINK_CLOSED_EAR_FLOOR = 0.16;
+const BLINK_OPEN_EAR_FLOOR = 0.21;
 const BLINK_MIN_CLOSED_FRAMES = 1;
+const BLINK_REOPEN_WINDOW_FRAMES = 9;
+const PRE_LIVENESS_MIN_DETECTION_SCORE = 0.62;
 
 const getMatchSupportCount = (referenceCount: number) => {
     if (referenceCount <= 3) return 2;
@@ -94,6 +96,8 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
     const fastPassRef = useRef(0);
     const livenessPassedRef = useRef(false);
     const blinkClosedFramesRef = useRef(0);
+    const blinkReopenWindowRef = useRef(0);
+    const earBaselineRef = useRef<number | null>(null);
 
     // 1. Fetch User Photos (Critical) & Exam Info (Optional)
     useEffect(() => {
@@ -249,6 +253,8 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
         fastPassRef.current = 0;
         livenessPassedRef.current = false;
         blinkClosedFramesRef.current = 0;
+        blinkReopenWindowRef.current = 0;
+        earBaselineRef.current = null;
         setConfidenceScore(0);
         setScanHint('กรุณากะพริบตา 1 ครั้งเพื่อยืนยันว่าเป็นบุคคลจริง');
     }, [status]);
@@ -305,7 +311,8 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
 
                 if (resizedDetections.length > 0) {
                     const detection = resizedDetections[0];
-                    if ((detection.detection.score || 0) < MIN_DETECTION_SCORE) {
+                    const requiredDetectionScore = livenessPassedRef.current ? MIN_DETECTION_SCORE : PRE_LIVENESS_MIN_DETECTION_SCORE;
+                    if ((detection.detection.score || 0) < requiredDetectionScore) {
                         const nextScore = Math.max(0, confidenceScoreRef.current - 10);
                         confidenceScoreRef.current = nextScore;
                         consecutiveMatchRef.current = 0;
@@ -318,14 +325,35 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
                     if (!livenessPassedRef.current) {
                         const ear = getAverageEAR(detection.landmarks);
                         if (ear !== null) {
-                            if (ear < BLINK_CLOSED_EAR) {
+                            if (ear > BLINK_OPEN_EAR_FLOOR) {
+                                earBaselineRef.current = earBaselineRef.current === null
+                                    ? ear
+                                    : (earBaselineRef.current * 0.85) + (ear * 0.15);
+                            }
+
+                            const baseline = earBaselineRef.current ?? ear;
+                            const dynamicClosedThreshold = Math.max(BLINK_CLOSED_EAR_FLOOR, baseline * 0.72);
+                            const dynamicOpenThreshold = Math.max(BLINK_OPEN_EAR_FLOOR, baseline * 0.92);
+
+                            if (ear < dynamicClosedThreshold) {
                                 blinkClosedFramesRef.current += 1;
-                            } else if (blinkClosedFramesRef.current >= BLINK_MIN_CLOSED_FRAMES && ear > BLINK_OPEN_EAR) {
+                                blinkReopenWindowRef.current = BLINK_REOPEN_WINDOW_FRAMES;
+                            } else if (
+                                blinkClosedFramesRef.current >= BLINK_MIN_CLOSED_FRAMES &&
+                                blinkReopenWindowRef.current > 0 &&
+                                ear > dynamicOpenThreshold
+                            ) {
                                 livenessPassedRef.current = true;
                                 blinkClosedFramesRef.current = 0;
+                                blinkReopenWindowRef.current = 0;
                                 setScanHint('ตรวจพบการกะพริบตา เริ่มยืนยันตัวตน...');
                             } else {
-                                blinkClosedFramesRef.current = 0;
+                                if (blinkReopenWindowRef.current > 0) {
+                                    blinkReopenWindowRef.current -= 1;
+                                }
+                                if (blinkReopenWindowRef.current === 0) {
+                                    blinkClosedFramesRef.current = 0;
+                                }
                             }
                         }
 
