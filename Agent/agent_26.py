@@ -396,116 +396,280 @@ class ExamAgent:
     def show_registration_gui(self):
         root = tk.Tk()
         root.title("ลงทะเบียนเครื่องสอบ (Exam Agent)")
-        root.geometry("400x450")
+        root.geometry("600x700")  # Adjusted size for grid view
         
         # Center Window
         try:
             root.eval('tk::PlaceWindow . center')
         except: pass
 
-        ttk.Label(root, text="อุปกรณ์นี้ยังไม่ลงทะเบียน", font=("Tahoma", 16, "bold"), foreground="red").pack(pady=20)
-        ttk.Label(root, text=f"IP: {self.ip}", font=("Tahoma", 10)).pack()
-        
-        # Form
-        frame = ttk.Frame(root, padding=20)
-        frame.pack(fill=tk.BOTH, expand=True)
+        # Styles
+        style = ttk.Style()
+        style.configure("Taken.TButton", foreground="gray")
+        style.configure("Free.TButton", foreground="black")
+        style.configure("Selected.TButton", background="green", foreground="blue")
 
-        # Room Select
-        ttk.Label(frame, text="เลือกห้องสอบ:", font=("Tahoma", 10)).grid(row=0, column=0, sticky="w", pady=5)
+        ttk.Label(root, text="อุปกรณ์นี้ยังไม่ลงทะเบียน", font=("Tahoma", 16, "bold"), foreground="#d32f2f").pack(pady=15)
+        ttk.Label(root, text=f"Your IP: {self.ip}", font=("Tahoma", 10)).pack()
+        
+        # Main Container
+        main_frame = ttk.Frame(root, padding=15)
+        main_frame.pack(fill=tk.BOTH, expand=True)
+
+        # --- Top Control: Room Selection ---
+        top_frame = ttk.Frame(main_frame)
+        top_frame.pack(fill=tk.X, pady=5)
+        
+        # Inner frame for centering
+        top_center_frame = ttk.Frame(top_frame)
+        top_center_frame.pack(anchor="center")
+
+        ttk.Label(top_center_frame, text="เลือกห้องสอบ:", font=("Tahoma", 11)).pack(side=tk.LEFT, padx=5)
+        
         room_var = tk.StringVar()
-        room_cb = ttk.Combobox(frame, textvariable=room_var, state="readonly", font=("Tahoma", 10))
-        room_cb.grid(row=0, column=1, sticky="ew", pady=5)
+        room_cb = ttk.Combobox(top_center_frame, textvariable=room_var, state="readonly", font=("Tahoma", 10), width=30)
+        room_cb.pack(side=tk.LEFT, padx=5)
+
+        refresh_btn = ttk.Button(top_center_frame, text="โหลดผังที่นั่ง", command=lambda: load_layout())
+        refresh_btn.pack(side=tk.LEFT, padx=5)
+
+        # --- Grid Area (Scrollable) ---
+        canvas_frame = ttk.LabelFrame(main_frame, text="ผังที่นั่ง (คลิกเพื่อเลือก)", padding=5)
+        # Center the title of LabelFrame if possible, but default is left. style config needed for center title.
+        # Alternatively, just pack fill both.
+        canvas_frame.pack(fill=tk.BOTH, expand=True, pady=10)
+
+        canvas = tk.Canvas(canvas_frame)
+        scrollbar = ttk.Scrollbar(canvas_frame, orient="vertical", command=canvas.yview)
+        scrollable_frame = ttk.Frame(canvas)
+
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+
+        # Center the scrollable frame inside the canvas
+        def center_content(event):
+            canvas_width = event.width
+            frame_width = scrollable_frame.winfo_reqwidth()
+            if frame_width < canvas_width:
+                canvas.itemconfig(window_item, width=canvas_width) # Expand frame to fit? No, just center.
+                # Actually, to center items inside scrollable_frame, we should pack them centered.
+            canvas.configure(scrollregion=canvas.bbox("all"))
+            
+        # Instead of complex canvas centering, let's center the rows inside scrollable_frame
         
-        # Load Rooms
-        room_data_map = {} # name -> {id, rows, columns}
-        try:
-            # Fetch dimensions to validate seat limits
-            res = supabase.table('room_seat_layouts').select('id, room_name, rows, columns').execute()
-            for r in res.data:
-                room_data_map[r['room_name']] = r
-            room_cb['values'] = list(room_data_map.keys())
-        except:
-            room_cb['values'] = ["Error loading rooms"]
+        window_item = canvas.create_window((0, 0), window=scrollable_frame, anchor="nw") # defaulting to nw for scroll logic
+        
+        # To make content centered essentially, we can force the window width to match canvas
+        canvas.bind("<Configure>", lambda e: canvas.itemconfig(window_item, width=e.width))
 
-        # Seat Input
-        ttk.Label(frame, text="เลขที่นั่ง (แถว-คอลัมน์):", font=("Tahoma", 10)).grid(row=1, column=0, sticky="w", pady=5)
-        ttk.Label(frame, text="เช่น: 1-1, 3-5", font=("Tahoma", 8, "italic"), foreground="gray").grid(row=2, column=1, sticky="w")
-        seat_entry = ttk.Entry(frame, font=("Tahoma", 10))
-        seat_entry.grid(row=1, column=1, sticky="ew", pady=5)
+        canvas.configure(yscrollcommand=scrollbar.set)
 
-        msg_lbl = ttk.Label(frame, text="", foreground="red", font=("Tahoma", 9))
-        msg_lbl.grid(row=4, column=0, columnspan=2, pady=10)
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
 
-        def on_submit():
+        # --- Bottom Control: Selection Info & Submit ---
+        bottom_frame = ttk.Frame(main_frame)
+        bottom_frame.pack(fill=tk.X, pady=10)
+
+        # Center container for bottom elements
+        bottom_center_frame = ttk.Frame(bottom_frame)
+        bottom_center_frame.pack(anchor="center")
+
+        selected_seat_var = tk.StringVar(value="-")
+        
+        ttk.Label(bottom_center_frame, text="ที่นั่งที่เลือก:", font=("Tahoma", 10, "bold")).pack(side=tk.LEFT, padx=5)
+        seat_lbl = ttk.Label(bottom_center_frame, textvariable=selected_seat_var, font=("Tahoma", 14, "bold"), foreground="blue")
+        seat_lbl.pack(side=tk.LEFT, padx=15)
+
+        submit_btn = ttk.Button(bottom_center_frame, text="ยืนยันการลงทะเบียน", state="disabled")
+        submit_btn.pack(side=tk.LEFT, padx=15)
+
+        msg_lbl = ttk.Label(root, text="", foreground="red", font=("Tahoma", 9))
+        msg_lbl.pack(pady=5)
+
+        # Data Store
+        room_data_map = {} 
+        seat_buttons = {}
+        current_selection = {"row": None, "col": None, "seat_num": None}
+
+        # --- Functions ---
+
+        def load_rooms():
+            try:
+                res = supabase.table('room_seat_layouts').select('id, room_name, rows, columns').execute()
+                for r in res.data:
+                    room_data_map[r['room_name']] = r
+                room_cb['values'] = list(room_data_map.keys())
+            except Exception as e:
+                msg_lbl.config(text=f"Error loading rooms: {e}")
+
+        def on_seat_click(r, c, seat_str, is_taken, taken_by_ip):
+            # Reset previous button style
+            prev = current_selection['seat_num']
+            if prev and prev in seat_buttons:
+                # Revert style based on taken status
+                was_taken = seat_buttons[prev]['taken']
+                btn_prev = seat_buttons[prev]['btn']
+                # UPDATED COLORS: Free=White, Taken=Green
+                color_prev = "white" if not was_taken else "#81c784" 
+                btn_prev.config(bg=color_prev, relief="raised")
+
+            # Set new selection
+            current_selection['row'] = r
+            current_selection['col'] = c
+            current_selection['seat_num'] = seat_str
+            
+            # Highlight Current (Grey)
+            btn_curr = seat_buttons[seat_str]['btn']
+            btn_curr.config(bg="#bdbdbd", relief="sunken") # Grey highlight
+
+            selected_seat_var.set(f"{seat_str}")
+            if is_taken:
+                msg_lbl.config(text=f"คำเตือน: ที่นั่งนี้มีคนลงไว้แล้ว (IP: {taken_by_ip}) หากยืนยันจะทับสิทธิ์เดิม", foreground="#f57f17")
+            else:
+                msg_lbl.config(text="", foreground="black")
+
+            submit_btn.config(state="normal")
+
+        def load_layout():
             r_name = room_var.get()
-            s_num = seat_entry.get().strip()
-            
-            if not r_name or not s_num:
-                msg_lbl.config(text="กรุณากรอกข้อมูลให้ครบ")
-                return
-            
-            if "-" not in s_num:
-                msg_lbl.config(text="รูปแบบที่นั่งผิด (ต้องเป็น Row-Col เช่น 1-1)")
-                return
+            if not r_name: return
+
+            # Clear old grid
+            for widget in scrollable_frame.winfo_children():
+                widget.destroy()
+            seat_buttons.clear()
+            current_selection['seat_num'] = None
+            selected_seat_var.set("")
+            submit_btn.config(state="disabled")
+
+            room_info = room_data_map.get(r_name)
+            if not room_info: return
+
+            rows = room_info['rows']
+            cols = room_info['columns']
+            layout_id = room_info['id']
 
             try:
-                parts = s_num.split('-')
-                try:
-                    row_n = int(parts[0])
-                    col_n = int(parts[1])
-                except ValueError:
-                    msg_lbl.config(text="ที่นั่งต้องเป็นตัวเลข (เช่น 1-1)")
-                    return
-
-                # Validate Bounds
-                room_info = room_data_map.get(r_name)
-                if not room_info:
-                    msg_lbl.config(text="ไม่พบข้อมูลห้อง")
-                    return
-
-                max_rows = room_info.get('rows', 99)
-                max_cols = room_info.get('columns', 99)
+                # Fetch occupied seats
+                taken_res = supabase.table('room_seat_ip_mappings')\
+                    .select('row_number, column_number, ip_address')\
+                    .eq('layout_id', layout_id)\
+                    .execute()
                 
-                if row_n < 1 or col_n < 1 or row_n > max_rows or col_n > max_cols:
-                    msg_lbl.config(text=f"ที่นั่งเกินขอบเขต! ห้อง '{r_name}' มีขนาด {max_rows}x{max_cols}")
-                    return
+                occupied_map = {} # "r-c" -> ip
+                for t in taken_res.data:
+                    key = f"{t['row_number']}-{t['column_number']}"
+                    occupied_map[key] = t.get('ip_address', 'Unknown')
 
+                # --- Front of Room Banner ---
+                # A styled Canvas or Label to represent the front board
+                # We can use a Frame with a dark background and white text
+                
+                # Check approximate width needed based on columns (12 chars width ~ 90px + padding) * cols
+                # But since we use pack, we can just let it fill or set a min width
+                
+                front_frame = tk.Frame(scrollable_frame, bg="#1a237e", height=40)
+                front_frame.pack(fill=tk.X, pady=(10, 20), padx=50) # Padding to make it look like a board
+                
+                tk.Label(
+                    front_frame, 
+                    text="กระดานหน้าห้อง (Front)", 
+                    font=("Tahoma", 12, "bold"), 
+                    bg="#1a237e", 
+                    fg="white"
+                ).pack(pady=5)
+
+                # Render Grid
+                first_row = True
+                for r in range(1, rows + 1):
+                    # Use a frame that centers its content
+                    row_frame = ttk.Frame(scrollable_frame)
+                    row_frame.pack(pady=2, anchor="center") # Anchor center to middle of scrollable_frame
+                    
+                    for c in range(1, cols + 1):
+                        seat_str = f"{r}-{c}"
+                        key = f"{r}-{c}"
+                        is_taken = key in occupied_map
+                        taken_ip = occupied_map.get(key, "")
+
+                        # Style
+                        if not is_taken:
+                            btn_text = f"{seat_str}\n(ว่าง)"
+                            color = "white"
+                        else:
+                            btn_text = f"{seat_str}\n{taken_ip}"
+                            color = "#81c784" # Green for taken
+
+                        # Using tk.Button for better color control than ttk
+                        btn = tk.Button(
+                            row_frame, 
+                            text=btn_text, 
+                            width=12, 
+                            height=3, 
+                            bg=color,
+                            command=lambda r=r, c=c, s=seat_str, t=is_taken, ip=taken_ip: on_seat_click(r, c, s, t, ip)
+                        )
+                        btn.pack(side=tk.LEFT, padx=2)
+                        
+                        seat_buttons[seat_str] = {'btn': btn, 'taken': is_taken}
+            except Exception as e:
+                msg_lbl.config(text=f"Error loading layout: {e}")
+
+        def submit_registration():
+            s_num = current_selection['seat_num']
+            r_name = room_var.get()
+            
+            if not s_num or not r_name: return
+
+            try:
+                room_info = room_data_map.get(r_name)
                 layout_id = room_info['id']
+                
+                row_n = current_selection['row']
+                col_n = current_selection['col']
 
-                # Prepare Data - Send list of MACs properly as JSON array compatible list
+                # Same UPSERT logic as before
                 new_mapping = {
                     "layout_id": layout_id,
                     "seat_number": s_num,
                     "row_number": row_n,
                     "column_number": col_n,
                     "ip_address": self.ip,
-                    "current_macs": self.macs, # DB Trigger will pick this up for History Log
+                    "current_macs": self.macs,
                     "updated_at": datetime.now().astimezone().isoformat()
                 }
 
-                # UPSERT based on unique conflict (layout_id, seat_number)
                 supabase.table('room_seat_ip_mappings').upsert(new_mapping, on_conflict='layout_id, seat_number').execute()
                 
                 messagebox.showinfo("สำเร็จ", "ลงทะเบียนเรียบร้อย!")
                 root.destroy()
                 
-                # Update Self Identity
+                # Update Self
                 self.room_name = r_name
                 self.seat_number = s_num
                 self.layout_id = layout_id
                 
                 # Start Loop
                 threading.Thread(target=self.run_monitoring_loop).start()
-
-            except Exception as e:
-                msg_lbl.config(text=f"Error: {e}")
-                print(e)
             
-        style = ttk.Style()
-        style.configure("TButton", font=("Tahoma", 10, "bold"))
-        ttk.Button(frame, text="บันทึกและเริ่มทำงาน", command=on_submit).grid(row=3, column=0, columnspan=2, pady=20)
+            except Exception as e:
+                print(f"Reg Error: {e}")
+                msg_lbl.config(text=str(e))
+
+        # Init
+        room_cb.bind("<<ComboboxSelected>>", lambda e: load_layout())
+        submit_btn.config(command=submit_registration)
+        load_rooms()
         
         root.mainloop()
+
+        ''' OLD CODE REMOVED
+        frame = ttk.Frame(root, padding=20)
+        ...
+        '''
 
     # ----------------------------------------
     # Monitoring Loop
