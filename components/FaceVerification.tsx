@@ -24,10 +24,19 @@ const CONFIDENCE_TARGET = 100;
 const MIN_DETECTION_SCORE = 0.82;
 const MIN_CONSECUTIVE_MATCH = 2;
 const FAST_PASS_DISTANCE = 0.33;
-const FAST_PASS_SUPPORT_RATIO = 0.75;
 const FAST_PASS_FRAMES = 2;
 const CONSENSUS_DISTANCE = 0.43;
 const MIN_REFERENCE_DESCRIPTORS = 3;
+
+const getMatchSupportCount = (referenceCount: number) => {
+    if (referenceCount <= 3) return 2;
+    return Math.max(2, Math.ceil(referenceCount * 0.5));
+};
+
+const getFastPassSupportCount = (referenceCount: number) => {
+    if (referenceCount <= 3) return 3;
+    return Math.max(3, Math.ceil(referenceCount * 0.67));
+};
 
 const buildMeanDescriptor = (descriptors: Float32Array[]) => {
     if (!descriptors.length) return null;
@@ -277,13 +286,13 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                 
                 // Photo types - Filtered for better verification accuracy (Removing extreme angles)
                 const photoTypes = [
-                    // { key: 'closed_eye', label: 'ตาปิด' }, // Removed: Low feature visibility
+                    // { key: 'closed_eye', label: 'ตาปิด' },
                     { key: 'open_eye', label: 'ตาเปิด' },
                     { key: 'turn_left', label: 'หันซ้าย' },
                     { key: 'turn_right', label: 'หันขวา' },
-                    // { key: 'look_up', label: 'มองขึ้น' }, // Removed: Distortion
-                    // { key: 'look_down', label: 'มองลง' }, // Removed: Distortion
-                    // { key: 'move_close', label: 'เข้าใกล้' } // Removed: Distortion
+                    { key: 'look_up', label: 'มองขึ้น' },
+                    { key: 'look_down', label: 'มองลง' },
+                    { key: 'move_close', label: 'เข้าใกล้' }
                 ];
 
                 // Also add face_forward if available (it's in the DB but not in the original list, but it's crucial)
@@ -490,9 +499,11 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                     const referenceDistances = referenceDescriptorsRef.current
                         .map((referenceDescriptor) => faceapi.euclideanDistance(detection.descriptor, referenceDescriptor));
                     const supportCount = referenceDistances.filter((distance) => distance < CONSENSUS_DISTANCE).length;
-                    const supportRatio = referenceDescriptorsRef.current.length
-                        ? supportCount / referenceDescriptorsRef.current.length
-                        : 0;
+                    const referenceCount = referenceDescriptorsRef.current.length;
+                    const matchSupportNeeded = getMatchSupportCount(referenceCount);
+                    const fastPassSupportNeeded = getFastPassSupportCount(referenceCount);
+                    const enoughSupportForMatch = supportCount >= matchSupportNeeded;
+                    const enoughSupportForFastPass = supportCount >= fastPassSupportNeeded;
 
                     if (bestCandidate) {
                         setCurrentDistance(bestCandidate.distance);
@@ -510,19 +521,19 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                             consecutiveMatchRef.current = 0;
                         }
 
-                        if (supportRatio >= 0.75) {
+                        if (supportCount >= fastPassSupportNeeded) {
                             scoreDelta += 8;
-                        } else if (supportRatio >= 0.5) {
+                        } else if (supportCount >= matchSupportNeeded) {
                             scoreDelta += 4;
-                        } else if (supportRatio < 0.34) {
+                        } else {
                             scoreDelta -= 6;
                         }
                         nextScore += scoreDelta;
 
-                        if (bestCandidate.distance < MATCH_DISTANCE && supportRatio >= 0.5) {
+                        if (bestCandidate.distance < MATCH_DISTANCE && enoughSupportForMatch) {
                             consecutiveMatchRef.current += 1;
                             setScanHint('กำลังยืนยันตัวตน...');
-                        } else if (supportRatio < 0.34) {
+                        } else if (!enoughSupportForMatch) {
                             consecutiveMatchRef.current = 0;
                             setScanHint('ลักษณะใบหน้าไม่สอดคล้องกับรูปลงทะเบียน');
                         } else if (bestCandidate.distance > PENALTY_DISTANCE) {
@@ -531,7 +542,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                             setScanHint('ปรับมุมหน้าและแสงอีกเล็กน้อย');
                         }
 
-                        if (bestCandidate.distance < FAST_PASS_DISTANCE && supportRatio >= FAST_PASS_SUPPORT_RATIO) {
+                        if (bestCandidate.distance < FAST_PASS_DISTANCE && enoughSupportForFastPass) {
                             fastPassRef.current += 1;
                         } else {
                             fastPassRef.current = 0;
@@ -542,7 +553,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                         setConfidenceScore(nextScore);
 
                         console.log(
-                            `Live Detection -> MeanDistance: ${bestCandidate.distance.toFixed(3)} | Support: ${(supportRatio * 100).toFixed(0)}% | ConfidenceScore: ${nextScore}`
+                            `Live Detection -> MeanDistance: ${bestCandidate.distance.toFixed(3)} | Support: ${supportCount}/${referenceCount} | ConfidenceScore: ${nextScore}`
                         );
 
                         const hasFastPass = fastPassRef.current >= FAST_PASS_FRAMES;
