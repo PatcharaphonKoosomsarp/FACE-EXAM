@@ -148,6 +148,18 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
               if (p.y > maxY) maxY = p.y;
           }
 
+          // Forehead-aware extension: FaceMesh top landmark usually stops around forehead,
+          // so estimate extra space above to avoid cutting hair/head.
+          if (!isEyeAction && landmarks.length > 152) {
+              const topFace = landmarks[10];
+              const chin = landmarks[152];
+              if (topFace && chin) {
+                  const faceVertical = Math.max(0.01, chin.y - topFace.y);
+                  const estimatedForeheadTop = topFace.y - (faceVertical * 0.65);
+                  minY = Math.min(minY, estimatedForeheadTop);
+              }
+          }
+
           // Adjust for Mirroring: Flip X coordinates
           // Original: 0 (Left) -> 1 (Right)
           // Mirrored: 1 (Left) -> 0 (Right)
@@ -166,17 +178,17 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
               const faceHeight = Math.max(0.01, maxY - minY);
 
               // Expand more to top to avoid cutting forehead/hairline
-              minX -= faceWidth * 0.22;
-              maxX += faceWidth * 0.22;
-              minY -= faceHeight * 0.38;
-              maxY += faceHeight * 0.18;
+              minX -= faceWidth * 0.24;
+              maxX += faceWidth * 0.24;
+              minY -= faceHeight * 0.50;
+              maxY += faceHeight * 0.20;
 
               // Keep portrait framing and center face in crop
-              const targetAspect = 0.78; // width / height
+              const targetAspect = 0.74; // width / height (taller portrait frame)
               let cropWidth = Math.max(0.01, maxX - minX);
               let cropHeight = Math.max(0.01, maxY - minY);
               const centerX = (minX + maxX) / 2;
-              const centerY = ((minY + maxY) / 2) - (cropHeight * 0.05);
+              const centerY = ((minY + maxY) / 2) - (cropHeight * 0.08);
 
               if (cropWidth / cropHeight < targetAspect) {
                   cropWidth = cropHeight * targetAspect;
