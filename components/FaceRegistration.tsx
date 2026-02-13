@@ -126,9 +126,10 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
       if (landmarks) {
           let targetLandmarks = landmarks;
           let padding = 0.08; // Default padding for face
+          const isEyeAction = action === 'eyeClosed' || action === 'eyeOpen';
 
           // Special cropping for Eyes (Close/Open)
-          if (action === 'eyeClosed' || action === 'eyeOpen') {
+          if (isEyeAction) {
              // Use comprehensive eye landmarks (16 points per eye) for better coverage
              const leftEyeIdx = [33, 7, 163, 144, 145, 153, 154, 155, 133, 173, 157, 158, 159, 160, 161, 246];
              const rightEyeIdx = [362, 382, 381, 380, 374, 373, 390, 249, 263, 466, 388, 387, 386, 385, 384, 398];
@@ -155,10 +156,62 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
           minX = 1 - maxX;
           maxX = 1 - tempMinX;
 
-          minX = Math.max(0, minX - padding);
-          minY = Math.max(0, minY - padding);
-          maxX = Math.min(1, maxX + padding);
-          maxY = Math.min(1, maxY + padding);
+          if (isEyeAction) {
+              minX = Math.max(0, minX - padding);
+              minY = Math.max(0, minY - padding);
+              maxX = Math.min(1, maxX + padding);
+              maxY = Math.min(1, maxY + padding);
+          } else {
+              const faceWidth = Math.max(0.01, maxX - minX);
+              const faceHeight = Math.max(0.01, maxY - minY);
+
+              // Expand more to top to avoid cutting forehead/hairline
+              minX -= faceWidth * 0.22;
+              maxX += faceWidth * 0.22;
+              minY -= faceHeight * 0.38;
+              maxY += faceHeight * 0.18;
+
+              // Keep portrait framing and center face in crop
+              const targetAspect = 0.78; // width / height
+              let cropWidth = Math.max(0.01, maxX - minX);
+              let cropHeight = Math.max(0.01, maxY - minY);
+              const centerX = (minX + maxX) / 2;
+              const centerY = ((minY + maxY) / 2) - (cropHeight * 0.05);
+
+              if (cropWidth / cropHeight < targetAspect) {
+                  cropWidth = cropHeight * targetAspect;
+              } else {
+                  cropHeight = cropWidth / targetAspect;
+              }
+
+              minX = centerX - cropWidth / 2;
+              maxX = centerX + cropWidth / 2;
+              minY = centerY - cropHeight / 2;
+              maxY = centerY + cropHeight / 2;
+
+              // Shift crop back into normalized frame bounds
+              if (minX < 0) {
+                  maxX -= minX;
+                  minX = 0;
+              }
+              if (maxX > 1) {
+                  minX -= (maxX - 1);
+                  maxX = 1;
+              }
+              if (minY < 0) {
+                  maxY -= minY;
+                  minY = 0;
+              }
+              if (maxY > 1) {
+                  minY -= (maxY - 1);
+                  maxY = 1;
+              }
+
+              minX = Math.max(0, minX);
+              minY = Math.max(0, minY);
+              maxX = Math.min(1, maxX);
+              maxY = Math.min(1, maxY);
+          }
 
           const sx = Math.floor(minX * canvas.width);
           const sy = Math.floor(minY * canvas.height);
