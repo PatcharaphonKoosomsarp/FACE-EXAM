@@ -106,7 +106,7 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
       
       const video = videoRef.current;
       const captureFrame = captureFrameRef.current;
-      const sourceWidth = video.videoWidth || captureFrame?.width || 640;
+    const sourceWidth = video.videoWidth || captureFrame?.width || 640;
       const sourceHeight = video.videoHeight || captureFrame?.height || 480;
 
       const canvas = document.createElement('canvas');
@@ -155,7 +155,8 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
               const chin = landmarks[152];
               if (topFace && chin) {
                   const faceVertical = Math.max(0.01, chin.y - topFace.y);
-                  const estimatedForeheadTop = topFace.y - (faceVertical * 0.5);
+                  const foreheadFactor = isMobileRegistration ? 0.38 : 0.5;
+                  const estimatedForeheadTop = topFace.y - (faceVertical * foreheadFactor);
                   minY = Math.min(minY, estimatedForeheadTop);
               }
           }
@@ -177,18 +178,22 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
               const faceWidth = Math.max(0.01, maxX - minX);
               const faceHeight = Math.max(0.01, maxY - minY);
 
-              // Keep head inside frame but tighten crop a bit
-              minX -= faceWidth * 0.2;
-              maxX += faceWidth * 0.2;
-              minY -= faceHeight * 0.4;
-              maxY += faceHeight * 0.16;
+              // Keep head inside frame but tighten crop (mobile tighter than desktop)
+              const expandX = isMobileRegistration ? 0.14 : 0.2;
+              const expandTop = isMobileRegistration ? 0.3 : 0.4;
+              const expandBottom = isMobileRegistration ? 0.12 : 0.16;
+              minX -= faceWidth * expandX;
+              maxX += faceWidth * expandX;
+              minY -= faceHeight * expandTop;
+              maxY += faceHeight * expandBottom;
 
               // Keep portrait framing and center face in crop
-              const targetAspect = 0.78; // width / height
+              const targetAspect = isMobileRegistration ? 0.86 : 0.78; // width / height
               let cropWidth = Math.max(0.01, maxX - minX);
               let cropHeight = Math.max(0.01, maxY - minY);
               const centerX = (minX + maxX) / 2;
-              const centerY = ((minY + maxY) / 2) - (cropHeight * 0.05);
+              const centerShiftY = isMobileRegistration ? 0 : -0.05;
+              const centerY = ((minY + maxY) / 2) - (cropHeight * centerShiftY);
 
               if (cropWidth / cropHeight < targetAspect) {
                   cropWidth = cropHeight * targetAspect;
@@ -246,7 +251,7 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
               }
           }
       }
-  }, []);
+    }, [isMobileRegistration]);
 
   const onResults = useCallback((results: Results) => {
       if (!results.multiFaceLandmarks || results.multiFaceLandmarks.length === 0) {
