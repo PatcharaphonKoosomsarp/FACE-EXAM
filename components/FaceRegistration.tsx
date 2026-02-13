@@ -155,7 +155,7 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
               const chin = landmarks[152];
               if (topFace && chin) {
                   const faceVertical = Math.max(0.01, chin.y - topFace.y);
-                  const estimatedForeheadTop = topFace.y - (faceVertical * 0.65);
+                  const estimatedForeheadTop = topFace.y - (faceVertical * 0.5);
                   minY = Math.min(minY, estimatedForeheadTop);
               }
           }
@@ -177,18 +177,18 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
               const faceWidth = Math.max(0.01, maxX - minX);
               const faceHeight = Math.max(0.01, maxY - minY);
 
-              // Expand more to top to avoid cutting forehead/hairline
-              minX -= faceWidth * 0.24;
-              maxX += faceWidth * 0.24;
-              minY -= faceHeight * 0.50;
-              maxY += faceHeight * 0.20;
+              // Keep head inside frame but tighten crop a bit
+              minX -= faceWidth * 0.2;
+              maxX += faceWidth * 0.2;
+              minY -= faceHeight * 0.4;
+              maxY += faceHeight * 0.16;
 
               // Keep portrait framing and center face in crop
-              const targetAspect = 0.74; // width / height (taller portrait frame)
+              const targetAspect = 0.78; // width / height
               let cropWidth = Math.max(0.01, maxX - minX);
               let cropHeight = Math.max(0.01, maxY - minY);
               const centerX = (minX + maxX) / 2;
-              const centerY = ((minY + maxY) / 2) - (cropHeight * 0.08);
+              const centerY = ((minY + maxY) / 2) - (cropHeight * 0.05);
 
               if (cropWidth / cropHeight < targetAspect) {
                   cropWidth = cropHeight * targetAspect;
