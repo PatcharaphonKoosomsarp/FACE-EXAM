@@ -17,7 +17,7 @@ const VERY_MATCH_DISTANCE = 0.35;
 const MATCH_DISTANCE = 0.40;
 const PENALTY_DISTANCE = 0.50;
 const CONFIDENCE_TARGET = 100;
-const MIN_DETECTION_SCORE = 0.9;
+const MIN_DETECTION_SCORE = 0.75;
 const MIN_CONSECUTIVE_MATCH = 3;
 
 const buildMeanDescriptor = (descriptors: Float32Array[]) => {

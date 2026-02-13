@@ -11,8 +11,10 @@ import { storageService } from '../services/storageService';
 
 declare const faceapi: any;
 
-const QUALITY_MIN_DETECTION_SCORE = 0.9;
-const QUALITY_MIN_FACE_WIDTH = 150;
+const QUALITY_MIN_DETECTION_SCORE_DESKTOP = 0.82;
+const QUALITY_MIN_DETECTION_SCORE_MOBILE = 0.75;
+const QUALITY_MIN_FACE_WIDTH_DESKTOP = 120;
+const QUALITY_MIN_FACE_WIDTH_MOBILE = 90;
 
 const stepsData: FaceRegistrationStep[] = [
   { id: '1', instruction: 'หน้าตรง', description: 'มองตรงไปที่กล้อง', isCompleted: false },
@@ -30,6 +32,9 @@ interface FaceRegistrationProps {
 }
 
 const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCancel, targetUserId }) => {
+    const isMobileRegistration = Boolean(targetUserId);
+    const qualityMinScore = isMobileRegistration ? QUALITY_MIN_DETECTION_SCORE_MOBILE : QUALITY_MIN_DETECTION_SCORE_DESKTOP;
+    const qualityMinFaceWidth = isMobileRegistration ? QUALITY_MIN_FACE_WIDTH_MOBILE : QUALITY_MIN_FACE_WIDTH_DESKTOP;
   const [method, setMethod] = useState<'WEBCAM' | 'QR' | null>(targetUserId ? 'WEBCAM' : null);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [steps, setSteps] = useState(stepsData);
@@ -180,7 +185,7 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
           return;
       }
 
-      if (!qualityStateRef.current.isValid) {
+      if (qualityModelReady && !qualityStateRef.current.isValid) {
           internalState.current.holdStartTime = 0;
           setFeedback(qualityStateRef.current.warning || "Face not clear");
           return;
@@ -378,10 +383,10 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
                 const score = detection.score || 0;
                 const faceWidth = detection.box?.width || 0;
 
-                if (score < QUALITY_MIN_DETECTION_SCORE) {
+                if (score < qualityMinScore) {
                     qualityStateRef.current = { isValid: false, score, faceWidth, warning: 'Face not clear' };
                     setQualityWarning('Face not clear');
-                } else if (faceWidth < QUALITY_MIN_FACE_WIDTH) {
+                } else if (faceWidth < qualityMinFaceWidth) {
                     qualityStateRef.current = { isValid: false, score, faceWidth, warning: 'Please move closer' };
                     setQualityWarning('Please move closer');
                 } else {
@@ -401,7 +406,7 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
             isMounted = false;
             clearInterval(interval);
         };
-    }, [method, isCapturing, qualityModelReady]);
+    }, [method, isCapturing, qualityModelReady, qualityMinFaceWidth, qualityMinScore]);
 
   const completeUIStep = (index: number) => {
       setSteps(prev => {
