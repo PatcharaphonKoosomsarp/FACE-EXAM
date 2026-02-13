@@ -105,8 +105,10 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
       
       const video = videoRef.current;
       const canvas = document.createElement('canvas');
-      canvas.width = 640;
-      canvas.height = 480;
+      const sourceWidth = video.videoWidth || 640;
+      const sourceHeight = video.videoHeight || 480;
+      canvas.width = sourceWidth;
+      canvas.height = sourceHeight;
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
 
@@ -583,8 +585,8 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
                       await faceMesh.send({image: videoRef.current});
                   }
                 },
-                width: 640,
-                height: 480
+                                width: isMobileRegistration && window.innerHeight > window.innerWidth ? 480 : 640,
+                                height: isMobileRegistration && window.innerHeight > window.innerWidth ? 640 : 480
               });
               await camera.start();
               setIsCapturing(true);
