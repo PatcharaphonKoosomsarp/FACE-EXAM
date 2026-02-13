@@ -87,7 +87,7 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
       leftTurn: -0.35,
       rightTurn: 0.35,
       up: 0.45,
-      down: 0.65,
+      down: 0.58,
       blinkEAR: 0.18,
       openEAR: 0.20,
       closeRatio: 1.25
