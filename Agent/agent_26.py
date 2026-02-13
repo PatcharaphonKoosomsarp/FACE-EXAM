@@ -86,6 +86,41 @@ SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 
 # Configuration
 RUN_IN_BACKGROUND = True  # Set to True to hide the console window automatically
+BACKGROUND_ENV_FLAG = "FACE_EXAM_BG_CHILD"
+
+
+def relaunch_without_console_if_needed():
+    """Relaunch the current script without console window (more reliable on Windows 11)."""
+    if not RUN_IN_BACKGROUND or os.name != 'nt':
+        return
+
+    # Prevent relaunch loop
+    if os.environ.get(BACKGROUND_ENV_FLAG) == "1":
+        return
+
+    try:
+        creation_flags = 0
+        if hasattr(subprocess, 'CREATE_NO_WINDOW'):
+            creation_flags |= subprocess.CREATE_NO_WINDOW
+        if hasattr(subprocess, 'DETACHED_PROCESS'):
+            creation_flags |= subprocess.DETACHED_PROCESS
+        if hasattr(subprocess, 'CREATE_NEW_PROCESS_GROUP'):
+            creation_flags |= subprocess.CREATE_NEW_PROCESS_GROUP
+
+        env = os.environ.copy()
+        env[BACKGROUND_ENV_FLAG] = "1"
+
+        subprocess.Popen(
+            [sys.executable] + sys.argv,
+            creationflags=creation_flags,
+            close_fds=True,
+            cwd=os.getcwd(),
+            env=env,
+        )
+        print("[Agent] Relaunching in background mode (no console window)...")
+        sys.exit(0)
+    except Exception as e:
+        print(f"[Agent] Background relaunch failed, fallback to hide window: {e}")
 
 # Connectivity
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
@@ -684,7 +719,15 @@ class ExamAgent:
                 try:
                     hwnd = ctypes.windll.kernel32.GetConsoleWindow()
                     if hwnd != 0:
+                        try:
+                            ctypes.windll.user32.ShowWindowAsync(hwnd, 0) # SW_HIDE
+                        except:
+                            pass
                         ctypes.windll.user32.ShowWindow(hwnd, 0) # SW_HIDE
+                        try:
+                            ctypes.windll.kernel32.FreeConsole()
+                        except:
+                            pass
                 except: pass
             threading.Thread(target=_hide, daemon=True).start()
 
@@ -948,5 +991,6 @@ def api_metrics():
 # 7. MAIN ENTRY
 # ==========================================
 if __name__ == "__main__":
+    relaunch_without_console_if_needed()
     agent = ExamAgent()
     agent.start()
