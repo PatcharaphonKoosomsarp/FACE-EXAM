@@ -65,6 +65,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [errorType, setErrorType] = useState<'PERMISSION' | 'NOT_FOUND' | 'IN_USE' | 'GENERIC' | null>(null);
     const [modelsLoaded, setModelsLoaded] = useState(false);
+    const [qrExpectedIp, setQrExpectedIp] = useState<string | null>(null);
     const [detectedSeat, setDetectedSeat] = useState<number | null>(null);
     const [currentDistance, setCurrentDistance] = useState<number | null>(null);
     const [confidenceScore, setConfidenceScore] = useState(0);
@@ -75,6 +76,40 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
     const confidenceScoreRef = useRef(0);
     const consecutiveMatchRef = useRef(0);
     const fastPassRef = useRef(0);
+
+    const fetchLatestQrAuth = useCallback(async () => {
+        const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+
+        const buildQuery = (includeExamId: boolean) => {
+            let query = supabase
+                .from('qr_authentication')
+                .select('*')
+                .eq('user_id', user.id)
+                .eq('status', 'authenticated')
+                .gt('authenticated_at', tenMinutesAgo)
+                .order('authenticated_at', { ascending: false })
+                .limit(1);
+
+            if (includeExamId) {
+                query = query.eq('exam_id', exam.id);
+            }
+
+            return query.maybeSingle();
+        };
+
+        let { data, error } = await buildQuery(true);
+        if (error && String(error.message || '').toLowerCase().includes('exam_id')) {
+            const fallback = await buildQuery(false);
+            data = fallback.data;
+            error = fallback.error;
+        }
+
+        if (error) {
+            throw error;
+        }
+
+        return data;
+    }, [exam.id, user.id]);
 
     const handleMobileSuccess = useCallback(async (mobileIp: string) => {
         if (isVerifyingRef.current) return;
@@ -133,22 +168,14 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
 
     // Check for existing valid authentication on mount
     useEffect(() => {
+        if (method !== 'QR') return;
+
         const checkExistingAuth = async () => {
             try {
-                // Check for auth record in the last 10 minutes
-                const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
-                
-                const { data } = await supabase
-                    .from('qr_authentication')
-                    .select('*')
-                    .eq('user_id', user.id)
-                    .eq('status', 'authenticated')
-                    .gt('authenticated_at', tenMinutesAgo)
-                    .order('authenticated_at', { ascending: false })
-                    .limit(1)
-                    .maybeSingle();
+                const data = await fetchLatestQrAuth();
 
-                if (data) {
+                const isNotExpired = !data?.expires_at || new Date(data.expires_at).getTime() > Date.now();
+                if (data && isNotExpired) {
                     console.log('Found recent authentication:', data);
                     await handleMobileSuccess(data.ip);
                 }
@@ -158,7 +185,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
         };
 
         checkExistingAuth();
-    }, [handleMobileSuccess, user.id]); // Add handleMobileSuccess to deps
+    }, [fetchLatestQrAuth, handleMobileSuccess, method]); // Add handleMobileSuccess to deps
 
     // Ref for the callback to avoid restarting the interval
     const handleMobileSuccessRef = useRef(handleMobileSuccess);
@@ -181,6 +208,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                     }
                     
                     if (!isMounted) return;
+                    setQrExpectedIp(ip || null);
 
                     console.log('Generating QR with IP:', ip);
 
@@ -193,23 +221,20 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                     pollInterval = setInterval(async () => {
                         if (!isMounted) return;
                         try {
-                            // Check qr_authentication table for the LATEST authenticated record
-                            const { data } = await supabase
-                                .from('qr_authentication')
-                                .select('*')
-                                .eq('user_id', user.id)
-                                .eq('status', 'authenticated')
-                                .order('authenticated_at', { ascending: false })
-                                .limit(1)
-                                .maybeSingle();
+                            const data = await fetchLatestQrAuth();
 
-                            if (data) {
+                            const isNotExpired = !data?.expires_at || new Date(data.expires_at).getTime() > Date.now();
+                            const isExpectedIp = !ip || data?.ip === ip;
+
+                            if (data && isNotExpired && isExpectedIp) {
                                 console.log('Mobile authentication successful:', data);
                                 if (pollInterval) clearInterval(pollInterval);
                                 // Proceed to session creation using the IP from the handshake
                                 if (handleMobileSuccessRef.current) {
                                     await handleMobileSuccessRef.current(data.ip);
                                 }
+                            } else if (data && !isExpectedIp) {
+                                console.warn('Ignoring QR authentication from unexpected IP:', data.ip);
                             }
                         } catch (e) {
                             console.error("Polling error:", e);
@@ -229,7 +254,13 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
             isMounted = false;
             if (pollInterval) clearInterval(pollInterval);
         };
-    }, [method, exam.id, user.id]); // Removed handleMobileSuccess from deps
+    }, [method, exam.id, user.id, fetchLatestQrAuth]); // Removed handleMobileSuccess from deps
+
+    useEffect(() => {
+        if (method !== 'QR') {
+            setQrExpectedIp(null);
+        }
+    }, [method]);
 
     const createSession = async (ip: string, seatNumber: number | string, descriptorStr: string) => {
         try {
@@ -702,6 +733,11 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                         ใช้โทรศัพท์มือถือสแกน QR Code นี้<br/>
                         เพื่อดำเนินการยืนยันตัวตนต่อบนมือถือ
                     </p>
+                    {qrExpectedIp && (
+                        <p className="text-[11px] text-gray-500 mb-2">
+                            Session IP: {qrExpectedIp}
+                        </p>
+                    )}
                     
                     <button onClick={() => setMethod(null)} className="mt-4 text-sm text-gray-500 hover:text-gray-900 underline">
                         ย้อนกลับ

@@ -64,26 +64,48 @@ export const authService = {
     };
   },
 
-  async authenticateMobile(userId: string, ip: string): Promise<void> {
+    async authenticateMobile(userId: string, examId: string, ip: string): Promise<void> {
       const safeIp = (ip && ip.match(/^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/)) ? ip : '0.0.0.0';
 
-      // 1. Delete existing records
-      await supabase.from('qr_authentication').delete().eq('user_id', userId);
+      // 1. Delete existing records for this user + exam (fallback to user-only on legacy schema)
+      let deleteQuery = supabase.from('qr_authentication').delete().eq('user_id', userId).eq('exam_id', examId);
+      let { error: deleteError } = await deleteQuery;
+
+      if (deleteError && String(deleteError.message || '').toLowerCase().includes('exam_id')) {
+        const fallbackDelete = await supabase.from('qr_authentication').delete().eq('user_id', userId);
+        deleteError = fallbackDelete.error;
+      }
+
+      if (deleteError) throw deleteError;
 
       // Calculate expiration time (2 minutes from now)
       const expiresAt = new Date();
       expiresAt.setMinutes(expiresAt.getMinutes() + 2);
 
       // 2. Insert new record
-      const { error } = await supabase
+        let { error } = await supabase
           .from('qr_authentication')
           .insert({
               user_id: userId,
+            exam_id: examId,
               status: 'authenticated',
               ip: safeIp,
               authenticated_at: new Date().toISOString(),
               expires_at: expiresAt.toISOString()
           });
+
+        if (error && String(error.message || '').toLowerCase().includes('exam_id')) {
+          const fallbackInsert = await supabase
+            .from('qr_authentication')
+            .insert({
+              user_id: userId,
+              status: 'authenticated',
+              ip: safeIp,
+              authenticated_at: new Date().toISOString(),
+              expires_at: expiresAt.toISOString()
+            });
+          error = fallbackInsert.error;
+        }
 
       if (error) throw error;
   },

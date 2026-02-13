@@ -389,7 +389,7 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
             
             console.log("Using IP for authentication:", ip);
             
-            await authService.authenticateMobile(userId, ip);
+            await authService.authenticateMobile(userId, examId, ip);
 
             // Note: We do NOT create the exam session here. 
             // The PC (FaceVerification.tsx) polls this table, sees 'authenticated', 

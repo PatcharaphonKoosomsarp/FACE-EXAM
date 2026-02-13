@@ -96,6 +96,17 @@ Agent รุ่นใหม่ต้องใช้ Store Procedure (RPC) ใน
    - `computer_machine_registry`: เก็บข้อมูลสถานะเครื่อง (Machine ID <-> Seat ID)
    - `system_logs`: เก็บประวัติการใช้งาน Resource
 3. ตรวจสอบว่ามีฟังก์ชัน `handle_smart_registration` ใน Database แล้ว
+4. รัน migration เพิ่มเติมสำหรับ Mobile Verification ในไฟล์ `diagram_now/qr_auth_exam_migration.sql`
+  - เพิ่มคอลัมน์ `exam_id` ใน `qr_authentication`
+  - เพิ่ม index สำหรับ query polling (`user_id + exam_id + status + authenticated_at`)
+  - เพิ่ม foreign key ไปยัง `exam_rooms(id)` (ถ้าตารางมีอยู่)
+5. ตั้งค่า maintenance สำหรับล้างข้อมูล QR ที่หมดอายุในไฟล์ `diagram_now/qr_auth_maintenance.sql`
+  - สร้างฟังก์ชัน `cleanup_qr_authentication(hours)`
+  - เรียกแบบ manual ได้ด้วย `SELECT public.cleanup_qr_authentication(24);`
+  - มีตัวอย่าง schedule ด้วย `pg_cron` (optional)
+
+> ทางเลือกแนะนำ (ครั้งเดียวจบ):
+> รันไฟล์ `diagram_now/qr_auth_bootstrap.sql` แทนข้อ 4-5 เพื่อสร้างทั้ง migration + maintenance + ตัวอย่าง scheduler ในสคริปต์เดียว
 
 ### 2. Frontend Setup
 ```bash

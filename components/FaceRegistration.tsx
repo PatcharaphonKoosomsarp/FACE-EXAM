@@ -250,6 +250,7 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
 
   const onResults = useCallback((results: Results) => {
       if (!results.multiFaceLandmarks || results.multiFaceLandmarks.length === 0) {
+          internalState.current.holdStartTime = 0;
           setFeedback("ไม่พบใบหน้า");
           setDistanceRatio(0);
           return;
@@ -787,7 +788,8 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
           },
           sequence: ['faceForward', 'eyeClosed', 'eyeOpen', 'left', 'right', 'up', 'down', 'close'],
           currentSeqIndex: 0,
-          lastLandmarks: null
+          lastLandmarks: null,
+          holdStartTime: 0
       };
       setFeedback('กำลังเตรียมกล้อง...');
   };
