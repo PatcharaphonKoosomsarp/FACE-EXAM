@@ -109,37 +109,17 @@ const FaceRegistration: React.FC<FaceRegistrationProps> = ({ onComplete, onCance
       const sourceWidth = video.videoWidth || captureFrame?.width || 640;
       const sourceHeight = video.videoHeight || captureFrame?.height || 480;
 
-      // Orientation lock: when browser reports transposed video dimensions,
-      // align capture canvas orientation with real track settings.
-      let canvasWidth = sourceWidth;
-      let canvasHeight = sourceHeight;
-      if (captureFrame) {
-          const streamLandscape = captureFrame.width >= captureFrame.height;
-          const frameLandscape = sourceWidth >= sourceHeight;
-          if (streamLandscape !== frameLandscape) {
-              canvasWidth = sourceHeight;
-              canvasHeight = sourceWidth;
-          }
-      }
-
       const canvas = document.createElement('canvas');
-      canvas.width = canvasWidth;
-      canvas.height = canvasHeight;
+      canvas.width = sourceWidth;
+      canvas.height = sourceHeight;
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
 
       // 1. Draw Mirrored Video (Flip Horizontal) to match user view
       ctx.save();
-      if (canvasWidth === sourceWidth && canvasHeight === sourceHeight) {
-          ctx.translate(canvas.width, 0);
-          ctx.scale(-1, 1);
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      } else {
-          ctx.translate(canvas.width / 2, canvas.height / 2);
-          ctx.rotate(Math.PI / 2);
-          ctx.scale(-1, 1);
-          ctx.drawImage(video, -sourceWidth / 2, -sourceHeight / 2, sourceWidth, sourceHeight);
-      }
+      ctx.translate(canvas.width, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       ctx.restore();
 
       // Crop logic if landmarks exist

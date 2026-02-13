@@ -23,6 +23,9 @@ const FAST_PASS_DISTANCE = 0.33;
 const FAST_PASS_FRAMES = 2;
 const CONSENSUS_DISTANCE = 0.45;
 const MIN_REFERENCE_DESCRIPTORS = 3;
+const BLINK_CLOSED_EAR = 0.19;
+const BLINK_OPEN_EAR = 0.24;
+const BLINK_MIN_CLOSED_FRAMES = 1;
 
 const getMatchSupportCount = (referenceCount: number) => {
     if (referenceCount <= 3) return 2;
@@ -53,6 +56,23 @@ const buildMeanDescriptor = (descriptors: Float32Array[]) => {
     return mean;
 };
 
+const calculateEAR = (points: any[], indices: number[]) => {
+    const [p1, p2, p3, p4, p5, p6] = indices.map((index) => points[index]);
+    const vertical1 = Math.hypot(p2.x - p6.x, p2.y - p6.y);
+    const vertical2 = Math.hypot(p3.x - p5.x, p3.y - p5.y);
+    const horizontal = Math.hypot(p1.x - p4.x, p1.y - p4.y);
+    if (!horizontal) return 0;
+    return (vertical1 + vertical2) / (2 * horizontal);
+};
+
+const getAverageEAR = (landmarks: any) => {
+    const points = landmarks?.positions;
+    if (!points || points.length < 48) return null;
+    const leftEar = calculateEAR(points, [36, 37, 38, 39, 40, 41]);
+    const rightEar = calculateEAR(points, [42, 43, 44, 45, 46, 47]);
+    return (leftEar + rightEar) / 2;
+};
+
 const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId, userId, agentIp }) => {
     const videoRef = useRef<HTMLVideoElement>(null);
     const [status, setStatus] = useState<'FETCHING_INFO' | 'LOADING_MODELS' | 'LOADING_DATA' | 'SCANNING' | 'VERIFYING_IP' | 'SUCCESS' | 'FAILED'>('FETCHING_INFO');
@@ -72,6 +92,8 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
     const confidenceScoreRef = useRef(0);
     const consecutiveMatchRef = useRef(0);
     const fastPassRef = useRef(0);
+    const livenessPassedRef = useRef(false);
+    const blinkClosedFramesRef = useRef(0);
 
     // 1. Fetch User Photos (Critical) & Exam Info (Optional)
     useEffect(() => {
@@ -225,8 +247,10 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
         confidenceScoreRef.current = 0;
         consecutiveMatchRef.current = 0;
         fastPassRef.current = 0;
+        livenessPassedRef.current = false;
+        blinkClosedFramesRef.current = 0;
         setConfidenceScore(0);
-        setScanHint('มองตรงไปที่กล้อง');
+        setScanHint('กรุณากะพริบตา 1 ครั้งเพื่อยืนยันว่าเป็นบุคคลจริง');
     }, [status]);
 
     const startCamera = useCallback(async () => {
@@ -289,6 +313,27 @@ const MobileFaceVerification: React.FC<MobileFaceVerificationProps> = ({ examId,
                         setCurrentDistance(null);
                         setScanHint('Face not clear');
                         return;
+                    }
+
+                    if (!livenessPassedRef.current) {
+                        const ear = getAverageEAR(detection.landmarks);
+                        if (ear !== null) {
+                            if (ear < BLINK_CLOSED_EAR) {
+                                blinkClosedFramesRef.current += 1;
+                            } else if (blinkClosedFramesRef.current >= BLINK_MIN_CLOSED_FRAMES && ear > BLINK_OPEN_EAR) {
+                                livenessPassedRef.current = true;
+                                blinkClosedFramesRef.current = 0;
+                                setScanHint('ตรวจพบการกะพริบตา เริ่มยืนยันตัวตน...');
+                            } else {
+                                blinkClosedFramesRef.current = 0;
+                            }
+                        }
+
+                        if (!livenessPassedRef.current) {
+                            setCurrentDistance(null);
+                            setScanHint('กรุณากะพริบตา 1 ครั้งเพื่อยืนยันว่าเป็นบุคคลจริง');
+                            return;
+                        }
                     }
 
                     const bestCandidate: { descriptor: Float32Array; distance: number } = {
