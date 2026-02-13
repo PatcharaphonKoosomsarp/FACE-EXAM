@@ -22,7 +22,12 @@ const MATCH_DISTANCE = 0.40;
 const PENALTY_DISTANCE = 0.50;
 const CONFIDENCE_TARGET = 100;
 const MIN_DETECTION_SCORE = 0.82;
-const MIN_CONSECUTIVE_MATCH = 3;
+const MIN_CONSECUTIVE_MATCH = 2;
+const FAST_PASS_DISTANCE = 0.33;
+const FAST_PASS_SUPPORT_RATIO = 0.75;
+const FAST_PASS_FRAMES = 2;
+const CONSENSUS_DISTANCE = 0.43;
+const MIN_REFERENCE_DESCRIPTORS = 3;
 
 const buildMeanDescriptor = (descriptors: Float32Array[]) => {
     if (!descriptors.length) return null;
@@ -57,8 +62,10 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
     const [scanHint, setScanHint] = useState('มองตรงไปที่กล้อง');
     const isVerifyingRef = useRef(false);
     const meanDescriptorRef = useRef<Float32Array | null>(null);
+    const referenceDescriptorsRef = useRef<Float32Array[]>([]);
     const confidenceScoreRef = useRef(0);
     const consecutiveMatchRef = useRef(0);
+    const fastPassRef = useRef(0);
 
     const handleMobileSuccess = useCallback(async (mobileIp: string) => {
         if (isVerifyingRef.current) return;
@@ -367,8 +374,13 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                     throw new Error("ไม่สามารถประมวลผลใบหน้าจากรูปที่ลงทะเบียนได้ (ไม่พบใบหน้าในรูปภาพ)");
                 }
 
+                if (descriptors.length < MIN_REFERENCE_DESCRIPTORS) {
+                    throw new Error("รูปอ้างอิงใช้งานได้ไม่พอ (ต้องมีอย่างน้อย 3 รูป) กรุณาลงทะเบียนใบหน้าใหม่");
+                }
+
                 console.log(`Computed ${descriptors.length} reference descriptors`);
                 meanDescriptorRef.current = buildMeanDescriptor(descriptors);
+                referenceDescriptorsRef.current = descriptors;
                 setStatus('SCANNING');
                 startCamera();
 
@@ -386,6 +398,7 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
         if (method !== 'WEBCAM' || status !== 'SCANNING') return;
         confidenceScoreRef.current = 0;
         consecutiveMatchRef.current = 0;
+        fastPassRef.current = 0;
         setConfidenceScore(0);
         setScanHint('มองตรงไปที่กล้อง');
     }, [method, status]);
@@ -474,28 +487,54 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                         distance: faceapi.euclideanDistance(detection.descriptor, meanDescriptorRef.current)
                     };
 
+                    const referenceDistances = referenceDescriptorsRef.current
+                        .map((referenceDescriptor) => faceapi.euclideanDistance(detection.descriptor, referenceDescriptor));
+                    const supportCount = referenceDistances.filter((distance) => distance < CONSENSUS_DISTANCE).length;
+                    const supportRatio = referenceDescriptorsRef.current.length
+                        ? supportCount / referenceDescriptorsRef.current.length
+                        : 0;
+
                     if (bestCandidate) {
                         setCurrentDistance(bestCandidate.distance);
 
                         let nextScore = confidenceScoreRef.current;
+                        let scoreDelta = 0;
                         if (bestCandidate.distance < VERY_MATCH_DISTANCE) {
-                            nextScore += 20;
+                            scoreDelta += 20;
                         } else if (bestCandidate.distance < MATCH_DISTANCE) {
-                            nextScore += 10;
+                            scoreDelta += 10;
                         } else if (bestCandidate.distance > PENALTY_DISTANCE) {
-                            nextScore -= 10;
+                            scoreDelta -= 10;
                             consecutiveMatchRef.current = 0;
                         } else {
                             consecutiveMatchRef.current = 0;
                         }
 
-                        if (bestCandidate.distance < MATCH_DISTANCE) {
+                        if (supportRatio >= 0.75) {
+                            scoreDelta += 8;
+                        } else if (supportRatio >= 0.5) {
+                            scoreDelta += 4;
+                        } else if (supportRatio < 0.34) {
+                            scoreDelta -= 6;
+                        }
+                        nextScore += scoreDelta;
+
+                        if (bestCandidate.distance < MATCH_DISTANCE && supportRatio >= 0.5) {
                             consecutiveMatchRef.current += 1;
                             setScanHint('กำลังยืนยันตัวตน...');
+                        } else if (supportRatio < 0.34) {
+                            consecutiveMatchRef.current = 0;
+                            setScanHint('ลักษณะใบหน้าไม่สอดคล้องกับรูปลงทะเบียน');
                         } else if (bestCandidate.distance > PENALTY_DISTANCE) {
                             setScanHint('ไม่ตรงกับข้อมูลที่ลงทะเบียน');
                         } else {
                             setScanHint('ปรับมุมหน้าและแสงอีกเล็กน้อย');
+                        }
+
+                        if (bestCandidate.distance < FAST_PASS_DISTANCE && supportRatio >= FAST_PASS_SUPPORT_RATIO) {
+                            fastPassRef.current += 1;
+                        } else {
+                            fastPassRef.current = 0;
                         }
 
                         nextScore = Math.max(0, Math.min(CONFIDENCE_TARGET, nextScore));
@@ -503,10 +542,11 @@ const FaceVerification: React.FC<FaceVerificationProps> = ({ user, exam, onVerif
                         setConfidenceScore(nextScore);
 
                         console.log(
-                            `Live Detection -> MeanDistance: ${bestCandidate.distance.toFixed(3)} | ConfidenceScore: ${nextScore}`
+                            `Live Detection -> MeanDistance: ${bestCandidate.distance.toFixed(3)} | Support: ${(supportRatio * 100).toFixed(0)}% | ConfidenceScore: ${nextScore}`
                         );
 
-                        if (nextScore >= CONFIDENCE_TARGET && consecutiveMatchRef.current >= MIN_CONSECUTIVE_MATCH) {
+                        const hasFastPass = fastPassRef.current >= FAST_PASS_FRAMES;
+                        if ((nextScore >= CONFIDENCE_TARGET && consecutiveMatchRef.current >= MIN_CONSECUTIVE_MATCH) || hasFastPass) {
                             clearInterval(interval);
                             handleSuccess(bestCandidate.descriptor);
                         }
