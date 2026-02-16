@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { User, UserRole } from '../types';
-import { ScanFace, FileCheck, Download, BookOpen } from 'lucide-react';
+import { ScanFace, ShieldCheck, Monitor, Download, BookOpen } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import { authService } from '../services/authService';
 import { determineUserRole } from '../utils';
@@ -55,12 +55,16 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
         <div className="text-center mb-8 mt-4">
           {/* Combined Logo Container */}
           <div className="relative bg-orange-50 p-6 rounded-full w-32 h-32 flex items-center justify-center mx-auto mb-6 shadow-sm ring-8 ring-orange-50/50 group hover:scale-105 transition-transform duration-500">
-            {/* Primary Icon: Scan Face */}
-            <ScanFace className="w-16 h-16 text-primary stroke-[1.5]" />
-            
-            {/* Secondary Badge: Exam/Check */}
+            <div className="relative w-20 h-20 rounded-full bg-white border border-orange-100 shadow-inner flex items-center justify-center">
+              <ScanFace className="w-10 h-10 text-primary stroke-[1.8]" />
+            </div>
+
+            <div className="absolute -top-1 -left-1 bg-white rounded-full p-2 shadow-md border-2 border-orange-100 flex items-center justify-center">
+              <ShieldCheck className="w-5 h-5 text-primary stroke-[2]" />
+            </div>
+
             <div className="absolute bottom-0 right-0 bg-white rounded-full p-2 shadow-lg border-2 border-orange-100 flex items-center justify-center">
-               <FileCheck className="w-6 h-6 text-green-600 stroke-[2]" />
+              <Monitor className="w-5 h-5 text-green-600 stroke-[2]" />
             </div>
           </div>
           
