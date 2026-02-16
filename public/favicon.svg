@@ -1,20 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  <rect width="64" height="64" rx="14" fill="#FFF1EB" />
-
-  <circle cx="30" cy="30" r="18" fill="#E35205" opacity="0.15" />
-
-  <path d="M16 24v-3.2A4.8 4.8 0 0 1 20.8 16H24" stroke="#E35205" stroke-width="3" stroke-linecap="round" />
-  <path d="M36 16h3.2a4.8 4.8 0 0 1 4.8 4.8V24" stroke="#E35205" stroke-width="3" stroke-linecap="round" />
-  <path d="M44 36v3.2a4.8 4.8 0 0 1-4.8 4.8H36" stroke="#E35205" stroke-width="3" stroke-linecap="round" />
-  <path d="M24 44h-3.2A4.8 4.8 0 0 1 16 39.2V36" stroke="#E35205" stroke-width="3" stroke-linecap="round" />
-
-  <circle cx="24.5" cy="28" r="1.8" fill="#E35205" />
-  <circle cx="35.5" cy="28" r="1.8" fill="#E35205" />
-  <path d="M24 35c1.4 1.7 3.5 2.7 6 2.7s4.6-1 6-2.7" stroke="#E35205" stroke-width="2.6" stroke-linecap="round" />
-
-  <rect x="38" y="38" width="20" height="16" rx="4" fill="#FFFFFF" stroke="#E35205" stroke-width="2.5" />
-  <path d="M42 49h12" stroke="#D1D5DB" stroke-width="2" stroke-linecap="round" />
-  <rect x="43" y="44" width="2.8" height="3.6" rx="1" fill="#10B981" />
-  <rect x="47.6" y="42" width="2.8" height="5.6" rx="1" fill="#10B981" />
-  <rect x="52.2" y="40" width="2.8" height="7.6" rx="1" fill="#10B981" />
+  <rect width="64" height="64" rx="14" fill="#E35205"/>
+  <path d="M32 10L48 16V30C48 41 40 50 32 54C24 50 16 41 16 30V16L32 10Z" fill="white"/>
+  <path d="M24 31L30 37L41 25" stroke="#E35205" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
