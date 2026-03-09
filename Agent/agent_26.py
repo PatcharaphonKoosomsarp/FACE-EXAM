@@ -78,6 +78,10 @@ try:
     import GPUtil
 except ImportError:
     GPUtil = None
+try:
+    import wmi
+except ImportError:
+    wmi = None
 
 # ==========================================
 # 3. CONFIGURATION & GLOBALS
@@ -137,6 +141,44 @@ LOG_FILE = "agent_backup_data.json"
 # ==========================================
 def get_local_ip():
     """Get best local IPv4 (prefer private LAN, avoid loopback/link-local)."""
+    # Windows WMI path (most reliable for multi-NIC environments)
+    if os.name == 'nt' and wmi is not None:
+        try:
+            c = wmi.WMI()
+            candidates = []
+            for nic in c.Win32_NetworkAdapterConfiguration(IPEnabled=True):
+                try:
+                    desc = (nic.Description or "").lower()
+                    if _is_virtual_interface(desc):
+                        continue
+
+                    mac = _normalize_mac(getattr(nic, 'MACAddress', '') or '')
+                    ips = [ip for ip in (nic.IPAddress or []) if '.' in str(ip)]
+                    gateways = nic.DefaultIPGateway or []
+
+                    for ip in ips:
+                        if ip.startswith("127.") or ip.startswith("169.254."):
+                            continue
+                        ip_obj = ipaddress.ip_address(ip)
+                        if not ip_obj.is_private:
+                            continue
+                        score = 0
+                        if gateways:
+                            score += 20
+                        if ip.startswith("10."):
+                            score += 10
+                        if mac and mac != "00:00:00:00:00:00":
+                            score += 5
+                        candidates.append((score, ip))
+                except:
+                    pass
+
+            if candidates:
+                candidates.sort(key=lambda x: x[0], reverse=True)
+                return candidates[0][1]
+        except:
+            pass
+
     # Try route-based detection first
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -196,6 +238,23 @@ def _normalize_mac(mac: str) -> str:
 
 def get_all_macs():
     """Get list of MAC addresses from active, non-virtual interfaces."""
+    # Windows WMI path
+    if os.name == 'nt' and wmi is not None:
+        try:
+            macs = []
+            c = wmi.WMI()
+            for nic in c.Win32_NetworkAdapterConfiguration(IPEnabled=True):
+                desc = (nic.Description or "").lower()
+                if _is_virtual_interface(desc):
+                    continue
+                mac = _normalize_mac(getattr(nic, 'MACAddress', '') or '')
+                if mac and mac != "00:00:00:00:00:00":
+                    macs.append(mac)
+            if macs:
+                return list(set(macs))
+        except:
+            pass
+
     macs = []
     try:
         stats = psutil.net_if_stats()
@@ -214,6 +273,27 @@ def get_all_macs():
     except:
         pass
     return list(set(macs))
+
+
+def get_local_ipv4_candidates():
+    """Collect all usable local IPv4 addresses for validation/debug."""
+    ips = set()
+    try:
+        stats = psutil.net_if_stats()
+        for interface, addrs in psutil.net_if_addrs().items():
+            st = stats.get(interface)
+            if st and not st.isup:
+                continue
+            if _is_virtual_interface(interface):
+                continue
+            for addr in addrs:
+                if getattr(addr, 'family', None) == socket.AF_INET:
+                    ip = addr.address
+                    if ip and not ip.startswith("127.") and not ip.startswith("169.254."):
+                        ips.add(ip)
+    except:
+        pass
+    return sorted(list(ips))
 
 # Global Process Cache to maintain state for CPU calculation
 process_cache = {}
@@ -340,6 +420,10 @@ def get_hw_metrics():
 class ExamAgent:
     def __init__(self):
         self.ip = get_local_ip()
+        self.local_ips = get_local_ipv4_candidates()
+        if self.ip not in self.local_ips and self.local_ips:
+            print(f"[Network] Selected IP {self.ip} is not in local active IP list {self.local_ips}. Fallback to {self.local_ips[0]}")
+            self.ip = self.local_ips[0]
         self.macs = get_all_macs()
         self.is_monitoring = False
         
@@ -363,6 +447,7 @@ class ExamAgent:
         print("\n" + "="*40)
         print(f" FACE EXAM AGENT v2.0")
         print(f" IP: {self.ip}")
+        print(f" Local Active IPs: {self.local_ips}")
         print(f" MACs: {self.macs}")
         print("="*40 + "\n")
 
