@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { User, UserRole } from '../types';
 import { ScanFace, ShieldCheck, Monitor, Download, BookOpen } from 'lucide-react';
 import { supabase } from '../supabaseClient';
@@ -18,12 +18,37 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
     setIsLoading(true);
     try {
       await authService.signInWithOAuth('google');
+      // Fallback: if redirect does not occur, re-enable the button.
+      setIsLoading(false);
     } catch (error) {
       console.error('Error logging in:', error);
       alert('เกิดข้อผิดพลาดในการล็อกอิน');
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    const resetLoadingState = () => setIsLoading(false);
+
+    // Handle browser back-forward cache after returning from OAuth page.
+    const handlePageShow = () => resetLoadingState();
+    const handleWindowFocus = () => resetLoadingState();
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        resetLoadingState();
+      }
+    };
+
+    window.addEventListener('pageshow', handlePageShow);
+    window.addEventListener('focus', handleWindowFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('pageshow', handlePageShow);
+      window.removeEventListener('focus', handleWindowFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
 
   const GoogleIcon = () => (
     <svg className="w-6 h-6 mr-3" viewBox="0 0 24 24">
