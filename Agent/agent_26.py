@@ -7,6 +7,7 @@ import json
 import threading
 import socket
 import ctypes
+import ipaddress
 from datetime import datetime
 
 # ==========================================
@@ -135,24 +136,79 @@ LOG_FILE = "agent_backup_data.json"
 # 4. UTILITY FUNCTIONS (Hardware/Network)
 # ==========================================
 def get_local_ip():
-    """Get the actual routable IP address"""
+    """Get best local IPv4 (prefer private LAN, avoid loopback/link-local)."""
+    # Try route-based detection first
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.connect(("8.8.8.8", 80))
-        ip = s.getsockname()[0]
+        routed_ip = s.getsockname()[0]
         s.close()
-        return ip
+        if routed_ip and not routed_ip.startswith("127.") and not routed_ip.startswith("169.254."):
+            return routed_ip
     except:
-        return "127.0.0.1"
+        pass
+
+    # Fallback: scan interfaces for best private IPv4
+    candidates = []
+    try:
+        stats = psutil.net_if_stats()
+        for interface, addrs in psutil.net_if_addrs().items():
+            st = stats.get(interface)
+            if st and not st.isup:
+                continue
+            if _is_virtual_interface(interface):
+                continue
+
+            for addr in addrs:
+                if getattr(addr, 'family', None) == socket.AF_INET:
+                    ip = addr.address
+                    if not ip or ip.startswith("127.") or ip.startswith("169.254."):
+                        continue
+                    try:
+                        ip_obj = ipaddress.ip_address(ip)
+                        if ip_obj.is_private:
+                            candidates.append(ip)
+                    except:
+                        pass
+    except:
+        pass
+
+    if candidates:
+        # Prefer 10.x first for common campus/company LAN
+        ten_net = [ip for ip in candidates if ip.startswith("10.")]
+        if ten_net:
+            return ten_net[0]
+        return candidates[0]
+
+    return "127.0.0.1"
+
+
+def _is_virtual_interface(interface_name: str) -> bool:
+    name = (interface_name or "").lower()
+    virtual_keywords = [
+        "loopback", "vmware", "virtualbox", "vbox", "hyper-v", "npcap", "tailscale", "wireguard", "tun", "tap"
+    ]
+    return any(k in name for k in virtual_keywords)
+
+
+def _normalize_mac(mac: str) -> str:
+    return (mac or "").strip().upper().replace("-", ":")
 
 def get_all_macs():
-    """Get list of all MAC addresses on this machine"""
+    """Get list of MAC addresses from active, non-virtual interfaces."""
     macs = []
     try:
+        stats = psutil.net_if_stats()
         for interface, addrs in psutil.net_if_addrs().items():
+            st = stats.get(interface)
+            if st and not st.isup:
+                continue
+            if _is_virtual_interface(interface):
+                continue
+
             for addr in addrs:
                 if addr.family == psutil.AF_LINK:
-                    mac = addr.address.upper().replace("-", ":")
+                    mac = _normalize_mac(addr.address)
                     if mac and mac != "00:00:00:00:00:00":
                         macs.append(mac)
     except:
@@ -402,10 +458,65 @@ class ExamAgent:
             
             # Fetch detailed IDs for internal use
             self.fetch_layout_details()
+
+            # Validate that recovered identity still matches this machine.
+            # If not, force manual registration UI.
+            if not self.ensure_identity_consistency():
+                print("[Auth] Recovered identity does not match this machine. Opening registration UI...")
+                self.room_name = None
+                self.seat_number = None
+                self.layout_id = None
+                self.row_number = 0
+                self.col_number = 0
+                return False
             
             print(f"[Auth] {status}! Connected to {self.room_name} - Seat {self.seat_number}")
             return True
         return False
+
+    def ensure_identity_consistency(self):
+        """
+        Prevent wrong machine auto-login.
+        Rules:
+        - If DB seat mapping MAC does not intersect local MACs -> mismatch (force registration)
+        - If MAC intersects but IP changed -> auto-heal DB IP to current machine IP
+        """
+        if not self.layout_id or not self.seat_number:
+            return False
+
+        try:
+            res = supabase.table('room_seat_ip_mappings')\
+                .select('ip_address, current_macs')\
+                .eq('layout_id', self.layout_id)\
+                .eq('seat_number', self.seat_number)\
+                .single().execute()
+
+            if not res.data:
+                return False
+
+            db_ip = (res.data.get('ip_address') or '').strip()
+            db_macs = set(_normalize_mac(m) for m in (res.data.get('current_macs') or []))
+            local_macs = set(_normalize_mac(m) for m in self.macs)
+            has_mac_match = bool(local_macs & db_macs)
+
+            if not has_mac_match:
+                return False
+
+            if db_ip != self.ip:
+                try:
+                    supabase.table('room_seat_ip_mappings').update({
+                        'ip_address': self.ip,
+                        'current_macs': list(local_macs),
+                        'updated_at': datetime.now().astimezone().isoformat()
+                    }).eq('layout_id', self.layout_id).eq('seat_number', self.seat_number).execute()
+                    print(f"[Auth] IP changed for same device: {db_ip} -> {self.ip} (auto-healed)")
+                except Exception as e:
+                    print(f"[Auth] Failed to auto-heal IP mapping: {e}")
+
+            return True
+        except Exception as e:
+            print(f"[Auth] Identity consistency check failed: {e}")
+            return False
 
     def fetch_layout_details(self):
         """Helper to get layout_id and other hidden fields after quick login"""
